@@ -1,0 +1,8 @@
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <rect width="16" height="16" rx="3" fill="#4285f4"/>
+  <rect x="2" y="4" width="12" height="2" rx="1" fill="white"/>
+  <rect x="2" y="7" width="8" height="2" rx="1" fill="white"/>
+  <rect x="2" y="10" width="10" height="2" rx="1" fill="white"/>
+  <circle cx="13" cy="3" r="2" fill="#ea4335"/>
+  <text x="13" y="4.5" text-anchor="middle" fill="white" font-size="3" font-family="Arial">T</text>
+</svg>

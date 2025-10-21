@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Chrome Tab Manager",
+  "version": "1.0",
+  "description": "A Chrome extension to manage tabs and show tab count",
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "tabGroups",
+    "storage",
+    "scripting",
+    "windows"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Tab Manager"
+  },
+  "icons": {
+    "16": "icons/icon16.svg",
+    "48": "icons/icon48.svg",
+    "128": "icons/icon128.svg"
+  }
+}

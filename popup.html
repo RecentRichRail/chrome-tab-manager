@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tab Explorer</title>
+  <style>
+  /* Glass button style */
+  .btn-glass { position: relative; color: #0f172a; padding: 9px 14px; border-radius: 10px; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; border: 1px solid rgba(255,255,255,0.6); background: rgba(255,255,255,0.18); backdrop-filter: blur(6px) saturate(180%); -webkit-backdrop-filter: blur(6px) saturate(180%); }
+  .btn-glass:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(15,23,42,0.14); }
+  .btn-glass:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(15,23,42,0.12); }
+
+    :root { --glass-bg: rgba(255,255,255,0.22); --glass-bg-strong: rgba(255,255,255,0.34); --glass-stroke: rgba(255,255,255,0.35); --text-primary: #0f172a; --text-secondary: #334155; --brand: #4f46e5; --brand-700: #4338ca; --accent: #22c55e; --muted: #94a3b8; --badge-bg: rgba(99,102,241,0.12); --badge-fg: #4f46e5; --backdrop-tint: rgba(2,6,23,0.42); }
+    html, body { background: transparent; height: 100%; }
+    html { overflow: hidden; }
+  body { width:640px; height:400px; margin:0; padding:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; color: var(--text-primary); overflow:hidden; position: relative; display:flex; flex-direction: column; }
+  /* Standalone (pop-out) window sizing */
+  body.standalone { width: auto; height: auto; max-height: none; min-height: 100vh; overflow: auto; }
+    /* Water droplet style backdrop: darker than foreground glass cards */
+    body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; background:
+      radial-gradient(40% 60% at 30% 20%, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.10) 60%, rgba(255,255,255,0.02) 100%),
+      radial-gradient(55% 50% at 70% 80%, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.02) 100%),
+      linear-gradient(180deg, rgba(2,6,23,0.50) 0%, rgba(2,6,23,0.35) 100%);
+      backdrop-filter: blur(18px) saturate(130%);
+      -webkit-backdrop-filter: blur(18px) saturate(130%);
+    }
+    /* Liquid glass background (animated blurred blobs) */
+    .liquid-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .liquid-bg .blob { position: absolute; width: 260px; height: 260px; border-radius: 50%;
+      filter: blur(28px); opacity: 0.6; will-change: transform; mix-blend-mode: screen; }
+    .liquid-bg .b1 { background: radial-gradient(circle at 30% 30%, rgba(99,102,241,0.9), rgba(99,102,241,0.2) 60%, rgba(99,102,241,0.0) 80%);
+      left: -40px; top: -40px; animation: float-a 22s ease-in-out infinite; }
+    .liquid-bg .b2 { background: radial-gradient(circle at 30% 30%, rgba(236,72,153,0.9), rgba(236,72,153,0.2) 60%, rgba(236,72,153,0.0) 80%);
+      right: -60px; top: 20px; animation: float-b 26s ease-in-out infinite; }
+    .liquid-bg .b3 { background: radial-gradient(circle at 30% 30%, rgba(34,197,94,0.9), rgba(34,197,94,0.2) 60%, rgba(34,197,94,0.0) 80%);
+      left: 20%; bottom: -80px; animation: float-c 24s ease-in-out infinite; }
+    .liquid-bg .b4 { background: radial-gradient(circle at 30% 30%, rgba(56,189,248,0.9), rgba(56,189,248,0.2) 60%, rgba(56,189,248,0.0) 80%);
+      right: 15%; bottom: -100px; animation: float-d 28s ease-in-out infinite; }
+    @keyframes float-a { 0% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(30px,20px,0) scale(1.05); } 100% { transform: translate3d(0,10px,0) scale(1); } }
+    @keyframes float-b { 0% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(-25px,10px,0) scale(1.06); } 100% { transform: translate3d(0,-10px,0) scale(1); } }
+    @keyframes float-c { 0% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(20px,-20px,0) scale(1.04); } 100% { transform: translate3d(-10px,0,0) scale(1); } }
+    @keyframes float-d { 0% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(-20px,-30px,0) scale(1.05); } 100% { transform: translate3d(10px,0,0) scale(1); } }
+    @media (prefers-reduced-motion: reduce) {
+      .liquid-bg .blob { animation: none; }
+    }
+
+    /* Refined glass card with gradient border and subtle highlight */
+    .glass-card { position: relative; background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.16)) padding-box;
+      backdrop-filter: blur(14px) saturate(180%); -webkit-backdrop-filter: blur(14px) saturate(180%);
+      border: 1px solid transparent; border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(15,23,42,0.14);
+      background-clip: padding-box, border-box;
+    }
+    .glass-card::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+      background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(79,70,229,0.5));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude; }
+    .glass-card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+      background: radial-gradient(120% 50% at 50% -20%, rgba(255,255,255,0.5), rgba(255,255,255,0) 60%);
+      mix-blend-mode: soft-light; opacity: 0.6; }
+  .header { padding: 8px 12px; display:flex; align-items:center; justify-content:space-between; position: relative; z-index: 1; min-height: 60px; }
+  .header-title { font-size: 14px; font-weight: 700; }
+  .icon-btn { width: 44px; height: 44px; display:inline-flex; align-items:center; justify-content:center; border-radius: 8px; background: var(--glass-bg-strong); border: 1px solid var(--glass-stroke); cursor:pointer; transition: all 0.2s ease; color: var(--text-primary); }
+    .icon-btn:hover { box-shadow: 0 6px 16px rgba(15,23,42,0.12); transform: translateY(-1px); }
+  /* Ensure icons are visible with good contrast */
+  .icon-btn svg { width: 90%; height: 90%; color: var(--text-primary); fill: currentColor; }
+  .icon-btn svg path.line-icon { fill: none; stroke: currentColor; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+  /* Circle-dot toggles (○/●) */
+  .glass-toggle { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+  /* Keep input interactive so change events fire reliably */
+  .glass-toggle input { position: absolute; opacity: 0; }
+  .glass-toggle .dot { display: inline-block; width: 18px; height: 18px; line-height: 18px; text-align: center; font-size: 16px; color: #0f172a; }
+  .glass-toggle .dot::before { content: "○"; }
+  .glass-toggle input:checked + .dot::before { content: "●"; }
+  .glass-toggle .toggle-text { color: var(--text-primary); font-weight: 500; }
+  .icon-btn.loading { opacity: 0.85; cursor: default; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .spin { animation: spin 1s linear infinite; transform-origin: center; }
+    /* Flex layout: content fills remaining height and scrolls */
+    .content { padding: 12px; padding-bottom: 28px; flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative; z-index: 1; }
+  /* In standalone mode, let the body scroll to avoid double scrollbars */
+  body.standalone .content { flex: initial; height: auto; max-height: none; overflow: visible; }
+  .explorer-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .explorer-search-top { padding: 0 12px 10px; position: relative; z-index: 1; }
+  .explorer-search-top .form-input { width: 100%; }
+    .dropdown-select, .form-input { padding: 10px 12px; border: 1px solid var(--glass-stroke); border-radius: 8px; font-size: 13px; background: rgba(255,255,255,0.7); color: var(--text-primary); box-sizing: border-box; min-width: 0; }
+    .dropdown-select:focus, .form-input:focus { outline:none; border-color: var(--brand); box-shadow: 0 0 0 2px rgba(79,70,229,0.15); }
+    .menu-section { margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.6); border-radius: 16px; overflow: hidden; background: rgba(255,255,255,0.14); backdrop-filter: blur(8px) saturate(180%); -webkit-backdrop-filter: blur(8px) saturate(180%); }
+    .menu-header { background: transparent; padding: 12px 16px; cursor: pointer; display:flex; align-items:center; gap:8px; justify-content: space-between; font-weight:600; font-size:14px; color: var(--text-primary); }
+  .menu-content { display:none; padding: 12px 16px 16px; background: transparent; border-top: 1px solid var(--glass-stroke); overflow: visible; }
+    .menu-content.expanded { display: block; }
+    .menu-arrow { transition: transform 0.2s ease; color: var(--muted); font-size: 11px; }
+    .menu-arrow.expanded { transform: rotate(90deg); }
+    .explorer-title-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+    .menu-header .count-badge { background: var(--badge-bg); color: var(--badge-fg); border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 700; margin-left: auto; }
+  .url-item { display:flex; justify-content:space-between; align-items:center; padding: 10px; background: var(--glass-bg); border: 1px solid var(--glass-stroke); border-radius: 10px; }
+  .explorer-tab-item { cursor: pointer; transition: box-shadow 0.15s ease, transform 0.15s ease; }
+  .explorer-tab-item:hover { box-shadow: 0 6px 16px rgba(15,23,42,0.12); transform: translateY(-1px); }
+  .close-tab-btn { margin-left: 8px; padding: 6px 8px; border-radius: 8px; background: #ef4444; color: white; border: none; cursor: pointer; }
+  .close-tab-btn:hover { background: #dc2626; }
+  .explorer-group { background: var(--glass-bg); border: 1px solid var(--glass-stroke); border-radius: 10px; margin: 8px 0; }
+  .explorer-group-header { padding: 10px 12px; background: rgba(255,255,255,0.65); cursor: pointer; display:flex; justify-content: space-between; align-items:center; border-bottom: 1px solid var(--glass-stroke); font-weight:600; }
+  .explorer-group-content { padding: 10px 12px; }
+    .goto-tab-btn { padding: 6px 8px; border-radius: 8px; background: linear-gradient(135deg, var(--brand) 0%, var(--brand-700) 100%); color: white; border:none; cursor:pointer; }
+    .help-text { font-size: 11px; color: #8a8d91; margin-top: 10px; line-height: 1.3; padding: 8px 10px; background: #f0f2f5; border-radius: 6px; border-left: 2px solid #1877f2; }
+    .actions { display:flex; gap:6px; margin: 12px 0; }
+    button { flex:1; padding: 10px 12px; border: 1px solid var(--glass-stroke); border-radius: 10px; background: var(--glass-bg-strong); cursor:pointer; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  </style>
+</head>
+<body>
+  <!-- Liquid glass animated background -->
+  <div class="liquid-bg" aria-hidden="true">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+    <span class="blob b4"></span>
+  </div>
+  <div class="header">
+  <div id="headerTitle" class="header-title">Tab Explorer</div>
+    <div style="display:flex; gap:8px;">
+      <button id="headerRefreshBtn" class="icon-btn btn-glass" title="Refresh">
+        <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.95 7.95 0 0 0 12 4c-4.42 0-8 3.58-8 8h2a6 6 0 1 1 6 6c-1.66 0-3.14-.69-4.22-1.78L10 14H4v6l2.24-2.24C7.9 19.41 9.86 20 12 20c4.42 0 8-3.58 8-8 0-2.21-.9-4.21-2.35-5.65z"/></svg>
+      </button>
+      <button id="openSettingsBtn" class="icon-btn btn-glass" title="Settings">
+        <svg id="settingsIcon" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.66.07-1s-.03-.68-.07-1l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a7.03 7.03 0 0 0-1.73-1l-.38-2.65A.5.5 0 0 0 13 2h-4a.5.5 0 0 0-.5.42l-.38 2.65a7.03 7.03 0 0 0-1.73 1l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0-.12.64L4.57 10c-.04.32-.07.66-.07 1s.03.68.07 1l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.14.24.43.34.69.22l2.49-1c.53.42 1.11.77 1.73 1l.38 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.38-2.65c.62-.23 1.2-.58 1.73-1l2.49 1c.26.12.55.02.69-.22l2-3.46a.5.5 0 0 0-.12-.64L19.43 12.98zM11 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="explorerRoot" class="content">
+    <div class="explorer-search-top">
+      <input id="windowSearchInput" type="text" class="form-input" placeholder="Search page titles or URLs...">
+    </div>
+    <div class="glass-card" style="padding:12px;">
+      <div class="explorer-toolbar">
+        <select id="windowFilterSelect" class="dropdown-select" style="width:180px;">
+          <option value="all">All pages</option>
+          <option value="duplicates">Duplicates</option>
+          <option value="autoclose">Auto-close candidates</option>
+        </select>
+        <select id="windowSortSelect" class="dropdown-select" style="width:200px;">
+          <option value="title-asc">Sort: Title (A–Z)</option>
+          <option value="lastAccessed-desc">Sort: Last accessed (recent first)</option>
+        </select>
+      </div>
+      <div id="windowListContainer"></div>
+    </div>
+  </div>
+
+  <div id="settingsRoot" class="content" style="display:none;">
+    <!-- Regroup All Tabs section moved to top -->
+  <div class="glass-card" style="padding:12px;margin-top:0;margin-bottom:16px;">
+      <div style="display:flex;gap:6px;">
+        <button id="regroupAllBtn" class="btn-glass" style="flex:1;">Regroup All Tabs</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <button id="expandAllBtn" class="btn-glass" style="flex:1;">Expand All Groups</button>
+        <button id="collapseAllBtn" class="btn-glass" style="flex:1;">Collapse All Groups</button>
+      </div>
+      <div class="glass-card" style="padding:12px;margin-top:12px;text-align:center;">
+        <div class="tab-count-number" id="tabCount">0</div>
+        <div class="tab-count-label">tabs open</div>
+        <div class="group-info" id="groupInfo"><span id="groupCount">0</span> tab groups</div>
+      </div>
+    </div>
+
+    <!-- Window Name section (second) -->
+    <div class="menu-section">
+      <div class="menu-header" id="windowNameHeader"><span>Window Name</span><span class="menu-arrow">▶</span></div>
+      <div class="menu-content" id="windowNameContent">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="windowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)" />
+          <button id="saveWindowLabelBtn" class="btn-glass">Save</button>
+        </div>
+        <div class="help-text" style="margin-top:8px;">This prefix will be added to the title of each tab in this window so the OS window title shows it when that tab is active.</div>
+        <div style="margin-top:6px;">
+          <label class="glass-toggle">
+            <input type="checkbox" id="windowLabelPrefixToggle" checked>
+            <span class="dot" aria-hidden="true"></span>
+            <span class="toggle-text">Show label prefix on page titles</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <div class="menu-header" id="autoCollapseHeader"><span>Auto-Collapse Groups</span><span class="menu-arrow">▶</span></div>
+      <div class="menu-content" id="autoCollapseContent">
+        <div class="actions">
+          <label class="glass-toggle">
+            <input type="checkbox" id="autoCollapseToggle">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="toggle-text">Enable Auto-Collapse</span>
+          </label>
+        </div>
+        <div class="actions"><span class="setting-label">Collapse delay (seconds)</span><input type="number" id="collapseDelayInput" class="form-input" value="3" min="1" max="30" style="width:80px;"></div>
+        <div class="help-text">Automatically collapses inactive tab groups when you switch to a different group.</div>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <div class="menu-header" id="autoCloseHeader"><span>Auto-Close Pages</span><span class="menu-arrow">▶</span></div>
+      <div class="menu-content" id="autoCloseContent">
+        <div class="actions">
+          <label class="glass-toggle">
+            <input type="checkbox" id="autoCloseToggle">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="toggle-text">Enable Auto-Close</span>
+          </label>
+        </div>
+        <div class="actions"><span class="setting-label">Close after (seconds)</span><input type="number" id="closeDelayInput" class="form-input" value="5" min="1" max="300" style="width:80px;"></div>
+        <div class="url-list">
+          <input type="text" id="urlInput" class="form-input" placeholder="Enter URL pattern (e.g., *login*, https://example.com/auth*)">
+          <button id="addUrlBtn" class="btn-glass">Add URL Pattern</button>
+          <div id="urlListContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <div class="menu-header" id="autoTabGroupingHeader"><span>Auto Tab Grouping</span><span class="menu-arrow">▶</span></div>
+      <div class="menu-content" id="autoTabGroupingContent">
+        <div class="actions">
+          <label class="glass-toggle">
+            <input type="checkbox" id="autoTabGroupingToggle" checked>
+            <span class="dot" aria-hidden="true"></span>
+            <span class="toggle-text">Enable Auto Tab Grouping</span>
+          </label>
+        </div>
+        <div class="actions">
+          <label class="glass-toggle">
+            <input type="checkbox" id="applyToGroupedTabsToggle">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="toggle-text">Apply to grouped tabs</span>
+          </label>
+        </div>
+        <div class="actions">
+          <label class="glass-toggle">
+            <input type="checkbox" id="ignorePinnedTabsToggle" checked>
+            <span class="dot" aria-hidden="true"></span>
+            <span class="toggle-text">Ignore pinned tabs</span>
+          </label>
+        </div>
+        <div class="actions">
+          <label class="glass-toggle">
+            <input type="checkbox" id="autoCloseSingleTabGroupsToggle" checked>
+            <span class="dot" aria-hidden="true"></span>
+            <span class="toggle-text">Auto-close single-tab groups</span>
+          </label>
+        </div>
+        <div class="actions"><span class="setting-label">Add tabs to</span>
+          <select id="addTabPositionSelect" class="dropdown-select" style="width:120px;">
+            <option value="right">Right</option>
+            <option value="left">Left</option>
+          </select>
+        </div>
+        <div class="url-list">
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="groupRuleNameInput" class="form-input" placeholder="Group name (e.g., Development)">
+            <select id="groupRuleColorSelect" class="dropdown-select" style="width:140px;">
+              <option value="">Random</option>
+              <option value="grey">Grey</option>
+              <option value="blue">Blue</option>
+              <option value="red">Red</option>
+              <option value="yellow">Yellow</option>
+              <option value="green">Green</option>
+              <option value="pink">Pink</option>
+              <option value="purple">Purple</option>
+              <option value="cyan">Cyan</option>
+              <option value="orange">Orange</option>
+            </select>
+          </div>
+          <button id="createGroupRuleBtn" class="btn-glass">Create Tab Group Rule</button>
+          <div id="groupRuleListContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <div class="menu-header" id="duplicatePreventionHeader"><span>Duplicate Tab Prevention</span><span class="menu-arrow">▶</span></div>
+      <div class="menu-content" id="duplicatePreventionContent">
+        <div class="actions">
+          <label class="glass-toggle">
+            <input type="checkbox" id="duplicatePreventionToggle" checked>
+            <span class="dot" aria-hidden="true"></span>
+            <span class="toggle-text">Enable Prevention</span>
+          </label>
+        </div>
+        <div class="actions"><span class="setting-label">When duplicate found</span>
+          <select id="duplicateActionSelect" class="dropdown-select" style="width:200px;">
+            <option value="false">Close newer tab</option>
+            <option value="true">Close older tab</option>
+          </select>
+        </div>
+        <div class="url-list">
+          <input type="text" id="duplicateAllowInput" class="form-input" placeholder="URLs allowed to have duplicates (e.g., *github.com*, https://docs.google.com*)">
+          <button id="addDuplicateAllowBtn" class="btn-glass">Add Exception Pattern</button>
+          <div id="duplicateAllowListContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import/Export moved to bottom -->
+    <div class="menu-section">
+      <div class="menu-header" id="importExportHeader"><span>Import / Export</span><span class="menu-arrow">▶</span></div>
+      <div class="menu-content" id="importExportContent">
+        <div style="display:flex;gap:8px;align-items:center;flex-direction:column;">
+          <button id="exportSettingsBtn" class="btn-glass">Export Settings (JSON)</button>
+          <label style="width:100%;margin-top:8px;">
+            <input id="importFileInput" type="file" accept="application/json" style="display:none;">
+            <button id="importSettingsBtn" class="btn-glass" style="width:100%;">Import Settings (JSON)</button>
+          </label>
+        </div>
+        <div class="help-text" style="margin-top:8px;">Export and import your settings as JSON. Importing will overwrite current stored settings in sync storage.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Minimal init view (shown when current window has no label yet) -->
+  <div id="initRoot" class="content" style="display:none;">
+    <div class="menu-section">
+      <div class="menu-header"><span>Name this window</span></div>
+      <div class="menu-content expanded" style="display:block;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="initWindowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)">
+          <button id="initSaveWindowLabelBtn" class="btn-glass">Save</button>
+        </div>
+        <div class="help-text" style="margin-top:8px;">Set a short label so you can recognize this window. You can change this later in Settings.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

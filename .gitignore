@@ -1,0 +1,10 @@
+# Ignore project-local generated or helper folders
+AI/
+exclude/
+
+# OS/editor cruft (optional but helpful)
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
