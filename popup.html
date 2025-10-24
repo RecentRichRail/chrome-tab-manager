@@ -209,6 +209,13 @@
           </label>
         </div>
         <div class="actions"><span class="setting-label">Close after (seconds)</span><input type="number" id="closeDelayInput" class="form-input" value="5" min="1" max="300" style="width:80px;"></div>
+        <div class="actions">
+          <label class="glass-toggle">
+            <input type="checkbox" id="autoCloseBannerToggle" checked>
+            <span class="dot" aria-hidden="true"></span>
+            <span class="toggle-text">Show auto-close banner</span>
+          </label>
+        </div>
         <div class="url-list">
           <input type="text" id="urlInput" class="form-input" placeholder="Enter URL pattern (e.g., *login*, https://example.com/auth*)">
           <button id="addUrlBtn" class="btn-glass">Add URL Pattern</button>
@@ -292,6 +299,14 @@
             <option value="true">Close older tab</option>
           </select>
         </div>
+        <div class="actions">
+          <label class="glass-toggle">
+            <input type="checkbox" id="duplicateBannerToggle" checked>
+            <span class="dot" aria-hidden="true"></span>
+            <span class="toggle-text">Show duplicate banner</span>
+          </label>
+        </div>
+        <div class="actions"><span class="setting-label">Banner timer (seconds)</span><input type="number" id="duplicateBannerDelayInput" class="form-input" value="5" min="1" max="300" style="width:100px;"></div>
         <div class="url-list">
           <input type="text" id="duplicateAllowInput" class="form-input" placeholder="URLs allowed to have duplicates (e.g., *github.com*, https://docs.google.com*)">
           <button id="addDuplicateAllowBtn" class="btn-glass">Add Exception Pattern</button>
@@ -324,6 +339,13 @@
         <div style="display:flex;gap:8px;align-items:center;">
           <input id="initWindowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)">
           <button id="initSaveWindowLabelBtn" class="btn-glass">Save</button>
+        </div>
+        <div style="margin-top:6px;">
+          <label class="glass-toggle">
+            <input type="checkbox" id="initWindowLabelPrefixToggle" checked>
+            <span class="dot" aria-hidden="true"></span>
+            <span class="toggle-text">Show label prefix on page titles</span>
+          </label>
         </div>
         <div class="help-text" style="margin-top:8px;">Set a short label so you can recognize this window. You can change this later in Settings.</div>
       </div>

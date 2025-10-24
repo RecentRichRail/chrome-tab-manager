@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Chrome Tab Manager",
-  "version": "1.0",
+  "version": "1.001.066",
   "description": "A Chrome extension to manage tabs and show tab count",
   "permissions": [
     "tabs",

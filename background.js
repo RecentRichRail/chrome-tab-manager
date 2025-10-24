@@ -71,11 +71,11 @@ async function groupExistingTabsForRule(rule) {
     }
 
     console.log(`Checking existing tabs for rule: ${rule.groupName}`);
-    
+
     // Get all tabs across all windows
     const tabs = await chrome.tabs.query({});
     const matchingTabs = [];
-    
+
     // Find tabs that match this rule's patterns
     for (const tab of tabs) {
       if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
@@ -84,63 +84,59 @@ async function groupExistingTabsForRule(rule) {
           console.log(`Existing tab pattern check: "${pattern}" vs "${tab.url}" = ${result}`);
           return result;
         });
-        
+
         if (matches) {
           matchingTabs.push(tab);
           console.log(`✓ Found matching existing tab: ${tab.url} for rule ${rule.groupName}`);
         }
       }
     }
-    
+
     if (matchingTabs.length === 0) {
       console.log(`No existing tabs match rule ${rule.groupName}`);
       return;
     }
-    
+
     // Group tabs by window
     const tabsByWindow = {};
-    matchingTabs.forEach(tab => {
-      if (!tabsByWindow[tab.windowId]) {
-        tabsByWindow[tab.windowId] = [];
-      }
+    for (const tab of matchingTabs) {
+      if (!tabsByWindow[tab.windowId]) tabsByWindow[tab.windowId] = [];
       tabsByWindow[tab.windowId].push(tab);
-    });
-    
+    }
+
+    // For positioning/color defaults
+    const settings = await getAutoTabGroupingSettings();
+
     // Process each window
-    for (const [windowId, windowTabs] of Object.entries(tabsByWindow)) {
-      if (windowTabs.length === 0) continue;
-      
-      console.log(`Processing ${windowTabs.length} tabs in window ${windowId} for rule ${rule.groupName}`);
-      
-      // Check if a group with this name already exists in this window
-      const existingGroups = await chrome.tabGroups.query({ windowId: parseInt(windowId) });
+    for (const [windowIdStr, windowTabs] of Object.entries(tabsByWindow)) {
+      const windowId = Number(windowIdStr);
+      if (!Array.isArray(windowTabs) || windowTabs.length === 0) continue;
+
+      const existingGroups = await chrome.tabGroups.query({ windowId });
       let targetGroup = existingGroups.find(group => group.title === rule.groupName);
-      
+      const tabIds = windowTabs.map(t => t.id);
+
       if (targetGroup) {
-        console.log(`Found existing group "${rule.groupName}" in window ${windowId}`);
-        // Add tabs to existing group
-        const tabIds = windowTabs.map(tab => tab.id);
+        // Add all matching tabs to the existing group
         await chrome.tabs.group({ tabIds, groupId: targetGroup.id });
-      } else if (windowTabs.length > 0) {
-        console.log(`Creating new group "${rule.groupName}" in window ${windowId}`);
-        // Create new group with all matching tabs
-        const tabIds = windowTabs.map(tab => tab.id);
-        const groupId = await chrome.tabs.group({ tabIds });
-        
-        // Update group properties
-        const updateOptions = {
-          title: rule.groupName
-        };
-        
-        // Set color if specified
+        // Optionally update color/title to match rule
+        const updateOptions = { title: rule.groupName };
         if (rule.groupColor) {
-          updateOptions.color = rule.groupColor;
+          updateOptions.color = rule.groupColor === 'default' ? getRandomTabGroupColor() : rule.groupColor;
+        }
+        try { await chrome.tabGroups.update(targetGroup.id, updateOptions); } catch (e) {}
+        console.log(`Added ${tabIds.length} tab(s) to existing group "${targetGroup.title}" in window ${windowId}`);
+      } else {
+        // Create a new group
+        const groupId = await chrome.tabs.group({ tabIds });
+        const updateOptions = { title: rule.groupName };
+        if (rule.groupColor) {
+          updateOptions.color = rule.groupColor === 'default' ? getRandomTabGroupColor() : rule.groupColor;
         } else {
           updateOptions.color = getRandomTabGroupColor();
         }
-        
         await chrome.tabGroups.update(groupId, updateOptions);
-        console.log(`Created group "${rule.groupName}" with ${windowTabs.length} tabs`);
+        console.log(`Created group "${rule.groupName}" with ${windowTabs.length} tab(s) in window ${windowId}`);
       }
     }
   } catch (error) {
@@ -302,12 +298,14 @@ async function getDuplicatePreventionSettings() {
     const result = await chrome.storage.sync.get({
       duplicatePreventionEnabled: true,
       closeOlderTab: false, // false = close newer tab, true = close older tab
-      allowedDuplicatePatterns: []
+      allowedDuplicatePatterns: [],
+      duplicateBannerEnabled: true,
+      duplicateBannerDelaySeconds: 5
     });
     return result;
   } catch (error) {
     console.error('Error getting duplicate prevention settings:', error);
-    return { duplicatePreventionEnabled: true, closeOlderTab: false, allowedDuplicatePatterns: [] };
+    return { duplicatePreventionEnabled: true, closeOlderTab: false, allowedDuplicatePatterns: [], duplicateBannerEnabled: true, duplicateBannerDelaySeconds: 5 };
   }
 }
 
@@ -362,25 +360,41 @@ async function handleDuplicateTab(newTabId, newTabUrl) {
       try {
         const existingTab = await chrome.tabs.get(existingTabId);
         if (existingTab && normalizeUrl(existingTab.url) === normalizedUrl) {
-          // Decide which tab to close based on settings
-          const tabToClose = settings.closeOlderTab ? existingTabId : newTabId;
-          const tabToKeep = settings.closeOlderTab ? newTabId : existingTabId;
-          
           console.log(`Duplicate detected: ${normalizedUrl}`);
-          console.log(`Closing ${settings.closeOlderTab ? 'older' : 'newer'} tab (ID: ${tabToClose}) immediately`);
-          
-          // Update the map with the remaining tab BEFORE closing
-          tabUrlMap.set(normalizedUrl, tabToKeep);
-          
-          // Close the designated tab immediately
-          await chrome.tabs.remove(tabToClose);
-          
-          // Focus the remaining tab if we closed the newer one
-          if (!settings.closeOlderTab) {
-            await chrome.tabs.update(existingTabId, { active: true });
+          const defaultClosesOlder = !!settings.closeOlderTab;
+
+          // If banner is enabled, show a banner on the new tab and wait for decision; otherwise proceed immediately
+          if (settings.duplicateBannerEnabled) {
+            const token = `${Date.now()}_${newTabId}_${existingTabId}`;
+            pendingDuplicateBanners.set(token, {
+              token,
+              url: normalizedUrl,
+              newTabId,
+              existingTabId,
+              defaultClosesOlder
+            });
+            try {
+              await chrome.scripting.executeScript({
+                target: { tabId: newTabId },
+                func: injectedShowDuplicateBanner,
+                args: [
+                  {
+                    token,
+                    defaultClosesOlder,
+                    delaySeconds: Math.max(1, Math.min(300, Number(settings.duplicateBannerDelaySeconds) || 5))
+                  }
+                ]
+              });
+            } catch (e) {
+              console.warn('Failed to inject duplicate banner, falling back to immediate action', e);
+              await performDuplicateDefaultAction({ newTabId, existingTabId, defaultClosesOlder, normalizedUrl });
+            }
+            // Either way, stop further processing here; action will be handled by message or we already acted.
+            return;
+          } else {
+            await performDuplicateDefaultAction({ newTabId, existingTabId, defaultClosesOlder, normalizedUrl });
+            return;
           }
-          
-          return;
         }
       } catch (error) {
         // Existing tab no longer exists, remove from map
@@ -395,6 +409,156 @@ async function handleDuplicateTab(newTabId, newTabUrl) {
     console.error('Error handling duplicate tab:', error);
   }
 }
+
+// Track pending banners so we can apply the right action when the user clicks
+const pendingDuplicateBanners = new Map(); // token -> { token, url, newTabId, existingTabId, defaultClosesOlder }
+
+// Perform the default duplicate resolution action and fix focus behavior robustly
+async function performDuplicateDefaultAction({ newTabId, existingTabId, defaultClosesOlder, normalizedUrl }) {
+  try {
+    // Update the map with the remaining tab BEFORE closing
+    const tabToKeep = defaultClosesOlder ? newTabId : existingTabId;
+    tabUrlMap.set(normalizedUrl, tabToKeep);
+
+    if (defaultClosesOlder) {
+      // Close older = close existing, keep the new tab
+      try { await chrome.tabs.remove(existingTabId); } catch (e) { /* ignore */ }
+      // Keep focus on the new tab (already active usually)
+    } else {
+      // Close newer = focus existing, then close new
+      let existingTab = null;
+      try { existingTab = await chrome.tabs.get(existingTabId); } catch {}
+      if (existingTab && typeof existingTab.windowId !== 'undefined') {
+        try { await chrome.windows.update(existingTab.windowId, { focused: true }); } catch (e) {}
+      }
+      try { await chrome.tabs.update(existingTabId, { active: true }); } catch (e) {}
+      try { await chrome.tabs.remove(newTabId); } catch (e) { /* ignore */ }
+    }
+  } catch (e) {
+    console.error('performDuplicateDefaultAction failed', e);
+  }
+}
+
+// Injected function to show a top-of-page duplicate banner with countdown and action buttons
+function injectedShowDuplicateBanner(opts) {
+  try {
+    const token = opts && opts.token;
+    const defaultClosesOlder = !!(opts && opts.defaultClosesOlder);
+    let seconds = Math.max(1, Math.min(300, Number((opts && opts.delaySeconds) || 5)));
+      let decided = false;
+
+    // Avoid duplicating banners on the same page
+    if (window.__ctmDupBannerEl) {
+      try { window.__ctmDupBannerEl.remove(); } catch (e) {}
+      window.__ctmDupBannerEl = null;
+    }
+
+    const style = document.createElement('style');
+      style.textContent = `
+        .ctm-glass { background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.16));
+          backdrop-filter: blur(14px) saturate(180%); -webkit-backdrop-filter: blur(14px) saturate(180%);
+          border: 1px solid rgba(255,255,255,0.35); box-shadow: 0 10px 30px rgba(15,23,42,0.14); }
+        .ctm-dup-banner{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:2147483647;color:#0f172a;border-radius:14px;}
+        .ctm-dup-inner{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;}
+        .ctm-dup-title{font-weight:700}
+        .ctm-dup-spacer{flex:1}
+        .ctm-dup-btn{border:1px solid rgba(255,255,255,0.35);border-radius:10px;padding:8px 10px;font-weight:700;cursor:pointer;background: rgba(255,255,255,0.18);}
+        .ctm-dup-btn:hover{background: rgba(255,255,255,0.28)}
+        .ctm-dup-primary{color:#fff; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); border: none;}
+        .ctm-dup-secondary{color:#0f172a;}
+        .ctm-dup-timer{font-variant-numeric:tabular-nums;background: rgba(255,255,255,0.34); border: 1px solid rgba(255,255,255,0.35); border-radius:10px;padding:4px 8px}
+      `;
+    document.documentElement.appendChild(style);
+
+    const bar = document.createElement('div');
+      bar.className = 'ctm-dup-banner ctm-glass';
+    bar.innerHTML = `<div class="ctm-dup-inner">
+        <span class="ctm-dup-title">Duplicate tab detected</span>
+        <span class="ctm-dup-timer" id="ctmDupTimer">${seconds}s</span>
+        <span class="ctm-dup-spacer"></span>
+        <button class="ctm-dup-btn ctm-dup-primary" id="ctmDupDefaultBtn"></button>
+        <button class="ctm-dup-btn ctm-dup-secondary" id="ctmDupKeepBtn">Keep this duplicate</button>
+      </div>`;
+    document.documentElement.appendChild(bar);
+    window.__ctmDupBannerEl = bar;
+
+    // Set default action button label based on policy
+    const defaultBtn = bar.querySelector('#ctmDupDefaultBtn');
+    if (defaultClosesOlder) {
+      defaultBtn.textContent = 'Keep this tab (Close older)';
+    } else {
+      defaultBtn.textContent = 'Go to existing tab (Close newer)';
+    }
+
+    const send = (decision) => {
+        if (decided) return; decided = true;
+        try { chrome.runtime.sendMessage({ type: 'duplicateBannerAction', token, decision }); } catch (e) {}
+    };
+
+    defaultBtn.addEventListener('click', () => {
+      cleanup();
+      send('default');
+    });
+    const keepBtn = bar.querySelector('#ctmDupKeepBtn');
+    keepBtn.addEventListener('click', () => {
+      cleanup();
+      send('keep');
+    });
+
+    const timerEl = bar.querySelector('#ctmDupTimer');
+    const iv = setInterval(() => {
+        if (decided) { try { clearInterval(iv); } catch (e) {} return; }
+        seconds -= 1;
+      if (seconds <= 0) {
+        clearInterval(iv);
+          if (!decided) { cleanup(); send('default'); }
+      } else if (timerEl) {
+        timerEl.textContent = `${seconds}s`;
+      }
+    }, 1000);
+
+    function cleanup(){
+      try { clearInterval(iv); } catch (e) {}
+      try { if (bar && bar.parentElement) bar.parentElement.removeChild(bar); } catch (e) {}
+      try { if (style && style.parentElement) style.parentElement.removeChild(style); } catch (e) {}
+      try { delete window.__ctmDupBannerEl; } catch (e) {}
+    }
+  } catch (e) {
+    // ignore injection failures
+  }
+}
+
+// Receive decisions from the injected duplicate banner
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request && request.type === 'duplicateBannerAction') {
+    (async () => {
+      try {
+        const { token, decision } = request;
+        if (!token || !pendingDuplicateBanners.has(token)) { sendResponse && sendResponse({ ok: false }); return; }
+        const ctx = pendingDuplicateBanners.get(token);
+        pendingDuplicateBanners.delete(token);
+
+        if (decision === 'keep') {
+          // Do nothing; user chose to keep both
+          sendResponse && sendResponse({ ok: true });
+          return;
+        }
+
+        // Apply default action
+        await performDuplicateDefaultAction({
+          newTabId: ctx.newTabId,
+          existingTabId: ctx.existingTabId,
+          defaultClosesOlder: ctx.defaultClosesOlder,
+          normalizedUrl: ctx.url
+        });
+        sendResponse && sendResponse({ ok: true });
+      } catch (e) {
+        sendResponse && sendResponse({ ok: false, error: e.message });
+      }
+    })();
+    return true; // async
+  }
+});
 
 // Function to update tab URL mapping when tabs change
 async function updateTabUrlMap() {
@@ -459,13 +623,14 @@ async function getAutoCloseSettings() {
     const result = await chrome.storage.sync.get({
       autoCloseEnabled: false,
       closeDelay: 5,
-      urlPatterns: []
+      urlPatterns: [],
+      autoCloseBannerEnabled: true
     });
     console.log('Loaded auto-close settings:', result);
     return result;
   } catch (error) {
     console.error('Error getting auto-close settings:', error);
-    return { autoCloseEnabled: false, closeDelay: 5, urlPatterns: [] };
+    return { autoCloseEnabled: false, closeDelay: 5, urlPatterns: [], autoCloseBannerEnabled: true };
   }
 }
 
@@ -491,35 +656,40 @@ async function handleAutoClose(tabId, url) {
     });
     
     if (shouldClose) {
-      console.log(`Scheduling auto-close for tab ${tabId} (${url}) in ${settings.closeDelay} seconds`);
-      
-      // Clear any existing timeout for this tab
+      // Respect temporary suppression (e.g., user clicked "Do not close")
+      if (isAutoCloseSuppressed(tabId)) {
+        console.log(`Auto-close suppressed for tab ${tabId}`);
+        return;
+      }
+
+      console.log(`Scheduling auto-close banner for tab ${tabId} (${url}) with ${settings.closeDelay} second countdown`);
+
+      // Clear any existing timeout for this tab; the banner countdown will own timing
       if (autoCloseTimeouts.has(tabId)) {
         clearTimeout(autoCloseTimeouts.get(tabId));
+        autoCloseTimeouts.delete(tabId);
         console.log(`Cleared existing timeout for tab ${tabId}`);
       }
-      
-      // Set new timeout
-      const timeoutId = setTimeout(async () => {
+
+      if (settings.autoCloseBannerEnabled) {
+        // Attempt to inject auto-close banner; if injection fails, fallback to timeout close
+        const token = `ac_${Date.now()}_${tabId}`;
+        pendingAutoCloseBanners.set(token, { token, tabId, initialUrl: url, delay: settings.closeDelay });
         try {
-          console.log(`Auto-close timeout triggered for tab ${tabId}`);
-          // Check if tab still exists and hasn't been navigated away
-          const tab = await chrome.tabs.get(tabId);
-          if (tab && settings.urlPatterns.some(pattern => matchesPattern(tab.url, pattern))) {
-            await chrome.tabs.remove(tabId);
-            console.log(`Auto-closed tab: ${tab.url}`);
-          } else {
-            console.log(`Tab ${tabId} no longer matches patterns or doesn't exist`);
-          }
-        } catch (error) {
-          // Tab might already be closed, ignore error
-          console.log(`Tab ${tabId} already closed or not found:`, error.message);
-        } finally {
-          autoCloseTimeouts.delete(tabId);
+          await chrome.scripting.executeScript({
+            target: { tabId },
+            func: injectedShowAutoCloseBanner,
+            args: [{ token, seconds: Math.max(1, Math.min(300, Number(settings.closeDelay) || 5)) }]
+          });
+          console.log(`Injected auto-close banner for tab ${tabId}`);
+        } catch (e) {
+          console.warn('Failed to inject auto-close banner, falling back to timeout:', e?.message || e);
+          scheduleAutoCloseTimeout(tabId, settings);
         }
-      }, settings.closeDelay * 1000);
-      
-      autoCloseTimeouts.set(tabId, timeoutId);
+      } else {
+        // Banner disabled: schedule background timeout close
+        scheduleAutoCloseTimeout(tabId, settings);
+      }
     } else {
       console.log(`URL "${url}" does not match any auto-close patterns`);
     }
@@ -527,6 +697,165 @@ async function handleAutoClose(tabId, url) {
     console.error('Error handling auto-close:', error);
   }
 }
+
+function scheduleAutoCloseTimeout(tabId, settings) {
+  const delayMs = Math.max(1, Math.min(300, Number(settings.closeDelay) || 5)) * 1000;
+  const timeoutId = setTimeout(async () => {
+    try {
+      // Abort if suppressed in the meantime
+      if (isAutoCloseSuppressed(tabId)) {
+        autoCloseTimeouts.delete(tabId);
+        return;
+      }
+      console.log(`Auto-close timeout triggered for tab ${tabId}`);
+      const tab = await chrome.tabs.get(tabId);
+      if (tab && settings.urlPatterns.some(pattern => matchesPattern(tab.url, pattern))) {
+        await chrome.tabs.remove(tabId);
+        console.log(`Auto-closed tab: ${tab.url}`);
+      } else {
+        console.log(`Tab ${tabId} no longer matches patterns or doesn't exist`);
+      }
+    } catch (error) {
+      console.log(`Tab ${tabId} already closed or not found:`, error?.message || error);
+    } finally {
+      autoCloseTimeouts.delete(tabId);
+    }
+  }, delayMs);
+  autoCloseTimeouts.set(tabId, timeoutId);
+}
+
+// Track pending auto-close banners by token
+const pendingAutoCloseBanners = new Map(); // token -> { token, tabId, initialUrl, delay }
+
+// Suppression map for auto-close after user chooses "Do not close"
+const suppressedAutoCloseTabs = new Map(); // tabId -> expiresAt (ms since epoch)
+
+function isAutoCloseSuppressed(tabId) {
+  if (!suppressedAutoCloseTabs.has(tabId)) return false;
+  const expires = suppressedAutoCloseTabs.get(tabId);
+  if (Date.now() > expires) { suppressedAutoCloseTabs.delete(tabId); return false; }
+  return true;
+}
+
+// Injected function to show an auto-close top banner with countdown and buttons
+function injectedShowAutoCloseBanner(opts) {
+  try {
+    const token = opts && opts.token;
+    let seconds = Math.max(1, Math.min(300, Number((opts && opts.seconds) || 5)));
+    let decided = false;
+
+    // Prevent duplicates on the page
+    if (window.__ctmAcBannerEl) {
+      try { window.__ctmAcBannerEl.remove(); } catch (e) {}
+      window.__ctmAcBannerEl = null;
+    }
+
+    const style = document.createElement('style');
+    style.textContent = `
+      .ctm-glass { background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.16));
+        backdrop-filter: blur(14px) saturate(180%); -webkit-backdrop-filter: blur(14px) saturate(180%);
+        border: 1px solid rgba(255,255,255,0.35); box-shadow: 0 10px 30px rgba(15,23,42,0.14); }
+      .ctm-ac-banner{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:2147483647;color:#0f172a;border-radius:14px;}
+      .ctm-ac-inner{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;}
+      .ctm-ac-title{font-weight:700}
+      .ctm-ac-spacer{flex:1}
+      .ctm-ac-btn{border:1px solid rgba(255,255,255,0.35);border-radius:10px;padding:8px 10px;font-weight:700;cursor:pointer;background: rgba(255,255,255,0.18);}
+      .ctm-ac-btn:hover{background: rgba(255,255,255,0.28)}
+      .ctm-ac-primary{color:#fff; background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); border: none;}
+      .ctm-ac-secondary{color:#0f172a;}
+      .ctm-ac-timer{font-variant-numeric:tabular-nums;background: rgba(255,255,255,0.34); border: 1px solid rgba(255,255,255,0.35); border-radius:10px;padding:4px 8px}
+    `;
+    document.documentElement.appendChild(style);
+
+    const bar = document.createElement('div');
+    bar.className = 'ctm-ac-banner ctm-glass';
+    bar.innerHTML = `<div class="ctm-ac-inner">
+      <span class="ctm-ac-title">This tab will auto-close</span>
+      <span class="ctm-ac-timer" id="ctmAcTimer">${seconds}s</span>
+      <span class="ctm-ac-spacer"></span>
+      <button class="ctm-ac-btn ctm-ac-primary" id="ctmAcCloseNowBtn">Close now</button>
+      <button class="ctm-ac-btn ctm-ac-secondary" id="ctmAcKeepBtn">Do not close</button>
+    </div>`;
+    document.documentElement.appendChild(bar);
+    window.__ctmAcBannerEl = bar;
+
+    const send = (decision) => {
+      if (decided) return; decided = true;
+      try { chrome.runtime.sendMessage({ type: 'autoCloseBannerAction', token, decision }); } catch (e) {}
+    };
+
+    const closeBtn = bar.querySelector('#ctmAcCloseNowBtn');
+    const keepBtn = bar.querySelector('#ctmAcKeepBtn');
+    const timerEl = bar.querySelector('#ctmAcTimer');
+    const iv = setInterval(() => {
+      if (decided) { try { clearInterval(iv); } catch (e) {} return; }
+      seconds -= 1;
+      if (seconds <= 0) {
+        clearInterval(iv);
+        if (!decided) { cleanup(); send('close'); }
+      } else if (timerEl) {
+        timerEl.textContent = `${seconds}s`;
+      }
+    }, 1000);
+
+    closeBtn.addEventListener('click', () => { cleanup(); send('close'); });
+    keepBtn.addEventListener('click', () => { cleanup(); send('keep'); });
+
+    function cleanup(){
+      try { clearInterval(iv); } catch (e) {}
+      try { if (bar && bar.parentElement) bar.parentElement.removeChild(bar); } catch (e) {}
+      try { if (style && style.parentElement) style.parentElement.removeChild(style); } catch (e) {}
+      try { delete window.__ctmAcBannerEl; } catch (e) {}
+    }
+  } catch (e) {
+    // ignore
+  }
+}
+
+// Handle decisions from auto-close banner
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request && request.type === 'autoCloseBannerAction') {
+    (async () => {
+      try {
+        const { token, decision } = request;
+        if (!token || !pendingAutoCloseBanners.has(token)) { sendResponse && sendResponse({ ok: false }); return; }
+        const ctx = pendingAutoCloseBanners.get(token);
+        pendingAutoCloseBanners.delete(token);
+
+        // Clear any fallback timeout if one exists (shouldn't if injection succeeded, but safe)
+        if (autoCloseTimeouts.has(ctx.tabId)) {
+          try { clearTimeout(autoCloseTimeouts.get(ctx.tabId)); } catch {}
+          autoCloseTimeouts.delete(ctx.tabId);
+        }
+
+        if (decision === 'keep') {
+          // Suppress auto-close for this tab for at least closeDelay seconds (or 10s minimum)
+          try {
+            const settings = await getAutoCloseSettings();
+            const ms = Math.max(10000, (Number(settings.closeDelay) || 5) * 1000);
+            suppressedAutoCloseTabs.set(ctx.tabId, Date.now() + ms);
+          } catch {}
+          sendResponse && sendResponse({ ok: true });
+          return;
+        }
+
+        // decision === 'close' (via click or timeout)
+        try {
+          const settings = await getAutoCloseSettings();
+          const tab = await chrome.tabs.get(ctx.tabId);
+          if (tab && settings.urlPatterns.some(pattern => matchesPattern(tab.url, pattern))) {
+            await chrome.tabs.remove(ctx.tabId);
+            console.log(`Auto-closed tab via banner: ${tab.url}`);
+          }
+        } catch (e) { /* ignore */ }
+        sendResponse && sendResponse({ ok: true });
+      } catch (e) {
+        sendResponse && sendResponse({ ok: false, error: e.message });
+      }
+    })();
+    return true; // async
+  }
+});
 
 // Function to update the badge with the global tab count, and show '!' only for the active tab of an unnamed current window
 async function updateTabCountBadge() {

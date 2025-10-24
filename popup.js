@@ -4,15 +4,18 @@
 // Auto-close settings management
 let autoCloseSettings = {
   autoCloseEnabled: false,
-  closeDelay: 15,
-  urlPatterns: []
+  closeDelay: 5,
+  urlPatterns: [],
+  autoCloseBannerEnabled: true
 };
 
 // Duplicate prevention settings management
 let duplicatePreventionSettings = {
   duplicatePreventionEnabled: true,
   closeOlderTab: false,
-  allowedDuplicatePatterns: []
+  allowedDuplicatePatterns: [],
+  duplicateBannerEnabled: true,
+  duplicateBannerDelaySeconds: 5
 };
 
 // Auto-collapse settings management
@@ -34,13 +37,33 @@ let autoTabGroupingSettings = {
 // General extension settings (reserved for future)
 let generalSettings = {};
 
+// Helper: get the current browser windowId (not the popup window)
+async function getCurrentBrowserWindowId() {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (tabs && tabs.length && typeof tabs[0].windowId !== 'undefined') {
+      return String(tabs[0].windowId);
+    }
+  } catch (e) {
+    // ignore
+  }
+  try {
+    const win = await chrome.windows.getLastFocused();
+    if (win && typeof win.id !== 'undefined') return String(win.id);
+  } catch (e) {
+    // ignore
+  }
+  return null;
+}
+
 // Load settings from storage
 async function loadAutoCloseSettings() {
   try {
     const result = await chrome.storage.sync.get({
       autoCloseEnabled: false,
       closeDelay: 5,
-      urlPatterns: []
+      urlPatterns: [],
+      autoCloseBannerEnabled: true
     });
     autoCloseSettings = result;
     updateAutoCloseUI();
@@ -55,7 +78,9 @@ async function loadDuplicatePreventionSettings() {
     const result = await chrome.storage.sync.get({
       duplicatePreventionEnabled: true,
       closeOlderTab: false,
-      allowedDuplicatePatterns: []
+      allowedDuplicatePatterns: [],
+      duplicateBannerEnabled: true,
+      duplicateBannerDelaySeconds: 5
     });
     duplicatePreventionSettings = result;
     updateDuplicatePreventionUI();
@@ -156,6 +181,8 @@ async function saveAutoTabGroupingSettings() {
 function updateAutoCloseUI() {
   document.getElementById('autoCloseToggle').checked = autoCloseSettings.autoCloseEnabled;
   document.getElementById('closeDelayInput').value = autoCloseSettings.closeDelay;
+  const acBanner = document.getElementById('autoCloseBannerToggle');
+  if (acBanner) acBanner.checked = !!autoCloseSettings.autoCloseBannerEnabled;
   updateUrlList();
 }
 
@@ -163,6 +190,10 @@ function updateAutoCloseUI() {
 function updateDuplicatePreventionUI() {
   document.getElementById('duplicatePreventionToggle').checked = duplicatePreventionSettings.duplicatePreventionEnabled;
   document.getElementById('duplicateActionSelect').value = duplicatePreventionSettings.closeOlderTab.toString();
+  const bannerToggle = document.getElementById('duplicateBannerToggle');
+  if (bannerToggle) bannerToggle.checked = !!duplicatePreventionSettings.duplicateBannerEnabled;
+  const bannerDelay = document.getElementById('duplicateBannerDelayInput');
+  if (bannerDelay) bannerDelay.value = duplicatePreventionSettings.duplicateBannerDelaySeconds || 5;
   updateDuplicateAllowList();
 }
 
@@ -753,8 +784,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Determine if this window is named, and if not, show a minimal init view
   (async () => {
     try {
-      const win = await chrome.windows.getCurrent();
-      const windowId = String(win.id);
+      const windowId = await getCurrentBrowserWindowId();
+      if (!windowId) return;
       chrome.runtime.sendMessage({ type: 'getWindowLabel', windowId }, (resp) => {
         const label = resp && resp.label ? resp.label : '';
         const headerTitle = document.getElementById('headerTitle');
@@ -775,6 +806,11 @@ document.addEventListener('DOMContentLoaded', () => {
           if (openSettingsBtn) openSettingsBtn.style.display = 'none';
           const initInput = document.getElementById('initWindowLabelInput');
           if (initInput) initInput.focus();
+          // Initialize init toggle from per-window state (defaults to true)
+          const initToggle = document.getElementById('initWindowLabelPrefixToggle');
+          chrome.runtime.sendMessage({ type: 'getWindowLabelPrefixEnabled', windowId }, (r) => {
+            if (initToggle) initToggle.checked = !!(r && r.ok ? r.enabled : true);
+          });
         } else {
           const input = document.getElementById('windowLabelInput');
           if (input) input.value = label;
@@ -788,8 +824,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize and wire the "Show label prefix on page titles" toggle (per-window)
   (async () => {
     try {
-      const win = await chrome.windows.getCurrent();
-      chrome.runtime.sendMessage({ type: 'getWindowLabelPrefixEnabled', windowId: String(win.id) }, (resp) => {
+      const windowId = await getCurrentBrowserWindowId();
+      if (!windowId) return;
+      chrome.runtime.sendMessage({ type: 'getWindowLabelPrefixEnabled', windowId }, (resp) => {
         const toggle = document.getElementById('windowLabelPrefixToggle');
         if (toggle) toggle.checked = !!(resp && resp.ok ? resp.enabled : true);
       });
@@ -802,9 +839,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (prefixToggle) {
     prefixToggle.addEventListener('change', async (e) => {
       try {
-        const win = await chrome.windows.getCurrent();
+        const windowId = await getCurrentBrowserWindowId();
+        if (!windowId) return;
         // Persist per-window and immediately apply/clear on current window
-        chrome.runtime.sendMessage({ type: 'applyWindowLabelPrefix', enabled: e.target.checked, windowId: String(win.id) }, () => {});
+        chrome.runtime.sendMessage({ type: 'applyWindowLabelPrefix', enabled: e.target.checked, windowId }, () => {});
       } catch (err) {
         console.error('Failed to apply window label prefix setting', err);
       }
@@ -816,8 +854,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Save window label
   document.getElementById('saveWindowLabelBtn').addEventListener('click', async () => {
     try {
-      const win = await chrome.windows.getCurrent();
-      const windowId = String(win.id);
+      const windowId = await getCurrentBrowserWindowId();
+      if (!windowId) return;
       const label = document.getElementById('windowLabelInput').value.trim();
       chrome.runtime.sendMessage({ type: 'setWindowLabel', windowId, label }, (resp) => {
         if (resp && resp.ok) {
@@ -837,13 +875,33 @@ document.addEventListener('DOMContentLoaded', () => {
   if (initSaveBtn) {
     initSaveBtn.addEventListener('click', async () => {
       try {
-        const win = await chrome.windows.getCurrent();
-        const windowId = String(win.id);
+        const windowId = await getCurrentBrowserWindowId();
+        if (!windowId) return;
         const label = document.getElementById('initWindowLabelInput').value.trim();
-        chrome.runtime.sendMessage({ type: 'setWindowLabel', windowId, label }, (resp) => {
+        const initToggle = document.getElementById('initWindowLabelPrefixToggle');
+        const prefixEnabled = initToggle ? !!initToggle.checked : true;
+        chrome.runtime.sendMessage({ type: 'setWindowLabel', windowId, label }, async (resp) => {
           if (resp && resp.ok) {
-            // Refresh the popup to initialize full UI cleanly
-            window.location.reload();
+            // Apply/clear prefix immediately for this window
+            chrome.runtime.sendMessage({ type: 'applyWindowLabelPrefix', enabled: prefixEnabled, windowId }, () => {});
+            // Transition UI to full explorer without requiring reopen
+            try {
+              const headerTitle = document.getElementById('headerTitle');
+              const explorerRoot = document.getElementById('explorerRoot');
+              const settingsRoot = document.getElementById('settingsRoot');
+              const initRoot = document.getElementById('initRoot');
+              if (headerTitle) headerTitle.textContent = 'Tab Explorer';
+              if (explorerRoot) explorerRoot.style.display = '';
+              if (settingsRoot) settingsRoot.style.display = '';
+              if (initRoot) initRoot.style.display = 'none';
+              const settingsInput = document.getElementById('windowLabelInput');
+              if (settingsInput) settingsInput.value = label;
+              const settingsToggle = document.getElementById('windowLabelPrefixToggle');
+              if (settingsToggle) settingsToggle.checked = prefixEnabled;
+              // Refresh counts and list
+              try { await updateTabCount(); } catch {}
+              try { await buildWindowExplorer(); } catch {}
+            } catch {}
           } else if (resp && resp.error) {
             alert('Failed to save label: ' + resp.error);
           }
@@ -1474,6 +1532,11 @@ document.addEventListener('DOMContentLoaded', () => {
       saveAutoCloseSettings();
     }
   });
+  const autoCloseBannerToggle = document.getElementById('autoCloseBannerToggle');
+  if (autoCloseBannerToggle) autoCloseBannerToggle.addEventListener('change', (e) => {
+    autoCloseSettings.autoCloseBannerEnabled = e.target.checked;
+    saveAutoCloseSettings();
+  });
   
   document.getElementById('addUrlBtn').addEventListener('click', addUrlPattern);
   
@@ -1496,6 +1559,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('duplicateActionSelect').addEventListener('change', (e) => {
     duplicatePreventionSettings.closeOlderTab = e.target.value === 'true';
     saveDuplicatePreventionSettings();
+  });
+
+  const duplicateBannerToggle = document.getElementById('duplicateBannerToggle');
+  if (duplicateBannerToggle) duplicateBannerToggle.addEventListener('change', (e) => {
+    duplicatePreventionSettings.duplicateBannerEnabled = e.target.checked;
+    saveDuplicatePreventionSettings();
+  });
+
+  const duplicateBannerDelayInput = document.getElementById('duplicateBannerDelayInput');
+  if (duplicateBannerDelayInput) duplicateBannerDelayInput.addEventListener('change', (e) => {
+    const v = parseInt(e.target.value);
+    if (Number.isFinite(v) && v >= 1 && v <= 300) {
+      duplicatePreventionSettings.duplicateBannerDelaySeconds = v;
+      saveDuplicatePreventionSettings();
+    }
   });
   
   document.getElementById('addDuplicateAllowBtn').addEventListener('click', addDuplicateAllowPattern);
