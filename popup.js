@@ -1051,9 +1051,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (filterSelect) filterSelect.addEventListener('change', () => buildWindowExplorer());
   if (sortSelect) sortSelect.addEventListener('change', () => buildWindowExplorer());
 
+  // ⚡ Bolt Performance Optimization:
+  // Debounce the search input to prevent rapid, unnecessary DOM rebuilds
+  // and async calls to chrome.windows.getAll on every keystroke.
+  let searchTimeoutId = null;
   document.getElementById('windowSearchInput').addEventListener('input', (e) => {
-    // Rebuild to support the alternate grouped-by-title layout when filtering
-    buildWindowExplorer();
+    if (searchTimeoutId) clearTimeout(searchTimeoutId);
+    searchTimeoutId = setTimeout(() => {
+      // Rebuild to support the alternate grouped-by-title layout when filtering
+      buildWindowExplorer();
+    }, 250);
   });
 
   // Build explorer on open by default
