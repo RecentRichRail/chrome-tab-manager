@@ -1,6 +1,10 @@
 // Popup script for Chrome Tab Manager
 // This script handles the popup interface interactions
 
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]; });
+}
+
 // Auto-close settings management
 let autoCloseSettings = {
   autoCloseEnabled: false,
@@ -222,7 +226,7 @@ function updateUrlList() {
     const item = document.createElement('div');
     item.className = 'url-item';
     item.innerHTML = `
-      <code class="url-text" data-index="${index}" title="Click to edit">${pattern}</code>
+      <code class="url-text" data-index="${index}" title="Click to edit">${escapeHtml(pattern)}</code>
       <div class="url-item-buttons">
         <button class="edit-btn" data-index="${index}" title="Edit">Edit</button>
         <button class="remove-btn" data-index="${index}" title="Remove">Remove</button>
@@ -241,7 +245,7 @@ function updateDuplicateAllowList() {
     const item = document.createElement('div');
     item.className = 'url-item';
     item.innerHTML = `
-      <code class="duplicate-url-text" data-index="${index}" title="Click to edit">${pattern}</code>
+      <code class="duplicate-url-text" data-index="${index}" title="Click to edit">${escapeHtml(pattern)}</code>
       <div class="url-item-buttons">
         <button class="duplicate-edit-btn" data-index="${index}" title="Edit">Edit</button>
         <button class="duplicate-remove-btn" data-index="${index}" title="Remove">Remove</button>
@@ -268,7 +272,7 @@ function updateGroupRuleList() {
     item.innerHTML = `
       <div class="group-rule-header">
         <div class="group-rule-info">
-          <div class="group-rule-name">${rule.groupName}${colorDisplay}</div>
+          <div class="group-rule-name">${escapeHtml(rule.groupName)}${colorDisplay}</div>
           <div class="group-rule-pattern">${patterns.length} URL pattern${patterns.length !== 1 ? 's' : ''}</div>
         </div>
         <div class="group-rule-buttons">
@@ -280,7 +284,7 @@ function updateGroupRuleList() {
       <div class="group-rule-patterns" id="patterns-${index}" style="display: none;">
         ${patterns.map((pattern, patternIndex) => `
           <div class="pattern-item">
-            <span class="pattern-text">${pattern}</span>
+            <span class="pattern-text">${escapeHtml(pattern)}</span>
             <button class="remove-btn remove-pattern-btn" data-rule-index="${index}" data-pattern-index="${patternIndex}" title="Remove">×</button>
           </div>
         `).join('')}
@@ -306,7 +310,7 @@ function startEditingUrl(index) {
   item.classList.add('editing');
   
   item.innerHTML = `
-    <input type="text" class="url-edit-input" value="${currentPattern}" data-index="${index}">
+    <input type="text" class="url-edit-input" value="${escapeHtml(currentPattern)}" data-index="${index}">
     <div class="url-item-buttons">
       <button class="save-btn" data-index="${index}" title="Save">Save</button>
       <button class="cancel-btn" data-index="${index}" title="Cancel">Cancel</button>
@@ -364,7 +368,7 @@ function startEditingDuplicateAllowUrl(index) {
   item.classList.add('editing');
   
   item.innerHTML = `
-    <input type="text" class="duplicate-url-edit-input" value="${currentPattern}" data-index="${index}">
+    <input type="text" class="duplicate-url-edit-input" value="${escapeHtml(currentPattern)}" data-index="${index}">
     <div class="url-item-buttons">
       <button class="duplicate-save-btn" data-index="${index}" title="Save">Save</button>
       <button class="duplicate-cancel-btn" data-index="${index}" title="Cancel">Cancel</button>
@@ -556,7 +560,7 @@ function startEditingGroupRule(index) {
     <div class="group-rule-edit-form">
       <div class="form-row">
         <span class="form-label">Name:</span>
-        <input type="text" class="form-input group-rule-name-edit" value="${rule.groupName}" data-index="${index}">
+        <input type="text" class="form-input group-rule-name-edit" value="${escapeHtml(rule.groupName)}" data-index="${index}">
       </div>
       <div class="form-row">
         <span class="form-label">Color:</span>
@@ -1490,9 +1494,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, function(c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]; });
-  }
   
   // Add group management event listeners
   document.getElementById('expandAllBtn').addEventListener('click', expandAllGroups);

@@ -1,0 +1,4 @@
+## 2024-07-07 - XSS in User-Controlled Configuration via innerHTML
+**Vulnerability:** DOM-based Cross-Site Scripting (XSS) vulnerability found in `popup.js` where user-controlled configuration data (e.g., URL patterns, tab group names) was interpolated directly into `.innerHTML` strings without prior sanitization.
+**Learning:** Even internal configuration settings like URL matching patterns or UI group labels, which are typically perceived as "trusted" because they are self-configured, become an attack vector if synchronized across devices or manipulated via other extensions or stored settings.
+**Prevention:** Establish a strict policy of utilizing `escapeHtml` for all dynamic data being injected into `.innerHTML`, or preferably, use DOM APIs like `.textContent` and `.createElement` which are inherently safe against injection.
