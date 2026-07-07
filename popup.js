@@ -285,7 +285,7 @@ function updateGroupRuleList() {
         ${patterns.map((pattern, patternIndex) => `
           <div class="pattern-item">
             <span class="pattern-text">${escapeHtml(pattern)}</span>
-            <button class="remove-btn remove-pattern-btn" data-rule-index="${index}" data-pattern-index="${patternIndex}" title="Remove">×</button>
+            <button class="remove-btn remove-pattern-btn" data-rule-index="${index}" data-pattern-index="${patternIndex}" title="Remove" aria-label="Remove pattern">×</button>
           </div>
         `).join('')}
         <div class="add-pattern-form">
@@ -1253,7 +1253,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="font-size:13px;font-weight:600;color:#111827;">${escapeHtml(baseTitle)}</div>
                   </div>
                   <div style="margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;">
-                    <button class="close-tab-btn" title="Close tab" data-tabid="${tab.tabId}">✕</button>
+                    <button class="close-tab-btn" title="Close tab" aria-label="Close tab" data-tabid="${tab.tabId}">✕</button>
                   </div>
                 `;
                 gContent.appendChild(tEl);
@@ -1363,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style=\"font-size:13px;font-weight:600;color:#111827;\">${escapeHtml(tab.title || '(no title)')}</div>\
                 </div>
                 <div style=\"margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;\">\
-                  <button class=\"close-tab-btn\" title=\"Close tab\" data-tabid=\"${tab.id}\">✕</button>\
+                  <button class=\"close-tab-btn\" title=\"Close tab\" aria-label=\"Close tab\" data-tabid=\"${tab.id}\">✕</button>\
                 </div>
               `;
               groupContent.appendChild(tEl);
