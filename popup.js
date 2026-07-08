@@ -1243,6 +1243,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tEl = document.createElement('div');
                 tEl.className = 'url-item explorer-tab-item';
                 tEl.style.margin = '6px 0';
+                tEl.setAttribute('role', 'button');
+                tEl.setAttribute('tabindex', '0');
                 tEl.dataset.title = String(tab.title || '(no title)');
                 tEl.dataset.url = String(tab.url || '');
                 tEl.dataset.tabid = String(tab.tabId);
@@ -1353,6 +1355,8 @@ document.addEventListener('DOMContentLoaded', () => {
               const tEl = document.createElement('div');
               tEl.className = 'url-item explorer-tab-item';
               tEl.style.margin = '6px 0';
+              tEl.setAttribute('role', 'button');
+              tEl.setAttribute('tabindex', '0');
               tEl.dataset.title = String(tab.title || '(no title)');
               tEl.dataset.url = String(tab.url || '');
               tEl.dataset.tabid = String(tab.id);
@@ -1394,10 +1398,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // wire up tab click to activate
+      // wire up tab click and keydown to activate
       container.querySelectorAll('.explorer-tab-item').forEach(item => {
-        item.addEventListener('click', async (e) => {
-          // Ignore clicks on the close button
+        const activateTab = async (e) => {
+          // Ignore interactions on the close button
           if (e.target && e.target.classList.contains('close-tab-btn')) return;
           const tabId = Number(item.dataset.tabid);
           const windowId = Number(item.dataset.windowid);
@@ -1407,6 +1411,14 @@ document.addEventListener('DOMContentLoaded', () => {
             window.close();
           } catch (err) {
             console.error('Failed to go to tab', err);
+          }
+        };
+
+        item.addEventListener('click', activateTab);
+        item.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            activateTab(e);
           }
         });
       });
