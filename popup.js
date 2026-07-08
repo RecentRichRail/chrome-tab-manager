@@ -267,7 +267,7 @@ function updateGroupRuleList() {
     
     // Display patterns count
     const patterns = rule.patterns || [];
-    const colorDisplay = rule.groupColor ? ` (${rule.groupColor})` : ' (random)';
+    const colorDisplay = rule.groupColor ? ` (${escapeHtml(rule.groupColor)})` : ' (random)';
     
     item.innerHTML = `
       <div class="group-rule-header">
