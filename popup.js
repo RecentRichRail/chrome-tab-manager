@@ -1084,6 +1084,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // Helper: escape a string for use in RegExp
       const escapeRegExp = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+      const labelRegexCache = new Map();
+
       // Helper: strip a window label prefix like "[Label] " from a title, but only
       // if it matches the known label for that window. This avoids stripping
       // legitimate bracketed prefixes in real page titles.
@@ -1091,7 +1093,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const lbl = labelMap[String(windowId)];
         if (!lbl) return title || '(no title)';
         try {
-          const re = new RegExp('^\\[' + escapeRegExp(lbl) + '\\]\\s*');
+          let re = labelRegexCache.get(lbl);
+          if (!re) {
+            re = new RegExp('^\\[' + escapeRegExp(lbl) + '\\]\\s*');
+            labelRegexCache.set(lbl, re);
+          }
           const base = (title || '(no title)').replace(re, '').trim();
           return base || '(no title)';
         } catch {
@@ -1137,19 +1143,27 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (filterMode === 'autoclose') {
         const ac = await chrome.storage.sync.get({ autoCloseEnabled: false, urlPatterns: [] });
         const patterns = ac.urlPatterns || [];
-        const matchesPattern = (url, pattern) => {
+
+        // Pre-compile regexes outside the loop to improve performance
+        const compiledRegexes = [];
+        for (const pattern of patterns) {
+          if (!pattern) continue;
           try {
-            if (!pattern || !url) return false;
             let rp = '';
             for (let i = 0; i < pattern.length; i++) {
               const ch = pattern[i];
               if (ch === '*') rp += '.*'; else if (/[.+^${}()|[\]\\]/.test(ch)) rp += '\\' + ch; else rp += ch;
             }
-            const re = new RegExp('^' + rp + '$', 'i');
-            return re.test(url);
-          } catch { return false; }
-        };
-        filteredTabs = allTabs.filter(t => patterns.some(p => matchesPattern(t.url, p)));
+            compiledRegexes.push(new RegExp('^' + rp + '$', 'i'));
+          } catch {
+            // Ignore invalid patterns
+          }
+        }
+
+        filteredTabs = allTabs.filter(t => {
+          if (!t.url) return false;
+          return compiledRegexes.some(re => re.test(t.url));
+        });
       }
 
       // Sort
