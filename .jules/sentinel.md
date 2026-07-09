@@ -7,3 +7,8 @@
 **Vulnerability:** A Stored XSS vulnerability existed where `rule.groupColor` (loaded from JSON settings) was directly injected into the DOM via `innerHTML` without HTML escaping in `popup.js`.
 **Learning:** Even internal configuration properties like colors, when imported from user-controlled files (like JSON setting imports), can be vectors for XSS if injected directly into HTML strings.
 **Prevention:** Always sanitize or escape EVERY property from imported JSON objects before rendering them into the DOM via `innerHTML`, or prefer safe DOM methods like `textContent`.
+
+## 2026-07-09 - [ReDoS via Unsanitized Wildcard to Regex Conversion]
+**Vulnerability:** A Regular Expression Denial of Service (ReDoS) vulnerability existed in `matchesPattern` (in both `background.js` and `popup.js`) where user-defined wildcard patterns containing multiple consecutive asterisks (e.g., `***a***`) were converted naively into `.*.*.*a.*.*.*`. When executed against non-matching strings, this could cause catastrophic backtracking, potentially hanging the extension's background worker permanently (Persistent DoS) if the pattern was imported via a malicious JSON configuration.
+**Learning:** Naive conversion of wildcards (`*`) to regex match-alls (`.*`) is dangerous if the input allows for consecutive wildcards without optimization. An attacker can craft a configuration that triggers exponential regex evaluation times.
+**Prevention:** Always sanitize wildcard inputs by collapsing consecutive wildcards (e.g., `pattern.replace(/\*+/g, '*')`) before converting them into regular expressions to mitigate catastrophic backtracking.

@@ -1140,9 +1140,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const matchesPattern = (url, pattern) => {
           try {
             if (!pattern || !url) return false;
+            const safePattern = pattern.replace(/\*+/g, '*');
             let rp = '';
-            for (let i = 0; i < pattern.length; i++) {
-              const ch = pattern[i];
+            for (let i = 0; i < safePattern.length; i++) {
+              const ch = safePattern[i];
               if (ch === '*') rp += '.*'; else if (/[.+^${}()|[\]\\]/.test(ch)) rp += '\\' + ch; else rp += ch;
             }
             const re = new RegExp('^' + rp + '$', 'i');

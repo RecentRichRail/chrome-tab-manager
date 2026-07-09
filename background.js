@@ -589,10 +589,13 @@ function matchesPattern(url, pattern) {
       return false;
     }
     
+    // Collapse consecutive wildcards to prevent ReDoS (Regular Expression Denial of Service)
+    const safePattern = pattern.replace(/\*+/g, '*');
+
     // Convert pattern to regex step by step
     let regexPattern = '';
-    for (let i = 0; i < pattern.length; i++) {
-      const char = pattern[i];
+    for (let i = 0; i < safePattern.length; i++) {
+      const char = safePattern[i];
       if (char === '*') {
         regexPattern += '.*'; // Wildcard becomes .*
       } else if (/[.+^${}()|[\]\\]/.test(char)) {
