@@ -684,9 +684,11 @@ function toggleMenu(headerId, contentId) {
   if (isExpanded) {
     content.classList.remove('expanded');
     arrow.classList.remove('expanded');
+    header.setAttribute('aria-expanded', 'false');
   } else {
     content.classList.add('expanded');
     arrow.classList.add('expanded');
+    header.setAttribute('aria-expanded', 'true');
   }
 }
 
@@ -1210,6 +1212,8 @@ document.addEventListener('DOMContentLoaded', () => {
           titleDiv.className = 'menu-section explorer-title';
           const headerEl = document.createElement('div');
           headerEl.className = 'menu-header';
+          headerEl.setAttribute('role', 'button');
+          headerEl.setAttribute('tabindex', '0');
           // Count total tabs under this title across windows/groups
           let totalCount = 0;
           for (const m of winMap.values()) { for (const tabs of m.values()) totalCount += tabs.length; }
@@ -1226,6 +1230,8 @@ document.addEventListener('DOMContentLoaded', () => {
             winSection.className = 'menu-section explorer-window';
             const wHeader = document.createElement('div');
             wHeader.className = 'menu-header';
+            wHeader.setAttribute('role', 'button');
+            wHeader.setAttribute('tabindex', '0');
             wHeader.innerHTML = `<span>${escapeHtml(headerTitle)}</span><span class="menu-arrow">▶</span>`;
             const wContent = document.createElement('div');
             wContent.className = 'menu-content';
@@ -1247,6 +1253,8 @@ document.addEventListener('DOMContentLoaded', () => {
               }
               const gHeader = document.createElement('div');
               gHeader.className = 'group-rule-header explorer-group-header';
+              gHeader.setAttribute('role', 'button');
+              gHeader.setAttribute('tabindex', '0');
               gHeader.innerHTML = `<div class="group-rule-name">${escapeHtml(groupTitle)}</div><span class="menu-arrow">▶</span>`;
               const gContent = document.createElement('div');
               gContent.className = 'explorer-group-content';
@@ -1285,35 +1293,64 @@ document.addEventListener('DOMContentLoaded', () => {
             contentEl.appendChild(winSection);
 
             // toggles
-            wHeader.addEventListener('click', () => {
+            const toggleWindow = () => {
               const expand = wContent.style.display === 'none';
               wContent.style.display = expand ? 'block' : 'none';
+              wHeader.setAttribute('aria-expanded', expand.toString());
               const arrow = wHeader.querySelector('.menu-arrow');
               if (arrow) arrow.classList.toggle('expanded', expand);
+            };
+            wHeader.addEventListener('click', toggleWindow);
+            wHeader.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleWindow();
+              }
             });
+            // Initial ARIA state
+            wHeader.setAttribute('aria-expanded', 'false');
           }
 
           titleGrid.appendChild(titleDiv);
           titleDiv.appendChild(headerEl);
           titleDiv.appendChild(contentEl);
-          headerEl.addEventListener('click', () => {
+          const toggleTitle = () => {
             const expand = contentEl.style.display === 'none';
             contentEl.style.display = expand ? 'block' : 'none';
+            headerEl.setAttribute('aria-expanded', expand.toString());
             const arrow = headerEl.querySelector('.menu-arrow');
             if (arrow) arrow.classList.toggle('expanded', expand);
+          };
+          headerEl.addEventListener('click', toggleTitle);
+          headerEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleTitle();
+            }
           });
+          // Initial ARIA state
+          headerEl.setAttribute('aria-expanded', 'false');
 
           // Wire group toggles inside titles
           contentEl.querySelectorAll('.explorer-group-header').forEach(h => {
-            h.addEventListener('click', () => {
+            const toggleGroup = () => {
               const gc = h.parentElement.querySelector('.explorer-group-content');
               if (gc) {
                 const expand = gc.style.display === 'none';
                 gc.style.display = expand ? 'block' : 'none';
+                h.setAttribute('aria-expanded', expand.toString());
                 const arrow = h.querySelector('.menu-arrow');
                 if (arrow) arrow.classList.toggle('expanded', expand);
               }
+            };
+            h.addEventListener('click', toggleGroup);
+            h.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleGroup();
+              }
             });
+            h.setAttribute('aria-expanded', 'false');
           });
         }
       } else {
@@ -1325,6 +1362,8 @@ document.addEventListener('DOMContentLoaded', () => {
           const headerTitle = winLabel ? `${winLabel}` : `Window ${w.id}`;
           const headerEl = document.createElement('div');
           headerEl.className = 'menu-header';
+          headerEl.setAttribute('role', 'button');
+          headerEl.setAttribute('tabindex', '0');
           headerEl.innerHTML = `<span>${escapeHtml(headerTitle)}</span><span class=\"menu-arrow\">▶</span>`;
           const contentEl = document.createElement('div');
           contentEl.className = 'menu-content';
@@ -1359,6 +1398,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const groupHeader = document.createElement('div');
             groupHeader.className = 'group-rule-header explorer-group-header';
+            groupHeader.setAttribute('role', 'button');
+            groupHeader.setAttribute('tabindex', '0');
             groupHeader.innerHTML = `<div class=\"group-rule-name\">${escapeHtml(groupTitle)}</div><span class=\"menu-arrow\">▶</span>`;
             const groupContent = document.createElement('div');
             groupContent.className = 'explorer-group-content';
@@ -1392,22 +1433,40 @@ document.addEventListener('DOMContentLoaded', () => {
             groupsContainer.appendChild(groupContainer);
           }
 
-          headerEl.addEventListener('click', () => {
+          const toggleWindowStatic = () => {
             const expand = contentEl.style.display === 'none';
             contentEl.style.display = expand ? 'block' : 'none';
+            headerEl.setAttribute('aria-expanded', expand.toString());
             const arrow = headerEl.querySelector('.menu-arrow');
             if (arrow) arrow.classList.toggle('expanded', expand);
+          };
+          headerEl.addEventListener('click', toggleWindowStatic);
+          headerEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleWindowStatic();
+            }
           });
+          headerEl.setAttribute('aria-expanded', 'false');
           groupsContainer.querySelectorAll('.explorer-group-header').forEach(h => {
-            h.addEventListener('click', () => {
+            const toggleStaticGroup = () => {
               const gc = h.parentElement.querySelector('.explorer-group-content');
               if (gc) {
                 const expand = gc.style.display === 'none';
                 gc.style.display = expand ? 'block' : 'none';
+                h.setAttribute('aria-expanded', expand.toString());
                 const arrow = h.querySelector('.menu-arrow');
                 if (arrow) arrow.classList.toggle('expanded', expand);
               }
+            };
+            h.addEventListener('click', toggleStaticGroup);
+            h.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleStaticGroup();
+              }
             });
+            h.setAttribute('aria-expanded', 'false');
           });
         }
       }
@@ -1525,16 +1584,47 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('expandAllBtn').addEventListener('click', expandAllGroups);
   document.getElementById('collapseAllBtn').addEventListener('click', collapseAllGroups);
   
-  // Add auto-collapse menu event listeners
-  document.getElementById('autoCollapseHeader').addEventListener('click', () => {
-    toggleMenu('autoCollapseHeader', 'autoCollapseContent');
+  // Initialize static header ARIA states
+  ['windowNameHeader', 'autoCollapseHeader', 'autoCloseHeader', 'autoTabGroupingHeader', 'duplicatePreventionHeader', 'importExportHeader'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.setAttribute('aria-expanded', 'false');
   });
+
+  // Add auto-collapse menu event listeners
+  const autoCollapseHeader = document.getElementById('autoCollapseHeader');
+  if (autoCollapseHeader) {
+    autoCollapseHeader.addEventListener('click', () => {
+      toggleMenu('autoCollapseHeader', 'autoCollapseContent');
+    });
+    autoCollapseHeader.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleMenu('autoCollapseHeader', 'autoCollapseContent');
+      }
+    });
+  }
 
   // Collapsible: Window Name and Import/Export sections
   const windowNameHeader = document.getElementById('windowNameHeader');
-  if (windowNameHeader) windowNameHeader.addEventListener('click', () => toggleMenu('windowNameHeader', 'windowNameContent'));
+  if (windowNameHeader) {
+    windowNameHeader.addEventListener('click', () => toggleMenu('windowNameHeader', 'windowNameContent'));
+    windowNameHeader.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleMenu('windowNameHeader', 'windowNameContent');
+      }
+    });
+  }
   const importExportHeader = document.getElementById('importExportHeader');
-  if (importExportHeader) importExportHeader.addEventListener('click', () => toggleMenu('importExportHeader', 'importExportContent'));
+  if (importExportHeader) {
+    importExportHeader.addEventListener('click', () => toggleMenu('importExportHeader', 'importExportContent'));
+    importExportHeader.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleMenu('importExportHeader', 'importExportContent');
+      }
+    });
+  }
   
   document.getElementById('autoCollapseToggle').addEventListener('change', (e) => {
     autoCollapseSettings.autoCollapseEnabled = e.target.checked;
@@ -1550,9 +1640,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   // Add auto-close menu event listeners
-  document.getElementById('autoCloseHeader').addEventListener('click', () => {
-    toggleMenu('autoCloseHeader', 'autoCloseContent');
-  });
+  const autoCloseHeader = document.getElementById('autoCloseHeader');
+  if (autoCloseHeader) {
+    autoCloseHeader.addEventListener('click', () => {
+      toggleMenu('autoCloseHeader', 'autoCloseContent');
+    });
+    autoCloseHeader.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleMenu('autoCloseHeader', 'autoCloseContent');
+      }
+    });
+  }
   
   document.getElementById('autoCloseToggle').addEventListener('change', (e) => {
     autoCloseSettings.autoCloseEnabled = e.target.checked;
@@ -1581,9 +1680,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   // Add duplicate prevention menu event listeners
-  document.getElementById('duplicatePreventionHeader').addEventListener('click', () => {
-    toggleMenu('duplicatePreventionHeader', 'duplicatePreventionContent');
-  });
+  const duplicatePreventionHeader = document.getElementById('duplicatePreventionHeader');
+  if (duplicatePreventionHeader) {
+    duplicatePreventionHeader.addEventListener('click', () => {
+      toggleMenu('duplicatePreventionHeader', 'duplicatePreventionContent');
+    });
+    duplicatePreventionHeader.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleMenu('duplicatePreventionHeader', 'duplicatePreventionContent');
+      }
+    });
+  }
   
   document.getElementById('duplicatePreventionToggle').addEventListener('change', (e) => {
     duplicatePreventionSettings.duplicatePreventionEnabled = e.target.checked;
@@ -1619,9 +1727,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   // Add auto tab grouping menu event listeners
-  document.getElementById('autoTabGroupingHeader').addEventListener('click', () => {
-    toggleMenu('autoTabGroupingHeader', 'autoTabGroupingContent');
-  });
+  const autoTabGroupingHeader = document.getElementById('autoTabGroupingHeader');
+  if (autoTabGroupingHeader) {
+    autoTabGroupingHeader.addEventListener('click', () => {
+      toggleMenu('autoTabGroupingHeader', 'autoTabGroupingContent');
+    });
+    autoTabGroupingHeader.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleMenu('autoTabGroupingHeader', 'autoTabGroupingContent');
+      }
+    });
+  }
   
   document.getElementById('autoTabGroupingToggle').addEventListener('change', (e) => {
     autoTabGroupingSettings.autoTabGroupingEnabled = e.target.checked;
