@@ -1151,9 +1151,11 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const pattern of patterns) {
           if (!pattern) continue;
           try {
+            // Collapse consecutive wildcards to prevent ReDoS (Regular Expression Denial of Service)
+            const safePattern = pattern.replace(/\*+/g, '*');
             let rp = '';
-            for (let i = 0; i < pattern.length; i++) {
-              const ch = pattern[i];
+            for (let i = 0; i < safePattern.length; i++) {
+              const ch = safePattern[i];
               if (ch === '*') rp += '.*'; else if (/[.+^${}()|[\]\\]/.test(ch)) rp += '\\' + ch; else rp += ch;
             }
             compiledRegexes.push(new RegExp('^' + rp + '$', 'i'));
