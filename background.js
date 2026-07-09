@@ -581,6 +581,10 @@ async function updateTabUrlMap() {
   }
 }
 
+// Cache for compiled regular expressions to avoid recompiling on every check
+const patternRegexCache = new Map();
+const MAX_REGEX_CACHE_SIZE = 500;
+
 // Function to check if a URL matches a pattern with wildcards
 function matchesPattern(url, pattern) {
   try {
@@ -589,25 +593,39 @@ function matchesPattern(url, pattern) {
       return false;
     }
     
-    // Convert pattern to regex step by step
-    let regexPattern = '';
-    for (let i = 0; i < pattern.length; i++) {
-      const char = pattern[i];
-      if (char === '*') {
-        regexPattern += '.*'; // Wildcard becomes .*
-      } else if (/[.+^${}()|[\]\\]/.test(char)) {
-        regexPattern += '\\' + char; // Escape special regex chars
-      } else {
-        regexPattern += char; // Regular character
+    let regex = patternRegexCache.get(pattern);
+
+    if (!regex) {
+      // Convert pattern to regex step by step
+      let regexPattern = '';
+      for (let i = 0; i < pattern.length; i++) {
+        const char = pattern[i];
+        if (char === '*') {
+          regexPattern += '.*'; // Wildcard becomes .*
+        } else if (/[.+^${}()|[\]\\]/.test(char)) {
+          regexPattern += '\\' + char; // Escape special regex chars
+        } else {
+          regexPattern += char; // Regular character
+        }
       }
+
+      regex = new RegExp(`^${regexPattern}$`, 'i');
+
+      // Manage cache size to prevent memory leaks
+      if (patternRegexCache.size >= MAX_REGEX_CACHE_SIZE) {
+        // Remove the first inserted item (simplest eviction policy)
+        const firstKey = patternRegexCache.keys().next().value;
+        patternRegexCache.delete(firstKey);
+      }
+      patternRegexCache.set(pattern, regex);
     }
     
-    const regex = new RegExp(`^${regexPattern}$`, 'i');
     const result = regex.test(url);
     
     // Only log for debugging when needed
     if (result || pattern.includes('spicerhome.net')) {
-      console.log(`Pattern match: "${pattern}" -> regex: "^${regexPattern}$" vs "${url}" = ${result}`);
+      // Use regex.source to reconstruct what was logged previously
+      console.log(`Pattern match: "${pattern}" -> regex: "^${regex.source}$" vs "${url}" = ${result}`);
     }
     
     return result;
