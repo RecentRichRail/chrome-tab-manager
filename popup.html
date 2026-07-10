@@ -130,16 +130,16 @@
 
   <div id="explorerRoot" class="content">
     <div class="explorer-search-top">
-      <input id="windowSearchInput" type="text" class="form-input" placeholder="Search page titles or URLs...">
+      <input id="windowSearchInput" type="text" class="form-input" placeholder="Search page titles or URLs..." aria-label="Search page titles or URLs">
     </div>
     <div class="glass-card" style="padding:12px;">
       <div class="explorer-toolbar">
-        <select id="windowFilterSelect" class="dropdown-select" style="width:180px;">
+        <select id="windowFilterSelect" class="dropdown-select" style="width:180px;" aria-label="Filter windows">
           <option value="all">All pages</option>
           <option value="duplicates">Duplicates</option>
           <option value="autoclose">Auto-close candidates</option>
         </select>
-        <select id="windowSortSelect" class="dropdown-select" style="width:200px;">
+        <select id="windowSortSelect" class="dropdown-select" style="width:200px;" aria-label="Sort windows">
           <option value="title-asc">Sort: Title (A–Z)</option>
           <option value="lastAccessed-desc">Sort: Last accessed (recent first)</option>
         </select>
@@ -170,7 +170,7 @@
       <div class="menu-header" id="windowNameHeader" role="button" tabindex="0"><span>Window Name</span><span class="menu-arrow">▶</span></div>
       <div class="menu-content" id="windowNameContent">
         <div style="display:flex;gap:8px;align-items:center;">
-          <input id="windowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)" />
+          <input id="windowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)" aria-label="Give this window a name" />
           <button id="saveWindowLabelBtn" class="btn-glass">Save</button>
         </div>
         <div class="help-text" style="margin-top:8px;">This prefix will be added to the title of each tab in this window so the OS window title shows it when that tab is active.</div>
@@ -194,7 +194,7 @@
             <span class="toggle-text">Enable Auto-Collapse</span>
           </label>
         </div>
-        <div class="actions"><span class="setting-label">Collapse delay (seconds)</span><input type="number" id="collapseDelayInput" class="form-input" value="3" min="1" max="30" style="width:80px;"></div>
+        <div class="actions"><span class="setting-label">Collapse delay (seconds)</span><input type="number" id="collapseDelayInput" class="form-input" value="3" min="1" max="30" style="width:80px;" aria-label="Collapse delay in seconds"></div>
         <div class="help-text">Automatically collapses inactive tab groups when you switch to a different group.</div>
       </div>
     </div>
@@ -209,7 +209,7 @@
             <span class="toggle-text">Enable Auto-Close</span>
           </label>
         </div>
-        <div class="actions"><span class="setting-label">Close after (seconds)</span><input type="number" id="closeDelayInput" class="form-input" value="5" min="1" max="300" style="width:80px;"></div>
+        <div class="actions"><span class="setting-label">Close after (seconds)</span><input type="number" id="closeDelayInput" class="form-input" value="5" min="1" max="300" style="width:80px;" aria-label="Auto-close delay in seconds"></div>
         <div class="actions">
           <label class="glass-toggle">
             <input type="checkbox" id="autoCloseBannerToggle" checked>
@@ -218,7 +218,7 @@
           </label>
         </div>
         <div class="url-list">
-          <input type="text" id="urlInput" class="form-input" placeholder="Enter URL pattern (e.g., *login*, https://example.com/auth*)">
+          <input type="text" id="urlInput" class="form-input" placeholder="Enter URL pattern (e.g., *login*, https://example.com/auth*)" aria-label="Enter URL pattern">
           <button id="addUrlBtn" class="btn-glass">Add URL Pattern</button>
           <div id="urlListContainer"></div>
         </div>
@@ -257,15 +257,15 @@
           </label>
         </div>
         <div class="actions"><span class="setting-label">Add tabs to</span>
-          <select id="addTabPositionSelect" class="dropdown-select" style="width:120px;">
+          <select id="addTabPositionSelect" class="dropdown-select" style="width:120px;" aria-label="Add tabs to position">
             <option value="right">Right</option>
             <option value="left">Left</option>
           </select>
         </div>
         <div class="url-list">
           <div style="display:flex; gap:8px;">
-            <input type="text" id="groupRuleNameInput" class="form-input" placeholder="Group name (e.g., Development)">
-            <select id="groupRuleColorSelect" class="dropdown-select" style="width:140px;">
+            <input type="text" id="groupRuleNameInput" class="form-input" placeholder="Group name (e.g., Development)" aria-label="Group name">
+            <select id="groupRuleColorSelect" class="dropdown-select" style="width:140px;" aria-label="Group rule color">
               <option value="">Random</option>
               <option value="grey">Grey</option>
               <option value="blue">Blue</option>
@@ -295,7 +295,7 @@
           </label>
         </div>
         <div class="actions"><span class="setting-label">When duplicate found</span>
-          <select id="duplicateActionSelect" class="dropdown-select" style="width:200px;">
+          <select id="duplicateActionSelect" class="dropdown-select" style="width:200px;" aria-label="Duplicate action">
             <option value="false">Close newer tab</option>
             <option value="true">Close older tab</option>
           </select>
@@ -307,9 +307,9 @@
             <span class="toggle-text">Show duplicate banner</span>
           </label>
         </div>
-        <div class="actions"><span class="setting-label">Banner timer (seconds)</span><input type="number" id="duplicateBannerDelayInput" class="form-input" value="5" min="1" max="300" style="width:100px;"></div>
+        <div class="actions"><span class="setting-label">Banner timer (seconds)</span><input type="number" id="duplicateBannerDelayInput" class="form-input" value="5" min="1" max="300" style="width:100px;" aria-label="Duplicate banner timer in seconds"></div>
         <div class="url-list">
-          <input type="text" id="duplicateAllowInput" class="form-input" placeholder="URLs allowed to have duplicates (e.g., *github.com*, https://docs.google.com*)">
+          <input type="text" id="duplicateAllowInput" class="form-input" placeholder="URLs allowed to have duplicates (e.g., *github.com*, https://docs.google.com*)" aria-label="URLs allowed to have duplicates">
           <button id="addDuplicateAllowBtn" class="btn-glass">Add Exception Pattern</button>
           <div id="duplicateAllowListContainer"></div>
         </div>
@@ -338,7 +338,7 @@
       <div class="menu-header"><span>Name this window</span></div>
       <div class="menu-content expanded" style="display:block;">
         <div style="display:flex;gap:8px;align-items:center;">
-          <input id="initWindowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)">
+          <input id="initWindowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)" aria-label="Give this window a name">
           <button id="initSaveWindowLabelBtn" class="btn-glass">Save</button>
         </div>
         <div style="margin-top:6px;">
