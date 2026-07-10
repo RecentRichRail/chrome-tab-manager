@@ -1076,8 +1076,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('windowListContainer');
     container.innerHTML = '';
     try {
-      // get windows and their tabs
-      const windows = await chrome.windows.getAll({ populate: true });
+      // get windows, tabs, and tab groups
+      const [windows, allGroupsList] = await Promise.all([
+        chrome.windows.getAll({ populate: true }),
+        chrome.tabGroups.query({})
+      ]);
+      const groupMap = new Map(allGroupsList.map(g => [String(g.id), g]));
+
       const labels = await new Promise(resolve => chrome.runtime.sendMessage({ type: 'getAllWindowLabels' }, resolve));
       const labelMap = (labels && labels.labels) ? labels.labels : {};
       const filterMode = (document.getElementById('windowFilterSelect')?.value) || 'all';
@@ -1249,7 +1254,7 @@ document.addEventListener('DOMContentLoaded', () => {
               let groupTitle = 'Ungrouped';
               if (gid !== 'ungrouped') {
                 try {
-                  const tg = await chrome.tabGroups.get(Number(gid));
+                  const tg = groupMap.get(String(gid));
                   groupTitle = tg && tg.title ? tg.title : `Group ${gid}`;
                 } catch { groupTitle = `Group ${gid}`; }
               }
@@ -1394,7 +1399,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let groupTitle = 'Ungrouped';
             if (gid !== 'ungrouped') {
               try {
-                const tg = await chrome.tabGroups.get(Number(gid));
+                const tg = groupMap.get(String(gid));
                 groupTitle = tg && tg.title ? tg.title : `Group ${gid}`;
               } catch { groupTitle = `Group ${gid}`; }
             }
