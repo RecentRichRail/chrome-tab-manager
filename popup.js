@@ -289,7 +289,7 @@ function updateGroupRuleList() {
           </div>
         `).join('')}
         <div class="add-pattern-form">
-          <input type="text" class="pattern-input" placeholder="URL pattern (e.g., *github.com*)" id="pattern-input-${index}">
+          <input type="text" class="pattern-input" placeholder="URL pattern (e.g., *github.com*)" id="pattern-input-${index}" aria-label="URL pattern">
           <button class="add-pattern-btn" data-rule-index="${index}" title="Add Pattern">Add</button>
         </div>
       </div>
@@ -310,7 +310,7 @@ function startEditingUrl(index) {
   item.classList.add('editing');
   
   item.innerHTML = `
-    <input type="text" class="url-edit-input" value="${escapeHtml(currentPattern)}" data-index="${index}">
+    <input type="text" class="url-edit-input" value="${escapeHtml(currentPattern)}" data-index="${index}" aria-label="URL edit">
     <div class="url-item-buttons">
       <button class="save-btn" data-index="${index}" title="Save">Save</button>
       <button class="cancel-btn" data-index="${index}" title="Cancel">Cancel</button>
@@ -368,7 +368,7 @@ function startEditingDuplicateAllowUrl(index) {
   item.classList.add('editing');
   
   item.innerHTML = `
-    <input type="text" class="duplicate-url-edit-input" value="${escapeHtml(currentPattern)}" data-index="${index}">
+    <input type="text" class="duplicate-url-edit-input" value="${escapeHtml(currentPattern)}" data-index="${index}" aria-label="Duplicate URL edit">
     <div class="url-item-buttons">
       <button class="duplicate-save-btn" data-index="${index}" title="Save">Save</button>
       <button class="duplicate-cancel-btn" data-index="${index}" title="Cancel">Cancel</button>
@@ -560,11 +560,11 @@ function startEditingGroupRule(index) {
     <div class="group-rule-edit-form">
       <div class="form-row">
         <span class="form-label">Name:</span>
-        <input type="text" class="form-input group-rule-name-edit" value="${escapeHtml(rule.groupName)}" data-index="${index}">
+        <input type="text" class="form-input group-rule-name-edit" value="${escapeHtml(rule.groupName)}" data-index="${index}" aria-label="Group rule name">
       </div>
       <div class="form-row">
         <span class="form-label">Color:</span>
-        <select class="color-select group-rule-color-edit" data-index="${index}">
+        <select class="color-select group-rule-color-edit" data-index="${index}" aria-label="Group rule color">
           <option value="">Random</option>
           <option value="grey" ${rule.groupColor === 'grey' ? 'selected' : ''}>Grey</option>
           <option value="blue" ${rule.groupColor === 'blue' ? 'selected' : ''}>Blue</option>
