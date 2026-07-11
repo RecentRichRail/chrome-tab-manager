@@ -81,13 +81,13 @@ async function groupExistingTabsForRule(rule) {
       if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
         const matches = rule.patterns.some(pattern => {
           const result = matchesPattern(tab.url, pattern);
-          console.log(`Existing tab pattern check: "${pattern}" vs "${tab.url}" = ${result}`);
+          console.log(`Existing tab pattern check: "${pattern}" vs "${sanitizeUrlForLog(tab.url)}" = ${result}`);
           return result;
         });
 
         if (matches) {
           matchingTabs.push(tab);
-          console.log(`✓ Found matching existing tab: ${tab.url} for rule ${rule.groupName}`);
+          console.log(`✓ Found matching existing tab: ${sanitizeUrlForLog(tab.url)} for rule ${rule.groupName}`);
         }
       }
     }
@@ -172,7 +172,7 @@ async function handleAutoTabGrouping(tabId, url) {
       return;
     }
     
-    console.log(`Auto tab grouping check for tab ${tabId}: ${url}`);
+    console.log(`Auto tab grouping check for tab ${tabId}: ${sanitizeUrlForLog(url)}`);
     console.log(`Available tab grouping rules:`, settings.tabGroupRules.map(rule => ({
       groupName: rule.groupName,
       patterns: rule.patterns,
@@ -202,23 +202,23 @@ async function handleAutoTabGrouping(tabId, url) {
       
       const matches = rule.patterns.some(pattern => {
         const result = matchesPattern(url, pattern);
-        console.log(`Tab grouping pattern check: "${pattern}" vs "${url}" = ${result}`);
+        console.log(`Tab grouping pattern check: "${pattern}" vs "${sanitizeUrlForLog(url)}" = ${result}`);
         return result;
       });
       
       if (matches) {
-        console.log(`✓ Found matching tab grouping rule: "${rule.groupName}" for URL: ${url}`);
+        console.log(`✓ Found matching tab grouping rule: "${rule.groupName}" for URL: ${sanitizeUrlForLog(url)}`);
       }
       
       return matches;
     });
     
     if (!matchingRule) {
-      console.log(`No matching rule found for URL: ${url}`);
+      console.log(`No matching rule found for URL: ${sanitizeUrlForLog(url)}`);
       return;
     }
     
-    console.log(`Found matching rule for ${url}: ${matchingRule.groupName}`);
+    console.log(`Found matching rule for ${sanitizeUrlForLog(url)}: ${matchingRule.groupName}`);
     
     // Find existing group with the same name in the same window
     const existingGroups = await chrome.tabGroups.query({ 
@@ -292,6 +292,18 @@ function normalizeUrl(url) {
   }
 }
 
+// Function to sanitize URLs for logging to prevent sensitive data exposure
+function sanitizeUrlForLog(urlStr) {
+  if (!urlStr) return String(urlStr);
+  try {
+    const u = new URL(urlStr);
+    return u.origin + u.pathname;
+  } catch (error) {
+    return '[invalid/redacted url]';
+  }
+}
+
+
 // Function to get duplicate prevention settings from storage
 async function getDuplicatePreventionSettings() {
   try {
@@ -330,7 +342,7 @@ function isAllowedDuplicate(url, patterns) {
   return patterns.some(pattern => {
     const matchesOriginal = matchesPattern(url, pattern);
     const matchesNormalized = matchesPattern(normalizedUrl, pattern);
-    console.log(`Duplicate check: Pattern "${pattern}" vs Original "${url}": ${matchesOriginal}, vs Normalized "${normalizedUrl}": ${matchesNormalized}`);
+    console.log(`Duplicate check: Pattern "${pattern}" vs Original "${sanitizeUrlForLog(url)}": ${matchesOriginal}, vs Normalized "${sanitizeUrlForLog(normalizedUrl)}": ${matchesNormalized}`);
     return matchesOriginal || matchesNormalized;
   });
 }
@@ -348,7 +360,7 @@ async function handleDuplicateTab(newTabId, newTabUrl) {
     
     // Check if this URL is allowed to have duplicates using the original URL
     if (isAllowedDuplicate(newTabUrl, settings.allowedDuplicatePatterns)) {
-      console.log(`URL allowed to have duplicates: ${newTabUrl} (normalized: ${normalizedUrl})`);
+      console.log(`URL allowed to have duplicates: ${sanitizeUrlForLog(newTabUrl)} (normalized: ${sanitizeUrlForLog(normalizedUrl)})`);
       tabUrlMap.set(normalizedUrl, newTabId); // Still track it
       return;
     }
@@ -360,7 +372,7 @@ async function handleDuplicateTab(newTabId, newTabUrl) {
       try {
         const existingTab = await chrome.tabs.get(existingTabId);
         if (existingTab && normalizeUrl(existingTab.url) === normalizedUrl) {
-          console.log(`Duplicate detected: ${normalizedUrl}`);
+          console.log(`Duplicate detected: ${sanitizeUrlForLog(normalizedUrl)}`);
           const defaultClosesOlder = !!settings.closeOlderTab;
 
           // If banner is enabled, show a banner on the new tab and wait for decision; otherwise proceed immediately
@@ -628,12 +640,12 @@ function matchesPattern(url, pattern) {
     // Only log for debugging when needed
     if (result || pattern.includes('spicerhome.net')) {
       // Use regex.source to reconstruct what was logged previously
-      console.log(`Pattern match: "${pattern}" -> regex: "^${regex.source}$" vs "${url}" = ${result}`);
+      console.log(`Pattern match: "${pattern}" -> regex: "^${regex.source}$" vs "${sanitizeUrlForLog(url)}" = ${result}`);
     }
     
     return result;
   } catch (error) {
-    console.error(`Error in pattern matching for pattern "${pattern}" and URL "${url}":`, error);
+    console.error(`Error in pattern matching for pattern "${pattern}" and URL "${sanitizeUrlForLog(url)}":`, error);
     return false;
   }
 }
@@ -660,7 +672,7 @@ async function handleAutoClose(tabId, url) {
   try {
     const settings = await getAutoCloseSettings();
     
-    console.log(`Auto-close check for tab ${tabId}: enabled=${settings.autoCloseEnabled}, patterns=${settings.urlPatterns.length}, url=${url}`);
+    console.log(`Auto-close check for tab ${tabId}: enabled=${settings.autoCloseEnabled}, patterns=${settings.urlPatterns.length}, url=${sanitizeUrlForLog(url)}`);
     
     if (!settings.autoCloseEnabled || !settings.urlPatterns.length) {
       console.log(`Auto-close skipped: enabled=${settings.autoCloseEnabled}, patterns=${settings.urlPatterns.length}`);
@@ -671,7 +683,7 @@ async function handleAutoClose(tabId, url) {
     const shouldClose = settings.urlPatterns.some(pattern => {
       const matches = matchesPattern(url, pattern);
       if (matches) {
-        console.log(`✓ Auto-close pattern "${pattern}" matches "${url}"`);
+        console.log(`✓ Auto-close pattern "${pattern}" matches "${sanitizeUrlForLog(url)}"`);
       }
       return matches;
     });
@@ -683,7 +695,7 @@ async function handleAutoClose(tabId, url) {
         return;
       }
 
-      console.log(`Scheduling auto-close banner for tab ${tabId} (${url}) with ${settings.closeDelay} second countdown`);
+      console.log(`Scheduling auto-close banner for tab ${tabId} (${sanitizeUrlForLog(url)}) with ${settings.closeDelay} second countdown`);
 
       // Clear any existing timeout for this tab; the banner countdown will own timing
       if (autoCloseTimeouts.has(tabId)) {
@@ -712,7 +724,7 @@ async function handleAutoClose(tabId, url) {
         scheduleAutoCloseTimeout(tabId, settings);
       }
     } else {
-      console.log(`URL "${url}" does not match any auto-close patterns`);
+      console.log(`URL "${sanitizeUrlForLog(url)}" does not match any auto-close patterns`);
     }
   } catch (error) {
     console.error('Error handling auto-close:', error);
@@ -732,7 +744,7 @@ function scheduleAutoCloseTimeout(tabId, settings) {
       const tab = await chrome.tabs.get(tabId);
       if (tab && settings.urlPatterns.some(pattern => matchesPattern(tab.url, pattern))) {
         await chrome.tabs.remove(tabId);
-        console.log(`Auto-closed tab: ${tab.url}`);
+        console.log(`Auto-closed tab: ${sanitizeUrlForLog(tab.url)}`);
       } else {
         console.log(`Tab ${tabId} no longer matches patterns or doesn't exist`);
       }
@@ -866,7 +878,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const tab = await chrome.tabs.get(ctx.tabId);
           if (tab && settings.urlPatterns.some(pattern => matchesPattern(tab.url, pattern))) {
             await chrome.tabs.remove(ctx.tabId);
-            console.log(`Auto-closed tab via banner: ${tab.url}`);
+            console.log(`Auto-closed tab via banner: ${sanitizeUrlForLog(tab.url)}`);
           }
         } catch (e) { /* ignore */ }
         sendResponse && sendResponse({ ok: true });
@@ -1307,7 +1319,7 @@ chrome.tabs.onCreated.addListener((tab) => {
     
     // Also check for auto-close when tab is created with URL
     handleAutoClose(tab.id, tab.url);
-    console.log(`Tab created with URL: ${tab.url}, checking auto-close`);
+    console.log(`Tab created with URL: ${sanitizeUrlForLog(tab.url)}, checking auto-close`);
     
     // Handle auto tab grouping
     handleAutoTabGrouping(tab.id, tab.url);
@@ -1344,7 +1356,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   // Handle auto-close when URL changes (both on URL change and completion)
   if (changeInfo.url && !changeInfo.url.startsWith('chrome://') && !changeInfo.url.startsWith('chrome-extension://')) {
     handleAutoClose(tabId, changeInfo.url);
-    console.log(`Tab ${tabId} URL changed to: ${changeInfo.url}, checking auto-close`);
+    console.log(`Tab ${tabId} URL changed to: ${sanitizeUrlForLog(changeInfo.url)}, checking auto-close`);
     
     // Handle auto tab grouping on URL change
     handleAutoTabGrouping(tabId, changeInfo.url);
@@ -1353,7 +1365,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   // Also check on status complete for auto-close (in case URL was set earlier)
   if (changeInfo.status === 'complete' && tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
     handleAutoClose(tabId, tab.url);
-    console.log(`Tab ${tabId} loading complete: ${tab.url}, checking auto-close`);
+    console.log(`Tab ${tabId} loading complete: ${sanitizeUrlForLog(tab.url)}, checking auto-close`);
     
     // Handle auto tab grouping on completion
     handleAutoTabGrouping(tabId, tab.url);

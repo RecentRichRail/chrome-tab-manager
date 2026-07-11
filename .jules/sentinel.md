@@ -12,3 +12,7 @@
 **Vulnerability:** A Regular Expression Denial of Service (ReDoS) vulnerability existed in `matchesPattern` (in both `background.js` and `popup.js`) where user-defined wildcard patterns containing multiple consecutive asterisks (e.g., `***a***`) were converted naively into `.*.*.*a.*.*.*`. When executed against non-matching strings, this could cause catastrophic backtracking, potentially hanging the extension's background worker permanently (Persistent DoS) if the pattern was imported via a malicious JSON configuration.
 **Learning:** Naive conversion of wildcards (`*`) to regex match-alls (`.*`) is dangerous if the input allows for consecutive wildcards without optimization. An attacker can craft a configuration that triggers exponential regex evaluation times.
 **Prevention:** Always sanitize wildcard inputs by collapsing consecutive wildcards (e.g., `pattern.replace(/\*+/g, '*')`) before converting them into regular expressions to mitigate catastrophic backtracking.
+## 2024-05-18 - URL Logging Exposes Sensitive Data
+**Vulnerability:** The extension logged raw URLs to the background console on every tab creation, update, match, and close event.
+**Learning:** These raw URLs often contain sensitive parameters (like OAuth tokens or PII). The console.log statements were intended for debugging but inadvertently created a potential data leak via the extension's logs.
+**Prevention:** Implement a sanitizeUrlForLog function to strip query parameters and fragments (retaining only origin + pathname) before passing URLs to console.log.
