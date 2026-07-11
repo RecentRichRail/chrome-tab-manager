@@ -1202,8 +1202,24 @@ async function collapseInactiveGroups() {
 
     const currentGroupId = activeTab.groupId;
     
-    // Get all tab groups in the current window
-    const tabGroups = await chrome.tabGroups.query({ windowId: activeTab.windowId });
+    // ⚡ Bolt Performance Optimization:
+    // Fetch all tab groups AND all tabs in the window concurrently to avoid N+1 query problem.
+    // Previously, chrome.tabs.query was called inside the loop for each group.
+    const [tabGroups, allWindowTabs] = await Promise.all([
+      chrome.tabGroups.query({ windowId: activeTab.windowId }),
+      chrome.tabs.query({ windowId: activeTab.windowId })
+    ]);
+
+    // Group tabs by groupId for O(1) lookup
+    const tabsByGroupId = new Map();
+    for (const tab of allWindowTabs) {
+      if (tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) {
+        if (!tabsByGroupId.has(tab.groupId)) {
+          tabsByGroupId.set(tab.groupId, []);
+        }
+        tabsByGroupId.get(tab.groupId).push(tab);
+      }
+    }
     
     for (const group of tabGroups) {
       // Skip the currently active group and already collapsed groups
@@ -1212,9 +1228,9 @@ async function collapseInactiveGroups() {
       }
       
       // Check if this group has any tabs that were recently active
-      const groupTabs = await chrome.tabs.query({ groupId: group.id });
+      const groupTabs = tabsByGroupId.get(group.id) || [];
       const hasRecentActivity = groupTabs.some(tab => 
-        Date.now() - tab.lastAccessed < 5000 // 5 seconds threshold
+        Date.now() - (tab.lastAccessed || 0) < 5000 // 5 seconds threshold
       );
       
       // Collapse the group if no recent activity
