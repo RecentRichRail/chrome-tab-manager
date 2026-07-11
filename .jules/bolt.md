@@ -5,3 +5,6 @@
 ## 2024-07-10 - N+1 Query in Chrome TabGroups API
 **Learning:** Calling `chrome.tabGroups.get()` inside loops while building UI causes an N+1 query problem that blocks main thread rendering, making the popup feel sluggish when users have many tab groups.
 **Action:** When building UIs that depend on tab group data, fetch all groups upfront using `chrome.tabGroups.query({})` and store them in a Map for fast O(1) synchronous lookups during the render loop.
+## 2026-07-11 - N+1 Query in Chrome TabGroups API
+**Learning:** Calling `chrome.tabs.query({ groupId: ... })` inside loops while building UI or background operations (like `collapseInactiveGroups`) causes an N+1 query problem that blocks the extension's execution thread, making the operation sluggish when users have many tab groups.
+**Action:** When performing operations that depend on tab group data across multiple groups, fetch all tabs for the window upfront using `chrome.tabs.query({ windowId: ... })` and group them by `groupId` in a Map for fast O(1) synchronous lookups during the loop.
