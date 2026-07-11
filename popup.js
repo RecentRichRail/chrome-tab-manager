@@ -1188,6 +1188,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return (tab.title || '').toLowerCase().includes(searchQ) || (tab.url || '').toLowerCase().includes(searchQ);
       };
 
+      const hasVisibleTabs = filteredTabs.some(searchFilter);
+      if (!hasVisibleTabs) {
+        container.innerHTML = `
+          <div style="text-align:center; padding: 40px 20px; color: var(--muted);">
+            <svg viewBox="0 0 24 24" style="width:48px;height:48px;margin:0 auto 12px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <div style="font-size:15px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No tabs found</div>
+            <div style="font-size:13px;">Try adjusting your search or filters.</div>
+          </div>
+        `;
+        return;
+      }
+
       const usingTopLevelByTitle = filterMode !== 'all' || !!searchQ;
 
       if (usingTopLevelByTitle) {
