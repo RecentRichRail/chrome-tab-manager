@@ -15,8 +15,34 @@ const EXPLORER_SIZE_KEY = 'explorerWindowSize';
 let explorerWindowId = null;
 const WINDOW_PREFIX_ENABLED_KEY = 'windowPrefixEnabled';
 
+// ⚡ Bolt Performance Optimization:
+// Cache storage settings in memory to avoid redundant async chrome.storage.sync.get calls.
+// This significantly reduces IPC overhead when handling frequent tab lifecycle events.
+let settingsCache = {
+  autoTabGrouping: null,
+  duplicatePrevention: null,
+  autoCollapse: null,
+  autoClose: null
+};
+
+// Listen for storage changes to invalidate the cache
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'sync') {
+    settingsCache = {
+      autoTabGrouping: null,
+      duplicatePrevention: null,
+      autoCollapse: null,
+      autoClose: null
+    };
+    console.log('Sync storage changed, settings cache invalidated');
+  }
+});
+
 // Function to get auto tab grouping settings from storage
 async function getAutoTabGroupingSettings() {
+  if (settingsCache.autoTabGrouping) {
+    return settingsCache.autoTabGrouping;
+  }
   try {
     const result = await chrome.storage.sync.get({
       autoTabGroupingEnabled: true,
@@ -42,6 +68,7 @@ async function getAutoTabGroupingSettings() {
       });
     }
     
+    settingsCache.autoTabGrouping = result;
     return result;
   } catch (error) {
     console.error('Error getting auto tab grouping settings:', error);
@@ -306,6 +333,9 @@ function sanitizeUrlForLog(urlStr) {
 
 // Function to get duplicate prevention settings from storage
 async function getDuplicatePreventionSettings() {
+  if (settingsCache.duplicatePrevention) {
+    return settingsCache.duplicatePrevention;
+  }
   try {
     const result = await chrome.storage.sync.get({
       duplicatePreventionEnabled: true,
@@ -314,6 +344,7 @@ async function getDuplicatePreventionSettings() {
       duplicateBannerEnabled: true,
       duplicateBannerDelaySeconds: 5
     });
+    settingsCache.duplicatePrevention = result;
     return result;
   } catch (error) {
     console.error('Error getting duplicate prevention settings:', error);
@@ -323,11 +354,15 @@ async function getDuplicatePreventionSettings() {
 
 // Function to get auto-collapse settings from storage
 async function getAutoCollapseSettings() {
+  if (settingsCache.autoCollapse) {
+    return settingsCache.autoCollapse;
+  }
   try {
     const result = await chrome.storage.sync.get({
       autoCollapseEnabled: true,
       collapseDelay: 3 // seconds
     });
+    settingsCache.autoCollapse = result;
     return result;
   } catch (error) {
     console.error('Error getting auto-collapse settings:', error);
@@ -652,6 +687,9 @@ function matchesPattern(url, pattern) {
 
 // Function to get auto-close settings from storage
 async function getAutoCloseSettings() {
+  if (settingsCache.autoClose) {
+    return settingsCache.autoClose;
+  }
   try {
     const result = await chrome.storage.sync.get({
       autoCloseEnabled: false,
@@ -660,6 +698,7 @@ async function getAutoCloseSettings() {
       autoCloseBannerEnabled: true
     });
     console.log('Loaded auto-close settings:', result);
+    settingsCache.autoClose = result;
     return result;
   } catch (error) {
     console.error('Error getting auto-close settings:', error);
