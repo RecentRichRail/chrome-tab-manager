@@ -8,3 +8,6 @@
 ## 2026-07-11 - N+1 Query in Chrome TabGroups API
 **Learning:** Calling `chrome.tabs.query({ groupId: ... })` inside loops while building UI or background operations (like `collapseInactiveGroups`) causes an N+1 query problem that blocks the extension's execution thread, making the operation sluggish when users have many tab groups.
 **Action:** When performing operations that depend on tab group data across multiple groups, fetch all tabs for the window upfront using `chrome.tabs.query({ windowId: ... })` and group them by `groupId` in a Map for fast O(1) synchronous lookups during the loop.
+## 2025-02-15 - IPC Overhead in Tab Lifecycle Events
+**Learning:** Frequent tab lifecycle events like `onCreated`, `onUpdated`, and `onActivated` can trigger many asynchronous `chrome.storage.sync.get` calls if settings aren't cached. While storage lookups are fast, the sheer volume of IPC (Inter-Process Communication) overhead caused by these redundant asynchronous calls blocks or slows down background scripts unnecessarily.
+**Action:** Always cache extension settings in-memory within background scripts using a `chrome.storage.onChanged` listener to invalidate the cache when settings change. This ensures fast, synchronous memory lookups for critical path operations like duplicate detection or auto-grouping.
