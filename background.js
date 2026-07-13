@@ -930,7 +930,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 // Function to update the badge with the global tab count, and show '!' only for the active tab of an unnamed current window
-async function updateTabCountBadge() {
+let badgeUpdateTimeout = null;
+
+async function _updateTabCountBadge() {
   try {
     // Global default badge: total tabs
     const tabs = await chrome.tabs.query({});
@@ -953,6 +955,13 @@ async function updateTabCountBadge() {
   } catch (error) {
     console.error('Error updating tab count badge:', error);
   }
+}
+
+async function updateTabCountBadge() {
+  if (badgeUpdateTimeout) {
+    clearTimeout(badgeUpdateTimeout);
+  }
+  badgeUpdateTimeout = setTimeout(_updateTabCountBadge, 250);
 }
 
 // --- Window labeling helpers ---

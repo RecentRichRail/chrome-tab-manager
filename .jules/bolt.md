@@ -11,3 +11,7 @@
 ## 2025-02-15 - IPC Overhead in Tab Lifecycle Events
 **Learning:** Frequent tab lifecycle events like `onCreated`, `onUpdated`, and `onActivated` can trigger many asynchronous `chrome.storage.sync.get` calls if settings aren't cached. While storage lookups are fast, the sheer volume of IPC (Inter-Process Communication) overhead caused by these redundant asynchronous calls blocks or slows down background scripts unnecessarily.
 **Action:** Always cache extension settings in-memory within background scripts using a `chrome.storage.onChanged` listener to invalidate the cache when settings change. This ensures fast, synchronous memory lookups for critical path operations like duplicate detection or auto-grouping.
+
+## 2025-07-28 - IPC Overhead in Tab Lifecycle Events
+**Learning:** Frequent tab lifecycle events like `onCreated`, `onUpdated`, and `onActivated` can trigger many synchronous `chrome.tabs.query` calls if they are not debounced. While the query might seem innocuous, the sheer volume of IPC (Inter-Process Communication) overhead caused by these redundant asynchronous calls blocks or slows down background scripts unnecessarily, and also serialize all tab data for each call.
+**Action:** Always debounce UI-updating functions that rely on `chrome.tabs.query({})` (like updating badges or lists) when they are invoked inside frequent tab lifecycle events.
