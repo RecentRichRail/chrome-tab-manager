@@ -222,6 +222,11 @@ function updateUrlList() {
   const container = document.getElementById('urlListContainer');
   container.innerHTML = '';
   
+  if (!autoCloseSettings.urlPatterns || autoCloseSettings.urlPatterns.length === 0) {
+    container.innerHTML = '<div class="help-text" style="text-align: center; margin-top: 8px; font-style: italic;">No URL patterns added yet. Add one above to start automatically closing matching tabs.</div>';
+    return;
+  }
+
   autoCloseSettings.urlPatterns.forEach((pattern, index) => {
     const item = document.createElement('div');
     item.className = 'url-item';
@@ -241,6 +246,11 @@ function updateDuplicateAllowList() {
   const container = document.getElementById('duplicateAllowListContainer');
   container.innerHTML = '';
   
+  if (!duplicatePreventionSettings.allowedDuplicatePatterns || duplicatePreventionSettings.allowedDuplicatePatterns.length === 0) {
+    container.innerHTML = '<div class="help-text" style="text-align: center; margin-top: 8px; font-style: italic;">No exception patterns added yet. All URLs will be checked for duplicates.</div>';
+    return;
+  }
+
   duplicatePreventionSettings.allowedDuplicatePatterns.forEach((pattern, index) => {
     const item = document.createElement('div');
     item.className = 'url-item';
@@ -260,6 +270,11 @@ function updateGroupRuleList() {
   const container = document.getElementById('groupRuleListContainer');
   container.innerHTML = '';
   
+  if (!autoTabGroupingSettings.tabGroupRules || autoTabGroupingSettings.tabGroupRules.length === 0) {
+    container.innerHTML = '<div class="help-text" style="text-align: center; margin-top: 8px; font-style: italic;">No tab group rules created yet. Create one above to start organizing tabs automatically.</div>';
+    return;
+  }
+
   autoTabGroupingSettings.tabGroupRules.forEach((rule, index) => {
     const item = document.createElement('div');
     item.className = 'group-rule-item';
@@ -276,7 +291,7 @@ function updateGroupRuleList() {
           <div class="group-rule-pattern">${patterns.length} URL pattern${patterns.length !== 1 ? 's' : ''}</div>
         </div>
         <div class="group-rule-buttons">
-          <button class="expand-btn" data-index="${index}" title="Add/Edit URLs">+</button>
+          <button class="expand-btn" data-index="${index}" aria-expanded="false" aria-controls="patterns-${index}" title="Add/Edit URLs">+</button>
           <button class="edit-btn group-rule-edit-btn" data-index="${index}" title="Edit Group">Edit</button>
           <button class="remove-btn group-rule-remove-btn" data-index="${index}" title="Remove">Remove</button>
         </div>
@@ -522,11 +537,13 @@ function togglePatterns(ruleIndex) {
     item.classList.add('group-rule-expanded');
     button.textContent = '−';
     button.title = 'Collapse';
+    button.setAttribute('aria-expanded', 'true');
   } else {
     patternsDiv.style.display = 'none';
     item.classList.remove('group-rule-expanded');
     button.textContent = '+';
     button.title = 'Add/Edit URLs';
+    button.setAttribute('aria-expanded', 'false');
   }
 }
 
