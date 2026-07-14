@@ -692,6 +692,8 @@ function toggleMenu(headerId, contentId) {
   }
 }
 
+let tabCountUpdateTimeout = null;
+
 // Function to get and display the current tab count and group info
 async function updateTabCount() {
   try {
@@ -1863,28 +1865,40 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// ⚡ Bolt Performance Optimization:
+// Debounce the updateTabCount function to prevent UI freezing and
+// excessive IPC overhead during rapid tab lifecycle events (e.g., onUpdated).
+function debouncedUpdateTabCount() {
+  if (tabCountUpdateTimeout) {
+    clearTimeout(tabCountUpdateTimeout);
+  }
+  tabCountUpdateTimeout = setTimeout(() => {
+    updateTabCount();
+  }, 250);
+}
+
 // Listen for tab changes to update count in real-time
 chrome.tabs.onCreated.addListener(() => {
-  updateTabCount();
+  debouncedUpdateTabCount();
 });
 
 chrome.tabs.onRemoved.addListener(() => {
-  updateTabCount();
+  debouncedUpdateTabCount();
 });
 
 chrome.tabs.onUpdated.addListener(() => {
-  updateTabCount();
+  debouncedUpdateTabCount();
 });
 
 // Listen for tab group changes
 chrome.tabGroups.onCreated.addListener(() => {
-  updateTabCount();
+  debouncedUpdateTabCount();
 });
 
 chrome.tabGroups.onRemoved.addListener(() => {
-  updateTabCount();
+  debouncedUpdateTabCount();
 });
 
 chrome.tabGroups.onUpdated.addListener(() => {
-  updateTabCount();
+  debouncedUpdateTabCount();
 });
