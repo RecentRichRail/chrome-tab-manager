@@ -1,3 +1,5 @@
-## 2025-10-21 - Keyboard interactions on non-semantic HTML elements
-**Learning:** This app frequently uses `div` elements as primary interaction targets (e.g., `.explorer-tab-item`) rather than native `button` or `a` tags. This means they are inherently inaccessible via keyboard and not recognized as interactive by screen readers.
-**Action:** When finding click handlers attached to `div`s or `span`s, proactively add `role="button"`, `tabindex="0"`, `:focus-visible` styling, and `keydown` event listeners to ensure full accessibility parity.
+## 2024-05-24 - Missing Empty States in Dynamic Lists and Custom Element Focus
+
+**Learning:** Found a recurring UX pattern where dynamically generated lists (URL patterns, tab group rules) lacked empty states. When a user first opens these sections or clears all items, the UI provides no feedback on what should happen next. Additionally, custom elements given a `role="button"` (like group headers) and generic buttons lacked `:focus-visible` states, severely impacting keyboard navigation.
+
+**Action:** Always verify that dynamic lists have a fallback empty state component that guides the user (e.g., "No items added yet. Click Add to create one."). When reviewing interactive elements, explicitly test keyboard navigation (Tab key) to ensure custom focus styles are applied to all actionable elements, especially those missing native focus rings.
