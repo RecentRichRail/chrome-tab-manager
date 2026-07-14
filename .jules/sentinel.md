@@ -16,3 +16,8 @@
 **Vulnerability:** The extension logged raw URLs to the background console on every tab creation, update, match, and close event.
 **Learning:** These raw URLs often contain sensitive parameters (like OAuth tokens or PII). The console.log statements were intended for debugging but inadvertently created a potential data leak via the extension's logs.
 **Prevention:** Implement a sanitizeUrlForLog function to strip query parameters and fragments (retaining only origin + pathname) before passing URLs to console.log.
+
+## 2026-07-10 - [Authorization Bypass in Background Messaging]
+**Vulnerability:** An authorization bypass vulnerability existed in `background.js` where `chrome.runtime.onMessage` listeners processed sensitive actions (e.g., `closeTab`, `activateTab`, `setWindowLabel`, and setting configuration states) without verifying the origin of the message. This allowed any website or content script to send messages and trigger privileged actions.
+**Learning:** Chrome extension message listeners (`onMessage`) accept messages from any origin (including content scripts and injected scripts) by default unless restricted. Without authorization checks, any page context can invoke background operations.
+**Prevention:** Always verify the `sender.url` in `chrome.runtime.onMessage` listeners to ensure the message originates from a trusted extension page (e.g., using `!sender.url || !sender.url.startsWith(chrome.runtime.getURL(''))`) when handling privileged or sensitive actions.
