@@ -1221,6 +1221,7 @@ chrome.windows.onRemoved.addListener(async (windowId) => {
 
 // Message handling for popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (!sender.url || !sender.url.startsWith(chrome.runtime.getURL(''))) return;
   if (request && request.type === 'setWindowLabel') {
     (async () => {
       try {
@@ -1484,6 +1485,7 @@ updateTabUrlMap();
 
 // Message listener for popup communications
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (!sender.url || !sender.url.startsWith(chrome.runtime.getURL(''))) return;
   if (request.action === 'groupExistingTabs') {
     groupAllExistingTabs().then(() => {
       sendResponse({ success: true });
@@ -1584,6 +1586,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // Open/size management for Explorer pop-out window
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (!sender.url || !sender.url.startsWith(chrome.runtime.getURL(''))) return;
   if (request && request.type === 'openExplorerWindow') {
     (async () => {
       try {
