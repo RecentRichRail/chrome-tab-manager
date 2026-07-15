@@ -110,7 +110,8 @@
     .goto-tab-btn { padding: 6px 8px; border-radius: 8px; background: linear-gradient(135deg, var(--brand) 0%, var(--brand-700) 100%); color: white; border:none; cursor:pointer; }
     .goto-tab-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
     .help-text { font-size: 11px; color: #8a8d91; margin-top: 10px; line-height: 1.3; padding: 8px 10px; background: #f0f2f5; border-radius: 6px; border-left: 2px solid #1877f2; }
-    .actions { display:flex; gap:6px; margin: 12px 0; }
+    .actions { display:flex; align-items:center; gap:6px; margin: 12px 0; }
+    .setting-label { cursor: pointer; }
     button { flex:1; padding: 10px 12px; border: 1px solid var(--glass-stroke); border-radius: 10px; background: var(--glass-bg-strong); cursor:pointer; font-size: 13px; font-weight: 600; color: var(--text-primary); }
     button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
     .explorer-group-header:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
@@ -138,7 +139,7 @@
 
   <div id="explorerRoot" class="content">
     <div class="explorer-search-top">
-      <input id="windowSearchInput" type="text" class="form-input" placeholder="Search page titles or URLs..." aria-label="Search page titles or URLs">
+      <input id="windowSearchInput" type="search" class="form-input" placeholder="Search page titles or URLs..." aria-label="Search page titles or URLs" autofocus>
     </div>
     <div class="glass-card" style="padding:12px;">
       <div class="explorer-toolbar">
@@ -202,7 +203,7 @@
             <span class="toggle-text">Enable Auto-Collapse</span>
           </label>
         </div>
-        <div class="actions"><span class="setting-label">Collapse delay (seconds)</span><input type="number" id="collapseDelayInput" class="form-input" value="3" min="1" max="30" style="width:80px;" aria-label="Collapse delay in seconds"></div>
+        <div class="actions"><label class="setting-label" for="collapseDelayInput">Collapse delay (seconds)</label><input type="number" id="collapseDelayInput" class="form-input" value="3" min="1" max="30" style="width:80px;" aria-label="Collapse delay in seconds"></div>
         <div class="help-text">Automatically collapses inactive tab groups when you switch to a different group.</div>
       </div>
     </div>
@@ -217,7 +218,7 @@
             <span class="toggle-text">Enable Auto-Close</span>
           </label>
         </div>
-        <div class="actions"><span class="setting-label">Close after (seconds)</span><input type="number" id="closeDelayInput" class="form-input" value="5" min="1" max="300" style="width:80px;" aria-label="Auto-close delay in seconds"></div>
+        <div class="actions"><label class="setting-label" for="closeDelayInput">Close after (seconds)</label><input type="number" id="closeDelayInput" class="form-input" value="5" min="1" max="300" style="width:80px;" aria-label="Auto-close delay in seconds"></div>
         <div class="actions">
           <label class="glass-toggle">
             <input type="checkbox" id="autoCloseBannerToggle" checked>
@@ -264,7 +265,7 @@
             <span class="toggle-text">Auto-close single-tab groups</span>
           </label>
         </div>
-        <div class="actions"><span class="setting-label">Add tabs to</span>
+        <div class="actions"><label class="setting-label" for="addTabPositionSelect">Add tabs to</label>
           <select id="addTabPositionSelect" class="dropdown-select" style="width:120px;" aria-label="Add tabs to position">
             <option value="right">Right</option>
             <option value="left">Left</option>
@@ -302,7 +303,7 @@
             <span class="toggle-text">Enable Prevention</span>
           </label>
         </div>
-        <div class="actions"><span class="setting-label">When duplicate found</span>
+        <div class="actions"><label class="setting-label" for="duplicateActionSelect">When duplicate found</label>
           <select id="duplicateActionSelect" class="dropdown-select" style="width:200px;" aria-label="Duplicate action">
             <option value="false">Close newer tab</option>
             <option value="true">Close older tab</option>
@@ -315,7 +316,7 @@
             <span class="toggle-text">Show duplicate banner</span>
           </label>
         </div>
-        <div class="actions"><span class="setting-label">Banner timer (seconds)</span><input type="number" id="duplicateBannerDelayInput" class="form-input" value="5" min="1" max="300" style="width:100px;" aria-label="Duplicate banner timer in seconds"></div>
+        <div class="actions"><label class="setting-label" for="duplicateBannerDelayInput">Banner timer (seconds)</label><input type="number" id="duplicateBannerDelayInput" class="form-input" value="5" min="1" max="300" style="width:100px;" aria-label="Duplicate banner timer in seconds"></div>
         <div class="url-list">
           <input type="text" id="duplicateAllowInput" class="form-input" placeholder="URLs allowed to have duplicates (e.g., *github.com*, https://docs.google.com*)" aria-label="URLs allowed to have duplicates">
           <button id="addDuplicateAllowBtn" class="btn-glass">Add Exception Pattern</button>
