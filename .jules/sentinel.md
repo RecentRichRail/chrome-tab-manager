@@ -21,3 +21,7 @@
 **Vulnerability:** An authorization bypass vulnerability existed in `background.js` where `chrome.runtime.onMessage` listeners processed sensitive actions (e.g., `closeTab`, `activateTab`, `setWindowLabel`, and setting configuration states) without verifying the origin of the message. This allowed any website or content script to send messages and trigger privileged actions.
 **Learning:** Chrome extension message listeners (`onMessage`) accept messages from any origin (including content scripts and injected scripts) by default unless restricted. Without authorization checks, any page context can invoke background operations.
 **Prevention:** Always verify the `sender.url` in `chrome.runtime.onMessage` listeners to ensure the message originates from a trusted extension page (e.g., using `!sender.url || !sender.url.startsWith(chrome.runtime.getURL(''))`) when handling privileged or sensitive actions.
+## 2026-07-15 - Predictable Token Generation
+**Vulnerability:** Weak, predictable tokens were generated using `Date.now()` in `background.js` for banner actions, potentially allowing an attacker to spoof messages and bypass intended workflows.
+**Learning:** Relying on timestamps (`Date.now()`) for security-sensitive tokens makes them predictable and vulnerable to forgery or brute-forcing.
+**Prevention:** Always use cryptographically secure random number generators like `crypto.randomUUID()` for generating tokens or nonces.
