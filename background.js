@@ -22,19 +22,27 @@ let settingsCache = {
   autoTabGrouping: null,
   duplicatePrevention: null,
   autoCollapse: null,
-  autoClose: null
+  autoClose: null,
+  windowLabels: null,
+  windowPrefixEnabled: null
 };
 
 // Listen for storage changes to invalidate the cache
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === 'sync') {
-    settingsCache = {
-      autoTabGrouping: null,
-      duplicatePrevention: null,
-      autoCollapse: null,
-      autoClose: null
-    };
+    settingsCache.autoTabGrouping = null;
+    settingsCache.duplicatePrevention = null;
+    settingsCache.autoCollapse = null;
+    settingsCache.autoClose = null;
     console.log('Sync storage changed, settings cache invalidated');
+  } else if (areaName === 'local') {
+    if (changes[WINDOW_LABEL_KEY]) {
+      settingsCache.windowLabels = null;
+    }
+    if (changes[WINDOW_PREFIX_ENABLED_KEY]) {
+      settingsCache.windowPrefixEnabled = null;
+    }
+    console.log('Local storage changed, related settings cache invalidated');
   }
 });
 
@@ -966,6 +974,9 @@ async function updateTabCountBadge() {
 
 // --- Window labeling helpers ---
 async function getWindowLabels() {
+  if (settingsCache.windowLabels) {
+    return settingsCache.windowLabels;
+  }
   try {
     const data = await chrome.storage.local.get(WINDOW_LABEL_KEY);
     const raw = data[WINDOW_LABEL_KEY] || {};
@@ -974,6 +985,7 @@ async function getWindowLabels() {
     for (const k of Object.keys(raw)) {
       normalized[String(k)] = raw[k];
     }
+    settingsCache.windowLabels = normalized;
     return normalized;
   } catch (e) {
     console.error('Error reading window labels', e);
@@ -991,9 +1003,14 @@ async function saveWindowLabels(labels) {
 
 // Per-window prefix enabled state helpers
 async function getWindowPrefixEnabledMap() {
+  if (settingsCache.windowPrefixEnabled) {
+    return settingsCache.windowPrefixEnabled;
+  }
   try {
     const data = await chrome.storage.local.get(WINDOW_PREFIX_ENABLED_KEY);
-    return data[WINDOW_PREFIX_ENABLED_KEY] || {};
+    const map = data[WINDOW_PREFIX_ENABLED_KEY] || {};
+    settingsCache.windowPrefixEnabled = map;
+    return map;
   } catch (e) {
     console.error('Error reading window prefix enabled map', e);
     return {};
