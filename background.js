@@ -412,7 +412,7 @@ async function handleDuplicateTab(newTabId, newTabUrl) {
 
           // If banner is enabled, show a banner on the new tab and wait for decision; otherwise proceed immediately
           if (settings.duplicateBannerEnabled) {
-            const token = `${Date.now()}_${newTabId}_${existingTabId}`;
+            const token = `${crypto.randomUUID()}_${newTabId}_${existingTabId}`;
             pendingDuplicateBanners.set(token, {
               token,
               url: normalizedUrl,
@@ -745,7 +745,7 @@ async function handleAutoClose(tabId, url) {
 
       if (settings.autoCloseBannerEnabled) {
         // Attempt to inject auto-close banner; if injection fails, fallback to timeout close
-        const token = `ac_${Date.now()}_${tabId}`;
+        const token = `ac_${crypto.randomUUID()}_${tabId}`;
         pendingAutoCloseBanners.set(token, { token, tabId, initialUrl: url, delay: settings.closeDelay });
         try {
           await chrome.scripting.executeScript({
