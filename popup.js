@@ -743,13 +743,16 @@ async function expandAllGroups() {
     if (!activeTab) return;
     
     const tabGroups = await chrome.tabGroups.query({ windowId: activeTab.windowId });
+    const tasks = [];
     
     for (const group of tabGroups) {
       if (group.collapsed) {
-        await chrome.tabGroups.update(group.id, { collapsed: false });
+        tasks.push(chrome.tabGroups.update(group.id, { collapsed: false }));
       }
     }
     
+    await Promise.allSettled(tasks);
+
     console.log(`Expanded ${tabGroups.length} tab groups`);
     updateTabCount();
   } catch (error) {
@@ -765,14 +768,17 @@ async function collapseAllGroups() {
     
     const tabGroups = await chrome.tabGroups.query({ windowId: activeTab.windowId });
     const activeGroupId = activeTab.groupId;
+    const tasks = [];
     
     for (const group of tabGroups) {
       // Don't collapse the group containing the active tab
       if (group.id !== activeGroupId && !group.collapsed) {
-        await chrome.tabGroups.update(group.id, { collapsed: true });
+        tasks.push(chrome.tabGroups.update(group.id, { collapsed: true }));
       }
     }
     
+    await Promise.allSettled(tasks);
+
     console.log('Collapsed all inactive tab groups');
     updateTabCount();
   } catch (error) {
