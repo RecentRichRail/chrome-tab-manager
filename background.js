@@ -1150,15 +1150,15 @@ function injectedClearLabel() {
 async function applyClearToWindow(windowId) {
   try {
     const tabs = await chrome.tabs.query({ windowId: Number(windowId) });
+    const tasks = [];
     for (const t of tabs) {
       if (!t.id || !t.url) continue;
       if (t.url.startsWith('chrome://') || t.url.startsWith('chrome-extension://') || t.url === 'chrome://newtab/') continue;
-      try {
-        await chrome.scripting.executeScript({ target: { tabId: t.id }, func: injectedClearLabel });
-      } catch (e) {
-        // ignore
-      }
+      tasks.push(
+        chrome.scripting.executeScript({ target: { tabId: t.id }, func: injectedClearLabel })
+      );
     }
+    await Promise.allSettled(tasks);
   } catch (e) {
     console.error('Error clearing label from window', e);
   }
@@ -1170,19 +1170,19 @@ async function applyLabelToWindow(windowId, label) {
     const enabled = await isWindowPrefixEnabled(windowId);
     if (!enabled) return;
     const tabs = await chrome.tabs.query({ windowId: Number(windowId) });
+    const tasks = [];
     for (const t of tabs) {
       if (!t.id || !t.url) continue;
       if (t.url.startsWith('chrome://') || t.url.startsWith('chrome-extension://') || t.url === 'chrome://newtab/') continue;
-      try {
-        await chrome.scripting.executeScript({
+      tasks.push(
+        chrome.scripting.executeScript({
           target: { tabId: t.id },
           func: injectedSetLabel,
           args: [label, true]
-        });
-      } catch (e) {
-        // some pages disallow injection
-      }
+        })
+      );
     }
+    await Promise.allSettled(tasks);
   } catch (e) {
     console.error('Error applying label to window', e);
   }

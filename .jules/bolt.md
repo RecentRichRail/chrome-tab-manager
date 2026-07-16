@@ -18,3 +18,7 @@
 ## 2026-07-15 - Cache local storage to reduce IPC overhead
 **Learning:** Frequent access to `chrome.storage.local` in tab lifecycle event listeners (e.g. `onUpdated`) causes significant IPC overhead and potential bottlenecks.
 **Action:** Always cache frequently accessed storage settings in memory and use `chrome.storage.onChanged` to invalidate/update the cache.
+
+## 2026-07-16 - Sequential IPC Latency in Bulk Operations
+**Learning:** Performing Chrome extension API calls (like `chrome.scripting.executeScript` or `chrome.tabGroups.update`) inside a `for...of` loop with sequential `await`s causes significant latency, as each operation blocks the next waiting for IPC round-trips. This is especially problematic in bulk operations like expanding all groups or modifying all tabs in a window.
+**Action:** When performing bulk operations across multiple tabs or groups, collect the returned Promises into an array and await them concurrently using `Promise.allSettled()` (or `Promise.all()`) to minimize IPC blocking.
