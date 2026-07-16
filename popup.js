@@ -1324,7 +1324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="font-size:13px;font-weight:600;color:#111827;">${escapeHtml(baseTitle)}</div>
                   </div>
                   <div style="margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;">
-                    <button class="close-tab-btn" title="Close tab" aria-label="Close tab" data-tabid="${tab.tabId}">✕</button>
+                    <button class="close-tab-btn" title="Close tab" aria-label="Close tab: ${escapeHtml(baseTitle)}" data-tabid="${tab.tabId}">✕</button>
                   </div>
                 `;
                 gContent.appendChild(tEl);
@@ -1469,7 +1469,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style=\"font-size:13px;font-weight:600;color:#111827;\">${escapeHtml(tab.title || '(no title)')}</div>\
                 </div>
                 <div style=\"margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;\">\
-                  <button class=\"close-tab-btn\" title=\"Close tab\" aria-label=\"Close tab\" data-tabid=\"${tab.id}\">✕</button>\
+                  <button class=\"close-tab-btn\" title=\"Close tab\" aria-label=\"Close tab: ${escapeHtml(tab.title || '(no title)')}\" data-tabid=\"${tab.id}\">✕</button>\
                 </div>
               `;
               groupContent.appendChild(tEl);
