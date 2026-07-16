@@ -643,8 +643,8 @@ const MAX_REGEX_CACHE_SIZE = 500;
 // Function to check if a URL matches a pattern with wildcards
 function matchesPattern(url, pattern) {
   try {
-    // Handle empty pattern or URL
-    if (!pattern || !url) {
+    // Handle empty pattern or URL, or excessively long patterns/URLs (DoS mitigation)
+    if (!pattern || !url || url.length > 2000 || pattern.length > 200) {
       return false;
     }
     
