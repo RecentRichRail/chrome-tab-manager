@@ -1179,7 +1179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Pre-compile regexes outside the loop to improve performance
         const compiledRegexes = [];
         for (const pattern of patterns) {
-          if (!pattern) continue;
+          if (!pattern || pattern.length > 200) continue;
           try {
             // Collapse consecutive wildcards to prevent ReDoS (Regular Expression Denial of Service)
             const safePattern = pattern.replace(/\*+/g, '*');
@@ -1195,7 +1195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         filteredTabs = allTabs.filter(t => {
-          if (!t.url) return false;
+          if (!t.url || t.url.length > 2000) return false;
           return compiledRegexes.some(re => re.test(t.url));
         });
       }
