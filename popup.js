@@ -714,14 +714,19 @@ let tabCountUpdateTimeout = null;
 // Function to get and display the current tab count and group info
 async function updateTabCount() {
   try {
-    const tabs = await chrome.tabs.query({});
+    // ⚡ Bolt Performance Optimization:
+    // Parallelize independent data fetches (total tabs and active tab) to minimize sequential IPC latency.
+    const [tabs, activeTabs] = await Promise.all([
+      chrome.tabs.query({}),
+      chrome.tabs.query({ active: true, currentWindow: true })
+    ]);
     const tabCount = tabs.length;
     
     const tabCountElement = document.getElementById('tabCount');
     tabCountElement.textContent = tabCount;
     
     // Get tab groups information
-    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const activeTab = activeTabs[0];
     if (activeTab) {
       const tabGroups = await chrome.tabGroups.query({ windowId: activeTab.windowId });
       const groupCountElement = document.getElementById('groupCount');
