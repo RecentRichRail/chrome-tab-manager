@@ -942,15 +942,21 @@ let badgeUpdateTimeout = null;
 
 async function _updateTabCountBadge() {
   try {
+    // ⚡ Bolt Performance Optimization:
+    // Parallelize independent data fetches (total tabs, labels, active tab) to reduce sequential IPC overhead.
+    const [tabs, labels, activeTabs] = await Promise.all([
+      chrome.tabs.query({}),
+      getWindowLabels(),
+      chrome.tabs.query({ active: true, lastFocusedWindow: true })
+    ]);
+
     // Global default badge: total tabs
-    const tabs = await chrome.tabs.query({});
     const tabCount = tabs.length;
     await chrome.action.setBadgeText({ text: tabCount.toString() });
     await chrome.action.setBadgeBackgroundColor({ color: '#4285f4' });
 
     // Active tab: show '!' if unnamed; otherwise explicitly set count so it persists
-    const labels = await getWindowLabels();
-    const [activeTab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    const activeTab = activeTabs[0];
     if (!activeTab) return;
     const hasLabel = !!labels[String(activeTab.windowId)];
     if (!hasLabel) {

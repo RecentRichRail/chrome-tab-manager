@@ -22,3 +22,6 @@
 ## 2026-07-16 - Sequential IPC Latency in Bulk Operations
 **Learning:** Performing Chrome extension API calls (like `chrome.scripting.executeScript` or `chrome.tabGroups.update`) inside a `for...of` loop with sequential `await`s causes significant latency, as each operation blocks the next waiting for IPC round-trips. This is especially problematic in bulk operations like expanding all groups or modifying all tabs in a window.
 **Action:** When performing bulk operations across multiple tabs or groups, collect the returned Promises into an array and await them concurrently using `Promise.allSettled()` (or `Promise.all()`) to minimize IPC blocking.
+## 2026-07-17 - Sequential IPC in UI Update Methods
+**Learning:** Functions that frequently update UI state based on Chrome extension APIs (like badges or counts) can block the execution thread if multiple independent queries like `chrome.tabs.query({})` are executed with sequential `await`s, leading to compounded IPC delays.
+**Action:** When gathering independent data to update UI (like total tabs, active tab context, or window info), always collect the queries in a `Promise.all()` array rather than executing them consecutively.
