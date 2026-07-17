@@ -233,8 +233,8 @@ function updateUrlList() {
     item.innerHTML = `
       <code class="url-text" data-index="${index}" title="Click to edit">${escapeHtml(pattern)}</code>
       <div class="url-item-buttons">
-        <button class="edit-btn" data-index="${index}" title="Edit">Edit</button>
-        <button class="remove-btn" data-index="${index}" title="Remove">Remove</button>
+        <button class="edit-btn" data-index="${index}" title="Edit" aria-label="Edit pattern: ${escapeHtml(pattern)}">Edit</button>
+        <button class="remove-btn" data-index="${index}" title="Remove" aria-label="Remove pattern: ${escapeHtml(pattern)}">Remove</button>
       </div>
     `;
     container.appendChild(item);
@@ -257,8 +257,8 @@ function updateDuplicateAllowList() {
     item.innerHTML = `
       <code class="duplicate-url-text" data-index="${index}" title="Click to edit">${escapeHtml(pattern)}</code>
       <div class="url-item-buttons">
-        <button class="duplicate-edit-btn" data-index="${index}" title="Edit">Edit</button>
-        <button class="duplicate-remove-btn" data-index="${index}" title="Remove">Remove</button>
+        <button class="duplicate-edit-btn" data-index="${index}" title="Edit" aria-label="Edit exception pattern: ${escapeHtml(pattern)}">Edit</button>
+        <button class="duplicate-remove-btn" data-index="${index}" title="Remove" aria-label="Remove exception pattern: ${escapeHtml(pattern)}">Remove</button>
       </div>
     `;
     container.appendChild(item);
@@ -291,16 +291,16 @@ function updateGroupRuleList() {
           <div class="group-rule-pattern">${patterns.length} URL pattern${patterns.length !== 1 ? 's' : ''}</div>
         </div>
         <div class="group-rule-buttons">
-          <button class="expand-btn" data-index="${index}" aria-expanded="false" aria-controls="patterns-${index}" title="Add/Edit URLs">+</button>
-          <button class="edit-btn group-rule-edit-btn" data-index="${index}" title="Edit Group">Edit</button>
-          <button class="remove-btn group-rule-remove-btn" data-index="${index}" title="Remove">Remove</button>
+          <button class="expand-btn" data-index="${index}" aria-expanded="false" aria-controls="patterns-${index}" title="Add/Edit URLs" aria-label="Toggle URLs for group: ${escapeHtml(rule.groupName)}">+</button>
+          <button class="edit-btn group-rule-edit-btn" data-index="${index}" title="Edit Group" aria-label="Edit group: ${escapeHtml(rule.groupName)}">Edit</button>
+          <button class="remove-btn group-rule-remove-btn" data-index="${index}" title="Remove" aria-label="Remove group: ${escapeHtml(rule.groupName)}">Remove</button>
         </div>
       </div>
       <div class="group-rule-patterns" id="patterns-${index}" style="display: none;">
         ${patterns.map((pattern, patternIndex) => `
           <div class="pattern-item">
             <span class="pattern-text">${escapeHtml(pattern)}</span>
-            <button class="remove-btn remove-pattern-btn" data-rule-index="${index}" data-pattern-index="${patternIndex}" title="Remove" aria-label="Remove pattern">×</button>
+            <button class="remove-btn remove-pattern-btn" data-rule-index="${index}" data-pattern-index="${patternIndex}" title="Remove" aria-label="Remove pattern: ${escapeHtml(pattern)}">×</button>
           </div>
         `).join('')}
         <div class="add-pattern-form">
