@@ -6,3 +6,6 @@
 ## 2024-07-16 - Dynamic ARIA labels in lists
 **Learning:** For repeated actions like "Close tab" in a list, static `aria-label`s are unhelpful out of context for screen reader users. They hear "Close tab, Close tab" repeatedly.
 **Action:** Always inject the item's title or identifier into the `aria-label` (e.g., "Close tab: Google Search") so the action is clear even when navigating by focus alone.
+## 2026-07-18 - Dynamic View-Switching Button Labels
+**Learning:** When a button toggles between views and changes its icon (e.g., from a gear to a back arrow), users relying on screen readers or tooltips remain unaware of the new function if the `aria-label` and `title` aren't updated dynamically alongside the icon.
+**Action:** Always ensure that state-toggling buttons update their accessible names (`aria-label` and `title`) to accurately reflect their *current* action, rather than retaining their initial static label.

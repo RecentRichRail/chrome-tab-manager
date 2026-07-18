@@ -1063,12 +1063,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Switch to back chevron for Settings view
         if (settingsIcon) settingsIcon.innerHTML = '<path class="line-icon" d="M15 6l-6 6 6 6" />';
         if (headerTitle) headerTitle.textContent = 'Settings';
+        openSettingsBtn.setAttribute('title', 'Back to Explorer');
+        openSettingsBtn.setAttribute('aria-label', 'Back to Explorer');
       } else {
         settingsRoot.style.display = 'none';
         explorerRoot.style.display = 'block';
         // Switch back to gear icon
         if (settingsIcon) settingsIcon.innerHTML = '<path d="M19.43 12.98c.04-.32.07-.66.07-1s-.03-.68-.07-1l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a7.03 7.03 0 0 0-1.73-1l-.38-2.65A.5.5 0 0 0 13 2h-4a.5.5 0 0 0-.5.42l-.38 2.65a7.03 7.03 0 0 0-1.73 1l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0-.12.64L4.57 10c-.04.32-.07.66-.07 1s.03.68.07 1l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.14.24.43.34.69.22l2.49-1c.53.42 1.11.77 1.73 1l.38 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.38-2.65c.62-.23 1.2-.58 1.73-1l2.49 1c.26.12.55.02.69-.22l2-3.46a.5.5 0 0 0-.12-.64L19.43 12.98zM11 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />';
         if (headerTitle) headerTitle.textContent = 'Tab Explorer';
+        openSettingsBtn.setAttribute('title', 'Settings');
+        openSettingsBtn.setAttribute('aria-label', 'Settings');
       }
     });
   }
