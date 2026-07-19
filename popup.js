@@ -304,8 +304,8 @@ function updateGroupRuleList() {
           </div>
         `).join('')}
         <div class="add-pattern-form">
-          <input type="text" class="pattern-input" placeholder="URL pattern (e.g., *github.com*)" id="pattern-input-${index}" aria-label="URL pattern">
-          <button class="add-pattern-btn" data-rule-index="${index}" title="Add Pattern">Add</button>
+          <input type="text" class="pattern-input" placeholder="URL pattern (e.g., *github.com*)" id="pattern-input-${index}" aria-label="URL pattern for ${escapeHtml(rule.groupName)}">
+          <button class="add-pattern-btn" data-rule-index="${index}" title="Add Pattern" aria-label="Add pattern to group: ${escapeHtml(rule.groupName)}">Add</button>
         </div>
       </div>
     `;
@@ -325,10 +325,10 @@ function startEditingUrl(index) {
   item.classList.add('editing');
   
   item.innerHTML = `
-    <input type="text" class="url-edit-input" value="${escapeHtml(currentPattern)}" data-index="${index}" aria-label="URL edit">
+    <input type="text" class="url-edit-input" value="${escapeHtml(currentPattern)}" data-index="${index}" aria-label="Edit URL: ${escapeHtml(currentPattern)}">
     <div class="url-item-buttons">
-      <button class="save-btn" data-index="${index}" title="Save">Save</button>
-      <button class="cancel-btn" data-index="${index}" title="Cancel">Cancel</button>
+      <button class="save-btn" data-index="${index}" title="Save" aria-label="Save URL: ${escapeHtml(currentPattern)}">Save</button>
+      <button class="cancel-btn" data-index="${index}" title="Cancel" aria-label="Cancel edit URL: ${escapeHtml(currentPattern)}">Cancel</button>
     </div>
   `;
   
@@ -383,10 +383,10 @@ function startEditingDuplicateAllowUrl(index) {
   item.classList.add('editing');
   
   item.innerHTML = `
-    <input type="text" class="duplicate-url-edit-input" value="${escapeHtml(currentPattern)}" data-index="${index}" aria-label="Duplicate URL edit">
+    <input type="text" class="duplicate-url-edit-input" value="${escapeHtml(currentPattern)}" data-index="${index}" aria-label="Edit duplicate URL: ${escapeHtml(currentPattern)}">
     <div class="url-item-buttons">
-      <button class="duplicate-save-btn" data-index="${index}" title="Save">Save</button>
-      <button class="duplicate-cancel-btn" data-index="${index}" title="Cancel">Cancel</button>
+      <button class="duplicate-save-btn" data-index="${index}" title="Save" aria-label="Save duplicate URL: ${escapeHtml(currentPattern)}">Save</button>
+      <button class="duplicate-cancel-btn" data-index="${index}" title="Cancel" aria-label="Cancel edit duplicate URL: ${escapeHtml(currentPattern)}">Cancel</button>
     </div>
   `;
   
@@ -595,8 +595,8 @@ function startEditingGroupRule(index) {
         </select>
       </div>
       <div class="form-row">
-        <button class="save-btn group-rule-save-btn" data-index="${index}" title="Save">Save</button>
-        <button class="cancel-btn group-rule-cancel-btn" data-index="${index}" title="Cancel">Cancel</button>
+        <button class="save-btn group-rule-save-btn" data-index="${index}" title="Save" aria-label="Save group rule: ${escapeHtml(rule.groupName)}">Save</button>
+        <button class="cancel-btn group-rule-cancel-btn" data-index="${index}" title="Cancel" aria-label="Cancel edit group rule: ${escapeHtml(rule.groupName)}">Cancel</button>
       </div>
     </div>
   `;

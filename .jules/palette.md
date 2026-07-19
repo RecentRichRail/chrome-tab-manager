@@ -9,3 +9,6 @@
 ## 2026-07-18 - Dynamic View-Switching Button Labels
 **Learning:** When a button toggles between views and changes its icon (e.g., from a gear to a back arrow), users relying on screen readers or tooltips remain unaware of the new function if the `aria-label` and `title` aren't updated dynamically alongside the icon.
 **Action:** Always ensure that state-toggling buttons update their accessible names (`aria-label` and `title`) to accurately reflect their *current* action, rather than retaining their initial static label.
+## 2024-05-18 - Missing dynamic ARIA context for inline edit actions
+**Learning:** Found a recurring UX/a11y issue where dynamically injected inline edit forms (like editing a URL pattern or group rule) used generic `aria-label`s like "Save" or "Cancel". Screen reader users lack the visual context of which specific item in the list they are currently editing, leading to confusion if multiple forms are present or if they navigate away and back.
+**Action:** Always inject the specific item's context (e.g., the URL or group name) into the `aria-label` of dynamically generated form actions (e.g., `aria-label="Save URL: pattern*"` instead of just "Save").
