@@ -25,3 +25,7 @@
 ## 2026-07-17 - Sequential IPC in UI Update Methods
 **Learning:** Functions that frequently update UI state based on Chrome extension APIs (like badges or counts) can block the execution thread if multiple independent queries like `chrome.tabs.query({})` are executed with sequential `await`s, leading to compounded IPC delays.
 **Action:** When gathering independent data to update UI (like total tabs, active tab context, or window info), always collect the queries in a `Promise.all()` array rather than executing them consecutively.
+
+## 2026-07-18 - Sequential IPC in Popup Initialization
+**Learning:** Functions that initialize extension popups (like `buildWindowExplorer`) can suffer from significant latency if they execute multiple independent data fetches sequentially (e.g., fetching windows, then groups, then labels, then storage settings). This delays the initial render of the UI and causes jank.
+**Action:** Always group independent Chrome extension API calls into a single `Promise.all()` during popup initialization to minimize sequential IPC blocking overhead.

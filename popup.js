@@ -1110,15 +1110,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('windowListContainer');
     container.innerHTML = '';
     try {
-      // get windows, tabs, and tab groups
-      const [windows, allGroupsList] = await Promise.all([
+      // ⚡ Bolt Performance Optimization:
+      // Parallelize independent data fetches (windows, groups, labels, auto-close settings)
+      // into a single Promise.all() rather than sequential awaits to minimize IPC blocking overhead.
+      const [windows, allGroupsList, labelsMsg, ac] = await Promise.all([
         chrome.windows.getAll({ populate: true }),
-        chrome.tabGroups.query({})
+        chrome.tabGroups.query({}),
+        new Promise(resolve => chrome.runtime.sendMessage({ type: 'getAllWindowLabels' }, resolve)),
+        chrome.storage.sync.get({ autoCloseEnabled: false, urlPatterns: [] })
       ]);
       const groupMap = new Map(allGroupsList.map(g => [String(g.id), g]));
 
-      const labels = await new Promise(resolve => chrome.runtime.sendMessage({ type: 'getAllWindowLabels' }, resolve));
-      const labelMap = (labels && labels.labels) ? labels.labels : {};
+      const labels = labelsMsg || {};
+      const labelMap = labels.labels ? labels.labels : {};
       const filterMode = (document.getElementById('windowFilterSelect')?.value) || 'all';
       const sortMode = (document.getElementById('windowSortSelect')?.value) || 'title-asc';
 
@@ -1182,7 +1186,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         filteredTabs = allDups;
       } else if (filterMode === 'autoclose') {
-        const ac = await chrome.storage.sync.get({ autoCloseEnabled: false, urlPatterns: [] });
         const patterns = ac.urlPatterns || [];
 
         // Pre-compile regexes outside the loop to improve performance
