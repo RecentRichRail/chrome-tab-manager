@@ -12,3 +12,6 @@
 ## 2024-05-18 - Missing dynamic ARIA context for inline edit actions
 **Learning:** Found a recurring UX/a11y issue where dynamically injected inline edit forms (like editing a URL pattern or group rule) used generic `aria-label`s like "Save" or "Cancel". Screen reader users lack the visual context of which specific item in the list they are currently editing, leading to confusion if multiple forms are present or if they navigate away and back.
 **Action:** Always inject the specific item's context (e.g., the URL or group name) into the `aria-label` of dynamically generated form actions (e.g., `aria-label="Save URL: pattern*"` instead of just "Save").
+## 2024-07-23 - Async Action Feedback & Disabled States
+**Learning:** For global async actions (like expanding/collapsing all tab groups or regrouping), users were left without immediate visual feedback. Missing `:disabled` states on the underlying `button` base styles meant the UI didn't communicate that an operation was in progress, leading to potential confusion or double-clicking.
+**Action:** Always ensure that base component styles (like `.btn-glass` or generic `button`) explicitly support `:disabled` pseudo-classes with reduced opacity and a `not-allowed` cursor. Update the button text (e.g., "Regrouping..." -> "Regrouped!") dynamically during async operations to provide clear state communication.
