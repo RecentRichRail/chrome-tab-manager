@@ -1305,6 +1305,11 @@ async function collapseInactiveGroups() {
       }
     }
     
+    // ⚡ Bolt Performance Optimization:
+    // Collect independent chrome.tabGroups.update promises into an array
+    // and resolve them concurrently using Promise.allSettled() instead of sequential awaits.
+    // This reduces IPC latency when multiple groups need to be collapsed.
+    const collapsePromises = [];
     for (const group of tabGroups) {
       // Skip the currently active group and already collapsed groups
       if (group.id === currentGroupId || group.collapsed) {
@@ -1319,9 +1324,15 @@ async function collapseInactiveGroups() {
       
       // Collapse the group if no recent activity
       if (!hasRecentActivity) {
-        await chrome.tabGroups.update(group.id, { collapsed: true });
-        console.log(`Collapsed inactive group: ${group.title || 'Untitled'}`);
+        collapsePromises.push(
+          chrome.tabGroups.update(group.id, { collapsed: true })
+            .then(() => console.log(`Collapsed inactive group: ${group.title || 'Untitled'}`))
+        );
       }
+    }
+
+    if (collapsePromises.length > 0) {
+      await Promise.allSettled(collapsePromises);
     }
   } catch (error) {
     console.error('Error collapsing inactive groups:', error);
