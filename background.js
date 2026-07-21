@@ -5,6 +5,7 @@
 let lastActiveGroupId = null;
 let collapseTimeout = null;
 let autoCloseTimeouts = new Map(); // Track auto-close timeouts for tabs
+let tabProcessingTimeouts = new Map(); // Track pending tab processing updates
 let tabUrlMap = new Map(); // Track all open tabs by URL for duplicate detection
 // Window label storage key
 const WINDOW_LABEL_KEY = 'windowLabels';
@@ -1407,6 +1408,11 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
     autoCloseTimeouts.delete(tabId);
   }
   
+  if (tabProcessingTimeouts.has(tabId)) {
+    clearTimeout(tabProcessingTimeouts.get(tabId));
+    tabProcessingTimeouts.delete(tabId);
+  }
+
   // Remove from URL map
   for (const [url, id] of tabUrlMap.entries()) {
     if (id === tabId) {
@@ -1425,30 +1431,28 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     handleDuplicateTab(tabId, changeInfo.url);
   }
   
-  // Handle auto-close when URL changes (both on URL change and completion)
-  if (changeInfo.url && !changeInfo.url.startsWith('chrome://') && !changeInfo.url.startsWith('chrome-extension://')) {
-    handleAutoClose(tabId, changeInfo.url);
-    console.log(`Tab ${tabId} URL changed to: ${sanitizeUrlForLog(changeInfo.url)}, checking auto-close`);
-    
-    // Handle auto tab grouping on URL change
-    handleAutoTabGrouping(tabId, changeInfo.url);
-  }
-  
-  // Also check on status complete for auto-close (in case URL was set earlier)
-  if (changeInfo.status === 'complete' && tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
-    handleAutoClose(tabId, tab.url);
-    console.log(`Tab ${tabId} loading complete: ${sanitizeUrlForLog(tab.url)}, checking auto-close`);
-    
-    // Handle auto tab grouping on completion
-    handleAutoTabGrouping(tabId, tab.url);
-  }
-  
-  // Additional check: if URL changed or page completed, check if it should be grouped
-  if ((changeInfo.url || changeInfo.status === 'complete') && tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
-    // Add a small delay to ensure the tab update is processed
-    setTimeout(() => {
-      handleAutoTabGrouping(tabId, tab.url);
+  // ⚡ Bolt Performance Optimization:
+  // Debounce the auto-close and tab grouping checks to avoid redundant processing
+  // during rapid tab lifecycle events.
+  const urlToCheck = changeInfo.url || tab.url;
+  const shouldProcess = (changeInfo.url || changeInfo.status === 'complete') &&
+                         urlToCheck &&
+                         !urlToCheck.startsWith('chrome://') &&
+                         !urlToCheck.startsWith('chrome-extension://');
+
+  if (shouldProcess) {
+    if (tabProcessingTimeouts.has(tabId)) {
+      clearTimeout(tabProcessingTimeouts.get(tabId));
+    }
+
+    const timeoutId = setTimeout(() => {
+      handleAutoClose(tabId, urlToCheck);
+      console.log(`Tab ${tabId} debounced processing: ${sanitizeUrlForLog(urlToCheck)}, checking auto-close and grouping`);
+      handleAutoTabGrouping(tabId, urlToCheck);
+      tabProcessingTimeouts.delete(tabId);
     }, 500);
+
+    tabProcessingTimeouts.set(tabId, timeoutId);
   }
 });
 
