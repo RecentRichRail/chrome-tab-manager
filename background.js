@@ -649,45 +649,46 @@ function matchesPattern(url, pattern) {
       return false;
     }
     
-    let regex = patternRegexCache.get(pattern);
+    const parts = pattern.split('*');
+    if (parts.length === 1) {
+      return url.toLowerCase() === pattern.toLowerCase();
+    }
 
-    if (!regex) {
-      // Collapse consecutive wildcards to prevent ReDoS (Regular Expression Denial of Service)
-      const safePattern = pattern.replace(/\*+/g, '*');
+    const lowerUrl = url.toLowerCase();
+    const lowerParts = parts.map(p => p.toLowerCase());
 
-      // Convert pattern to regex step by step
-      let regexPattern = '';
-      for (let i = 0; i < safePattern.length; i++) {
-        const char = safePattern[i];
-        if (char === '*') {
-          regexPattern += '.*'; // Wildcard becomes .*
-        } else if (/[.+^${}()|[\]\\]/.test(char)) {
-          regexPattern += '\\' + char; // Escape special regex chars
-        } else {
-          regexPattern += char; // Regular character
-        }
+    if (!lowerUrl.startsWith(lowerParts[0])) {
+      return false;
+    }
+
+    let currentIndex = lowerParts[0].length;
+    for (let i = 1; i < lowerParts.length - 1; i++) {
+      const part = lowerParts[i];
+      if (part === '') continue; // consecutive wildcards
+
+      const foundIndex = lowerUrl.indexOf(part, currentIndex);
+      if (foundIndex === -1) {
+        return false;
       }
-
-      regex = new RegExp(`^${regexPattern}$`, 'i');
-
-      // Manage cache size to prevent memory leaks
-      if (patternRegexCache.size >= MAX_REGEX_CACHE_SIZE) {
-        // Remove the first inserted item (simplest eviction policy)
-        const firstKey = patternRegexCache.keys().next().value;
-        patternRegexCache.delete(firstKey);
-      }
-      patternRegexCache.set(pattern, regex);
+      currentIndex = foundIndex + part.length;
     }
     
-    const result = regex.test(url);
+    const lastPart = lowerParts[lowerParts.length - 1];
+    if (lastPart !== '') {
+      if (!lowerUrl.endsWith(lastPart)) {
+        return false;
+      }
+      if (lowerUrl.length - lastPart.length < currentIndex) {
+        return false;
+      }
+    }
     
     // Only log for debugging when needed
-    if (result || pattern.includes('spicerhome.net')) {
-      // Use regex.source to reconstruct what was logged previously
-      console.log(`Pattern match: "${pattern}" -> regex: "^${regex.source}$" vs "${sanitizeUrlForLog(url)}" = ${result}`);
+    if (pattern.includes('spicerhome.net')) {
+      console.log(`Pattern match: "${pattern}" vs "${sanitizeUrlForLog(url)}" = true`);
     }
     
-    return result;
+    return true;
   } catch (error) {
     console.error(`Error in pattern matching for pattern "${pattern}" and URL "${sanitizeUrlForLog(url)}":`, error);
     return false;
@@ -1306,6 +1307,11 @@ async function collapseInactiveGroups() {
       }
     }
     
+    // ⚡ Bolt Performance Optimization:
+    // Collect independent chrome.tabGroups.update promises into an array
+    // and resolve them concurrently using Promise.allSettled() instead of sequential awaits.
+    // This reduces IPC latency when multiple groups need to be collapsed.
+    const collapsePromises = [];
     for (const group of tabGroups) {
       // Skip the currently active group and already collapsed groups
       if (group.id === currentGroupId || group.collapsed) {
@@ -1320,9 +1326,15 @@ async function collapseInactiveGroups() {
       
       // Collapse the group if no recent activity
       if (!hasRecentActivity) {
-        await chrome.tabGroups.update(group.id, { collapsed: true });
-        console.log(`Collapsed inactive group: ${group.title || 'Untitled'}`);
+        collapsePromises.push(
+          chrome.tabGroups.update(group.id, { collapsed: true })
+            .then(() => console.log(`Collapsed inactive group: ${group.title || 'Untitled'}`))
+        );
       }
+    }
+
+    if (collapsePromises.length > 0) {
+      await Promise.allSettled(collapsePromises);
     }
   } catch (error) {
     console.error('Error collapsing inactive groups:', error);
