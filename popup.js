@@ -1231,27 +1231,37 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (filterMode === 'autoclose') {
         const patterns = ac.urlPatterns || [];
 
-        // Pre-compile regexes outside the loop to improve performance
-        const compiledRegexes = [];
-        for (const pattern of patterns) {
-          if (!pattern || pattern.length > 200) continue;
-          try {
-            // Collapse consecutive wildcards to prevent ReDoS (Regular Expression Denial of Service)
-            const safePattern = pattern.replace(/\*+/g, '*');
-            let rp = '';
-            for (let i = 0; i < safePattern.length; i++) {
-              const ch = safePattern[i];
-              if (ch === '*') rp += '.*'; else if (/[.+^${}()|[\]\\]/.test(ch)) rp += '\\' + ch; else rp += ch;
-            }
-            compiledRegexes.push(new RegExp('^' + rp + '$', 'i'));
-          } catch {
-            // Ignore invalid patterns
+        // Helper for safe pattern matching (ReDoS prevention)
+        const matchesPattern = (url, pattern) => {
+          if (!pattern || !url || url.length > 2000 || pattern.length > 200) return false;
+          const parts = pattern.split('*');
+          if (parts.length === 1) return url.toLowerCase() === pattern.toLowerCase();
+
+          const lowerUrl = url.toLowerCase();
+          const lowerParts = parts.map(p => p.toLowerCase());
+
+          if (!lowerUrl.startsWith(lowerParts[0])) return false;
+
+          let currentIndex = lowerParts[0].length;
+          for (let i = 1; i < lowerParts.length - 1; i++) {
+            const part = lowerParts[i];
+            if (part === '') continue;
+            const foundIndex = lowerUrl.indexOf(part, currentIndex);
+            if (foundIndex === -1) return false;
+            currentIndex = foundIndex + part.length;
           }
-        }
+
+          const lastPart = lowerParts[lowerParts.length - 1];
+          if (lastPart !== '') {
+            if (!lowerUrl.endsWith(lastPart)) return false;
+            if (lowerUrl.length - lastPart.length < currentIndex) return false;
+          }
+          return true;
+        };
 
         filteredTabs = allTabs.filter(t => {
           if (!t.url || t.url.length > 2000) return false;
-          return compiledRegexes.some(re => re.test(t.url));
+          return patterns.some(pattern => matchesPattern(t.url, pattern));
         });
       }
 
