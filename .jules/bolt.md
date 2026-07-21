@@ -29,13 +29,11 @@
 ## 2026-07-18 - Sequential IPC in Popup Initialization
 **Learning:** Functions that initialize extension popups (like `buildWindowExplorer`) can suffer from significant latency if they execute multiple independent data fetches sequentially (e.g., fetching windows, then groups, then labels, then storage settings). This delays the initial render of the UI and causes jank.
 **Action:** Always group independent Chrome extension API calls into a single `Promise.all()` during popup initialization to minimize sequential IPC blocking overhead.
-<<<<<<< HEAD
+
+## 2026-07-20 - Avoid Sequential awaits for Chrome APIs
+**Learning:** Sequential await calls for API operations like chrome.tabGroups.update inside loops compound IPC latency significantly in Chrome extensions when multiple groups/tabs are processed.
+**Action:** Always collect promises for independent Chrome API operations within loops and execute them concurrently using Promise.allSettled().
 
 ## 2026-07-21 - Redundant Processing in Tab Lifecycle
 **Learning:** The `chrome.tabs.onUpdated` event fires multiple times for a single page load (e.g., when the URL changes and then when status is 'complete'). Triggering processing logic like auto-close or auto-grouping directly in this event without debouncing causes redundant asynchronous API calls, which wastes main thread time and can lead to race conditions if timeouts aren't managed per tab.
 **Action:** In Chrome extension development, consolidate and debounce `chrome.tabs.onUpdated` event handlers using a map of timeouts keyed by `tabId` to prevent redundant asynchronous operations and race conditions.
-=======
-## 2026-07-20 - Avoid Sequential awaits for Chrome APIs
-**Learning:** Sequential await calls for API operations like chrome.tabGroups.update inside loops compound IPC latency significantly in Chrome extensions when multiple groups/tabs are processed.
-**Action:** Always collect promises for independent Chrome API operations within loops and execute them concurrently using Promise.allSettled().
->>>>>>> origin/main

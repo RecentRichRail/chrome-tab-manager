@@ -1447,24 +1447,30 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   // Debounce the auto-close and tab grouping checks to avoid redundant processing
   // during rapid tab lifecycle events.
   const urlToCheck = changeInfo.url || tab.url;
-  const shouldProcess = (changeInfo.url || changeInfo.status === 'complete') &&
+  const isRelevantChange = changeInfo.url || changeInfo.status === 'complete';
+  const shouldProcess = isRelevantChange &&
                          urlToCheck &&
                          !urlToCheck.startsWith('chrome://') &&
                          !urlToCheck.startsWith('chrome-extension://');
 
-  if (shouldProcess) {
+  if (isRelevantChange) {
+    // Always clear any stale pending timeout on a relevant tab update, even if
+    // the new URL should not be processed (e.g. navigation to chrome:// pages).
     if (tabProcessingTimeouts.has(tabId)) {
       clearTimeout(tabProcessingTimeouts.get(tabId));
+      tabProcessingTimeouts.delete(tabId);
     }
 
-    const timeoutId = setTimeout(() => {
-      handleAutoClose(tabId, urlToCheck);
-      console.log(`Tab ${tabId} debounced processing: ${sanitizeUrlForLog(urlToCheck)}, checking auto-close and grouping`);
-      handleAutoTabGrouping(tabId, urlToCheck);
-      tabProcessingTimeouts.delete(tabId);
-    }, 500);
+    if (shouldProcess) {
+      const timeoutId = setTimeout(() => {
+        handleAutoClose(tabId, urlToCheck);
+        console.log(`Tab ${tabId} debounced processing: ${sanitizeUrlForLog(urlToCheck)}, checking auto-close and grouping`);
+        handleAutoTabGrouping(tabId, urlToCheck);
+        tabProcessingTimeouts.delete(tabId);
+      }, 500);
 
-    tabProcessingTimeouts.set(tabId, timeoutId);
+      tabProcessingTimeouts.set(tabId, timeoutId);
+    }
   }
 });
 
