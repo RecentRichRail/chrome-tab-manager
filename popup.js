@@ -743,6 +743,11 @@ async function updateTabCount() {
 
 // Function to expand all tab groups
 async function expandAllGroups() {
+  const btn = document.getElementById('expandAllBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Expanding...';
+  }
   try {
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!activeTab) return;
@@ -760,13 +765,27 @@ async function expandAllGroups() {
 
     console.log(`Expanded ${tabGroups.length} tab groups`);
     updateTabCount();
+    if (btn) btn.textContent = 'Expanded!';
   } catch (error) {
     console.error('Error expanding groups:', error);
+    if (btn) btn.textContent = 'Error';
+  } finally {
+    if (btn) {
+      setTimeout(() => {
+        btn.textContent = 'Expand All Groups';
+        btn.disabled = false;
+      }, 1500);
+    }
   }
 }
 
 // Function to collapse all tab groups except the active one
 async function collapseAllGroups() {
+  const btn = document.getElementById('collapseAllBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Collapsing...';
+  }
   try {
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!activeTab) return;
@@ -786,13 +805,27 @@ async function collapseAllGroups() {
 
     console.log('Collapsed all inactive tab groups');
     updateTabCount();
+    if (btn) btn.textContent = 'Collapsed!';
   } catch (error) {
     console.error('Error collapsing groups:', error);
+    if (btn) btn.textContent = 'Error';
+  } finally {
+    if (btn) {
+      setTimeout(() => {
+        btn.textContent = 'Collapse All Groups';
+        btn.disabled = false;
+      }, 1500);
+    }
   }
 }
 
 // Function to regroup all tabs based on current rules
 async function regroupAllTabs() {
+  const btn = document.getElementById('regroupAllBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Regrouping...';
+  }
   try {
     console.log('Regrouping all tabs based on current rules...');
     
@@ -803,11 +836,21 @@ async function regroupAllTabs() {
       console.log('Successfully regrouped all tabs');
       // Update the tab count and group info
       setTimeout(updateTabCount, 500);
+      if (btn) btn.textContent = 'Regrouped!';
     } else {
       console.error('Failed to regroup tabs:', response?.error);
+      if (btn) btn.textContent = 'Error';
     }
   } catch (error) {
     console.error('Error regrouping tabs:', error);
+    if (btn) btn.textContent = 'Error';
+  } finally {
+    if (btn) {
+      setTimeout(() => {
+        btn.textContent = 'Regroup All Tabs';
+        btn.disabled = false;
+      }, 1500);
+    }
   }
 }
 
