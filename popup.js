@@ -338,7 +338,7 @@ function startEditingUrl(index) {
   input.select();
   
   // Handle Enter key to save
-  input.addEventListener('keypress', (e) => {
+  input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       saveEditedUrl(index, input.value.trim());
     } else if (e.key === 'Escape') {
@@ -396,7 +396,7 @@ function startEditingDuplicateAllowUrl(index) {
   input.select();
   
   // Handle Enter key to save
-  input.addEventListener('keypress', (e) => {
+  input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       saveEditedDuplicateAllowUrl(index, input.value.trim());
     } else if (e.key === 'Escape') {
@@ -605,6 +605,18 @@ function startEditingGroupRule(index) {
   const nameInput = item.querySelector('.group-rule-name-edit');
   nameInput.focus();
   nameInput.select();
+
+  // Handle Enter key to save, Escape to cancel
+  const editForm = item.querySelector('.group-rule-edit-form');
+  if (editForm) {
+    editForm.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        saveEditedGroupRule(index);
+      } else if (e.key === 'Escape') {
+        cancelEditGroupRule(index);
+      }
+    });
+  }
 }
 
 // Save edited group rule
@@ -1785,7 +1797,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   document.getElementById('addUrlBtn').addEventListener('click', addUrlPattern);
   
-  document.getElementById('urlInput').addEventListener('keypress', (e) => {
+  document.getElementById('urlInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       addUrlPattern();
     }
@@ -1832,7 +1844,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   document.getElementById('addDuplicateAllowBtn').addEventListener('click', addDuplicateAllowPattern);
   
-  document.getElementById('duplicateAllowInput').addEventListener('keypress', (e) => {
+  document.getElementById('duplicateAllowInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       addDuplicateAllowPattern();
     }
@@ -1879,7 +1891,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   document.getElementById('createGroupRuleBtn').addEventListener('click', createGroupRule);
   
-  document.getElementById('groupRuleNameInput').addEventListener('keypress', (e) => {
+  document.getElementById('groupRuleNameInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       createGroupRule();
     }
@@ -1945,7 +1957,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   // Handle Enter key in pattern inputs (event delegation)
-  document.getElementById('groupRuleListContainer').addEventListener('keypress', (e) => {
+  document.getElementById('groupRuleListContainer').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.target.classList.contains('pattern-input')) {
       const ruleIndex = parseInt(e.target.getAttribute('id').split('-')[2]);
       addPattern(ruleIndex);

@@ -15,3 +15,6 @@
 ## 2024-07-23 - Async Action Feedback & Disabled States
 **Learning:** For global async actions (like expanding/collapsing all tab groups or regrouping), users were left without immediate visual feedback. Missing `:disabled` states on the underlying `button` base styles meant the UI didn't communicate that an operation was in progress, leading to potential confusion or double-clicking.
 **Action:** Always ensure that base component styles (like `.btn-glass` or generic `button`) explicitly support `:disabled` pseudo-classes with reduced opacity and a `not-allowed` cursor. Update the button text (e.g., "Regrouping..." -> "Regrouped!") dynamically during async operations to provide clear state communication.
+## 2026-07-22 - Fix Escape Key Support in Inline Edits
+**Learning:** The `keypress` event is deprecated and importantly, does not fire for non-character keys like `Escape` in modern browsers, preventing users from cancelling inline edits via keyboard.
+**Action:** Always use `keydown` for keyboard accessibility, especially when handling navigation or control keys like Escape/Enter.
