@@ -291,7 +291,7 @@ function updateGroupRuleList() {
           <div class="group-rule-pattern">${patterns.length} URL pattern${patterns.length !== 1 ? 's' : ''}</div>
         </div>
         <div class="group-rule-buttons">
-          <button class="expand-btn" data-index="${index}" aria-expanded="false" aria-controls="patterns-${index}" title="Add/Edit URLs" aria-label="Toggle URLs for group: ${escapeHtml(rule.groupName)}">+</button>
+          <button class="expand-btn" data-index="${index}" aria-expanded="false" aria-controls="patterns-${index}" title="Expand URLs" aria-label="Expand URLs for group: ${escapeHtml(rule.groupName)}" data-group-name="${escapeHtml(rule.groupName)}">+</button>
           <button class="edit-btn group-rule-edit-btn" data-index="${index}" title="Edit Group" aria-label="Edit group: ${escapeHtml(rule.groupName)}">Edit</button>
           <button class="remove-btn group-rule-remove-btn" data-index="${index}" title="Remove" aria-label="Remove group: ${escapeHtml(rule.groupName)}">Remove</button>
         </div>
@@ -536,13 +536,15 @@ function togglePatterns(ruleIndex) {
     patternsDiv.style.display = 'block';
     item.classList.add('group-rule-expanded');
     button.textContent = '−';
-    button.title = 'Collapse';
+    button.title = 'Collapse URLs';
+    button.setAttribute('aria-label', `Collapse URLs for group: ${button.dataset.groupName}`);
     button.setAttribute('aria-expanded', 'true');
   } else {
     patternsDiv.style.display = 'none';
     item.classList.remove('group-rule-expanded');
     button.textContent = '+';
-    button.title = 'Add/Edit URLs';
+    button.title = 'Expand URLs';
+    button.setAttribute('aria-label', `Expand URLs for group: ${button.dataset.groupName}`);
     button.setAttribute('aria-expanded', 'false');
   }
 }
