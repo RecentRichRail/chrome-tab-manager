@@ -1187,6 +1187,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const escapeRegExp = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
       const labelRegexCache = new Map();
+      const patternPartsCache = new Map();
 
       // Helper: strip a window label prefix like "[Label] " from a title, but only
       // if it matches the known label for that window. This avoids stripping
@@ -1248,11 +1249,21 @@ document.addEventListener('DOMContentLoaded', () => {
         // Helper for safe pattern matching (ReDoS prevention)
         const matchesPattern = (url, pattern) => {
           if (!pattern || !url || url.length > 2000 || pattern.length > 200) return false;
-          const parts = pattern.split('*');
-          if (parts.length === 1) return url.toLowerCase() === pattern.toLowerCase();
+
+          let cached = patternPartsCache.get(pattern);
+          if (!cached) {
+            const parts = pattern.split('*');
+            cached = {
+              isExactMatch: parts.length === 1,
+              lowerParts: parts.length === 1 ? [pattern.toLowerCase()] : parts.map(p => p.toLowerCase())
+            };
+            patternPartsCache.set(pattern, cached);
+          }
+
+          if (cached.isExactMatch) return url.toLowerCase() === cached.lowerParts[0];
 
           const lowerUrl = url.toLowerCase();
-          const lowerParts = parts.map(p => p.toLowerCase());
+          const lowerParts = cached.lowerParts;
 
           if (!lowerUrl.startsWith(lowerParts[0])) return false;
 

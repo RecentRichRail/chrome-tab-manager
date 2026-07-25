@@ -37,3 +37,6 @@
 ## 2026-07-21 - Redundant Processing in Tab Lifecycle
 **Learning:** The `chrome.tabs.onUpdated` event fires multiple times for a single page load (e.g., when the URL changes and then when status is 'complete'). Triggering processing logic like auto-close or auto-grouping directly in this event without debouncing causes redundant asynchronous API calls, which wastes main thread time and can lead to race conditions if timeouts aren't managed per tab.
 **Action:** In Chrome extension development, consolidate and debounce `chrome.tabs.onUpdated` event handlers using a map of timeouts keyed by `tabId` to prevent redundant asynchronous operations and race conditions.
+## 2026-07-25 - Cached Parsed Wildcard Patterns
+**Learning:** When replacing regular expressions with string operations (like `split()` and `.map()`) for ReDoS mitigation, always cache the pre-parsed patterns outside of hot paths (like O(N*M) tab/pattern filtering loops) to avoid severe garbage collection and CPU bottlenecks from redundant allocations.
+**Action:** Use a `Map` to cache pre-parsed arrays of string parts for wildcard matching functions rather than repeatedly parsing strings inside hot loops.

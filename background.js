@@ -641,6 +641,9 @@ async function updateTabUrlMap() {
 const patternRegexCache = new Map();
 const MAX_REGEX_CACHE_SIZE = 500;
 
+const patternPartsCache = new Map();
+const MAX_PARTS_CACHE_SIZE = 500;
+
 // Function to check if a URL matches a pattern with wildcards
 function matchesPattern(url, pattern) {
   try {
@@ -649,13 +652,25 @@ function matchesPattern(url, pattern) {
       return false;
     }
     
-    const parts = pattern.split('*');
-    if (parts.length === 1) {
-      return url.toLowerCase() === pattern.toLowerCase();
+    let cached = patternPartsCache.get(pattern);
+    if (!cached) {
+      const parts = pattern.split('*');
+      cached = {
+        isExactMatch: parts.length === 1,
+        lowerParts: parts.length === 1 ? [pattern.toLowerCase()] : parts.map(p => p.toLowerCase())
+      };
+      if (patternPartsCache.size >= MAX_PARTS_CACHE_SIZE) {
+        patternPartsCache.clear();
+      }
+      patternPartsCache.set(pattern, cached);
+    }
+
+    if (cached.isExactMatch) {
+      return url.toLowerCase() === cached.lowerParts[0];
     }
 
     const lowerUrl = url.toLowerCase();
-    const lowerParts = parts.map(p => p.toLowerCase());
+    const lowerParts = cached.lowerParts;
 
     if (!lowerUrl.startsWith(lowerParts[0])) {
       return false;
