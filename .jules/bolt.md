@@ -40,7 +40,3 @@
 ## 2026-07-24 - String Allocation Bottleneck in ReDoS Mitigation
 **Learning:** ReDoS mitigations that replace Regex with `split()` and `.map()` can inadvertently introduce a severe O(N*M) garbage collection bottleneck when executed inside tight loops (like checking many patterns against many tabs).
 **Action:** When migrating away from Regex to safe string matching for performance/security, explicitly pre-parse and cache the split patterns outside the hot path to avoid redundant memory allocations.
-
-## 2026-07-25 - Cached Parsed Wildcard Patterns
-**Learning:** When replacing regular expressions with string operations (like `split()` and `.map()`) for ReDoS mitigation, always cache the pre-parsed patterns outside of hot paths (like O(N*M) tab/pattern filtering loops) to avoid severe garbage collection and CPU bottlenecks from redundant allocations.
-**Action:** Use a `Map` to cache pre-parsed arrays of string parts for wildcard matching functions rather than repeatedly parsing strings inside hot loops.
