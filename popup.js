@@ -1245,15 +1245,26 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (filterMode === 'autoclose') {
         const patterns = ac.urlPatterns || [];
 
-        // Helper for safe pattern matching (ReDoS prevention)
-        const matchesPattern = (url, pattern) => {
-          if (!pattern || !url || url.length > 2000 || pattern.length > 200) return false;
+        // ⚡ Bolt Performance Optimization:
+        // Pre-parse and lower-case patterns once outside the filter loop
+        // to prevent O(N * M) redundant string allocations where N = tabs, M = patterns.
+        const parsedPatterns = patterns.map(pattern => {
+          if (!pattern || pattern.length > 200) return null;
           const parts = pattern.split('*');
-          if (parts.length === 1) return url.toLowerCase() === pattern.toLowerCase();
+          return {
+            exact: parts.length === 1,
+            lowerPattern: parts.length === 1 ? pattern.toLowerCase() : null,
+            lowerParts: parts.length > 1 ? parts.map(p => p.toLowerCase()) : []
+          };
+        }).filter(Boolean);
 
-          const lowerUrl = url.toLowerCase();
-          const lowerParts = parts.map(p => p.toLowerCase());
+        // Helper for safe pattern matching (ReDoS prevention) using pre-parsed parts
+        const matchesParsedPattern = (url, lowerUrl, parsed) => {
+          if (!url || url.length > 2000) return false;
 
+          if (parsed.exact) return lowerUrl === parsed.lowerPattern;
+
+          const lowerParts = parsed.lowerParts;
           if (!lowerUrl.startsWith(lowerParts[0])) return false;
 
           let currentIndex = lowerParts[0].length;
@@ -1275,7 +1286,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         filteredTabs = allTabs.filter(t => {
           if (!t.url || t.url.length > 2000) return false;
-          return patterns.some(pattern => matchesPattern(t.url, pattern));
+          const lowerUrl = t.url.toLowerCase();
+          return parsedPatterns.some(parsed => matchesParsedPattern(t.url, lowerUrl, parsed));
         });
       }
 
