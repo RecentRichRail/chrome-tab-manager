@@ -677,7 +677,6 @@ function matchesPattern(url, pattern) {
     if (parsedPattern.exact) {
       return lowerUrl === parsedPattern.lowerPattern;
     }
-
     const lowerParts = parsedPattern.lowerParts;
 
     if (!lowerUrl.startsWith(lowerParts[0])) {

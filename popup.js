@@ -1257,9 +1257,9 @@ document.addEventListener('DOMContentLoaded', () => {
             lowerParts: parts.length > 1 ? parts.map(p => p.toLowerCase()) : []
           };
         }).filter(Boolean);
-
         // Helper for safe pattern matching (ReDoS prevention) using pre-parsed parts
         const matchesParsedPattern = (url, lowerUrl, parsed) => {
+          if (!url || url.length > 2000) return false;
           if (!url || url.length > 2000) return false;
 
           if (parsed.exact) return lowerUrl === parsed.lowerPattern;
