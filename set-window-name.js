@@ -42,13 +42,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.close();
   });
 
-  labelInput.addEventListener('keypress', async (e) => {
+  labelInput.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter') {
       const label = labelInput.value.trim();
       try {
         await saveLabel(windowId, label);
         chrome.runtime.sendMessage({ type: 'focusWindow', windowId: String(windowId) }, () => {});
       } catch (e) {}
+      window.close();
+    } else if (e.key === 'Escape') {
+      chrome.runtime.sendMessage({ type: 'focusWindow', windowId: String(windowId) }, () => {});
       window.close();
     }
   });
