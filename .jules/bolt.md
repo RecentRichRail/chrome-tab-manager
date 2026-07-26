@@ -37,7 +37,9 @@
 ## 2026-07-21 - Redundant Processing in Tab Lifecycle
 **Learning:** The `chrome.tabs.onUpdated` event fires multiple times for a single page load (e.g., when the URL changes and then when status is 'complete'). Triggering processing logic like auto-close or auto-grouping directly in this event without debouncing causes redundant asynchronous API calls, which wastes main thread time and can lead to race conditions if timeouts aren't managed per tab.
 **Action:** In Chrome extension development, consolidate and debounce `chrome.tabs.onUpdated` event handlers using a map of timeouts keyed by `tabId` to prevent redundant asynchronous operations and race conditions.
-
 ## 2026-07-26 - Redundant allocations in hot loops
 **Learning:** Replacing regular expressions with string operations (like split and map) in hot loops can cause severe garbage collection and CPU bottlenecks due to redundant allocations if the pre-parsed patterns aren't cached.
 **Action:** Always cache the pre-parsed patterns outside of hot paths (like O(N*M) tab/pattern filtering loops) when replacing regexes with string-based matching algorithms.
+## 2026-07-24 - String Allocation Bottleneck in ReDoS Mitigation
+**Learning:** ReDoS mitigations that replace Regex with `split()` and `.map()` can inadvertently introduce a severe O(N*M) garbage collection bottleneck when executed inside tight loops (like checking many patterns against many tabs).
+**Action:** When migrating away from Regex to safe string matching for performance/security, explicitly pre-parse and cache the split patterns outside the hot path to avoid redundant memory allocations.

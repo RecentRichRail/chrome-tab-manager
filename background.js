@@ -637,9 +637,11 @@ async function updateTabUrlMap() {
   }
 }
 
-// Cache for pre-parsed pattern arrays to avoid redundant string allocations in hot loops
-const patternCache = new Map();
-const MAX_CACHE_SIZE = 500;
+// ⚡ Bolt Performance Optimization:
+// Cache parsed pattern arrays to avoid redundant string allocations (.toLowerCase(), .split())
+// on every tab URL check, significantly reducing GC pressure.
+const patternParseCache = new Map();
+const MAX_PATTERN_CACHE_SIZE = 500;
 
 // Function to check if a URL matches a pattern with wildcards
 function matchesPattern(url, pattern) {
@@ -649,21 +651,33 @@ function matchesPattern(url, pattern) {
       return false;
     }
     
-    let lowerParts = patternCache.get(pattern);
-    if (!lowerParts) {
-      lowerParts = pattern.toLowerCase().split('*');
-      if (patternCache.size >= MAX_CACHE_SIZE) {
-        // clear cache if it grows too large to prevent memory leaks
-        patternCache.clear();
-      }
-      patternCache.set(pattern, lowerParts);
-    }
+    // Check if we have parsed this pattern before
+    let parsedPattern = patternParseCache.get(pattern);
 
-    if (lowerParts.length === 1) {
-      return url.toLowerCase() === lowerParts[0];
+    if (!parsedPattern) {
+      // Manage cache size
+      if (patternParseCache.size >= MAX_PATTERN_CACHE_SIZE) {
+        // Remove the oldest entry (Map iterates in insertion order)
+        const firstKey = patternParseCache.keys().next().value;
+        patternParseCache.delete(firstKey);
+      }
+
+      const parts = pattern.split('*');
+      parsedPattern = {
+        exact: parts.length === 1,
+        lowerPattern: parts.length === 1 ? pattern.toLowerCase() : null,
+        lowerParts: parts.length > 1 ? parts.map(p => p.toLowerCase()) : []
+      };
+
+      patternParseCache.set(pattern, parsedPattern);
     }
 
     const lowerUrl = url.toLowerCase();
+
+    if (parsedPattern.exact) {
+      return lowerUrl === parsedPattern.lowerPattern;
+    }
+    const lowerParts = parsedPattern.lowerParts;
 
     if (!lowerUrl.startsWith(lowerParts[0])) {
       return false;

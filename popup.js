@@ -1246,24 +1246,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const patterns = ac.urlPatterns || [];
 
         // ⚡ Bolt Performance Optimization:
-        // Cache pre-parsed pattern arrays to avoid redundant O(N*M) string allocations
-        // in this hot loop when filtering thousands of tabs.
-        const patternCache = new Map();
+        // Pre-parse and lower-case patterns once outside the filter loop
+        // to prevent O(N * M) redundant string allocations where N = tabs, M = patterns.
+        const parsedPatterns = patterns.map(pattern => {
+          if (!pattern || pattern.length > 200) return null;
+          const parts = pattern.split('*');
+          return {
+            exact: parts.length === 1,
+            lowerPattern: parts.length === 1 ? pattern.toLowerCase() : null,
+            lowerParts: parts.length > 1 ? parts.map(p => p.toLowerCase()) : []
+          };
+        }).filter(Boolean);
+        // Helper for safe pattern matching (ReDoS prevention) using pre-parsed parts
+        const matchesParsedPattern = (url, lowerUrl, parsed) => {
+          if (!url || url.length > 2000) return false;
+          if (!url || url.length > 2000) return false;
 
-        // Helper for safe pattern matching (ReDoS prevention)
-        const matchesPattern = (url, pattern) => {
-          if (!pattern || !url || url.length > 2000 || pattern.length > 200) return false;
+          if (parsed.exact) return lowerUrl === parsed.lowerPattern;
 
-          let lowerParts = patternCache.get(pattern);
-          if (!lowerParts) {
-            lowerParts = pattern.toLowerCase().split('*');
-            patternCache.set(pattern, lowerParts);
-          }
-
-          if (lowerParts.length === 1) return url.toLowerCase() === lowerParts[0];
-
-          const lowerUrl = url.toLowerCase();
-
+          const lowerParts = parsed.lowerParts;
           if (!lowerUrl.startsWith(lowerParts[0])) return false;
 
           let currentIndex = lowerParts[0].length;
@@ -1285,7 +1286,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         filteredTabs = allTabs.filter(t => {
           if (!t.url || t.url.length > 2000) return false;
-          return patterns.some(pattern => matchesPattern(t.url, pattern));
+          const lowerUrl = t.url.toLowerCase();
+          return parsedPatterns.some(parsed => matchesParsedPattern(t.url, lowerUrl, parsed));
         });
       }
 
@@ -1409,8 +1411,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 tEl.dataset.windowid = String(tab.windowId);
                 tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
                 tEl.innerHTML = `
-                  <div style="flex:1;min-width:0;">
-                    <div style="font-size:13px;font-weight:600;color:#111827;">${escapeHtml(baseTitle)}</div>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
+                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(baseTitle)}">${escapeHtml(baseTitle)}</div>
+                    <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;" title="${escapeHtml(tab.url || '')}">${escapeHtml(tab.url || '')}</div>
                   </div>
                   <div style="margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;">
                     <button class="close-tab-btn" title="Close tab" aria-label="Close tab: ${escapeHtml(baseTitle)}" data-tabid="${tab.tabId}">✕</button>
@@ -1554,8 +1557,9 @@ document.addEventListener('DOMContentLoaded', () => {
               tEl.dataset.windowid = String(w.id);
               tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
               tEl.innerHTML = `
-                <div style=\"flex:1;min-width:0;\">\
-                  <div style=\"font-size:13px;font-weight:600;color:#111827;\">${escapeHtml(tab.title || '(no title)')}</div>\
+                <div style=\"flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;\">\
+                  <div style=\"font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\" title=\"${escapeHtml(tab.title || '(no title)')}\">${escapeHtml(tab.title || '(no title)')}</div>\
+                  <div style=\"font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;\" title=\"${escapeHtml(tab.url || '')}\">${escapeHtml(tab.url || '')}</div>\
                 </div>
                 <div style=\"margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;\">\
                   <button class=\"close-tab-btn\" title=\"Close tab\" aria-label=\"Close tab: ${escapeHtml(tab.title || '(no title)')}\" data-tabid=\"${tab.id}\">✕</button>\

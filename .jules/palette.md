@@ -18,3 +18,6 @@
 ## 2026-07-22 - Fix Escape Key Support in Inline Edits
 **Learning:** The `keypress` event is deprecated and importantly, does not fire for non-character keys like `Escape` in modern browsers, preventing users from cancelling inline edits via keyboard.
 **Action:** Always use `keydown` for keyboard accessibility, especially when handling navigation or control keys like Escape/Enter.
+## 2026-07-24 - Consistent Theming and Layout Truncation
+**Learning:** Found that tab list items used hardcoded text colors (e.g., #111827) and lacked layout safeguards (like text-overflow: ellipsis) for long titles or URLs, which could break the flex layout or clash with dark mode themes.
+**Action:** Always prefer design system CSS variables (like `var(--text-primary)` and `var(--muted)`) over hardcoded colors, and explicitly handle text truncation for unbounded user-generated content (like URLs and page titles).
