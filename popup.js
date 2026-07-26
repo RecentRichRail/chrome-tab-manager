@@ -1245,14 +1245,24 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (filterMode === 'autoclose') {
         const patterns = ac.urlPatterns || [];
 
+        // ⚡ Bolt Performance Optimization:
+        // Cache pre-parsed pattern arrays to avoid redundant O(N*M) string allocations
+        // in this hot loop when filtering thousands of tabs.
+        const patternCache = new Map();
+
         // Helper for safe pattern matching (ReDoS prevention)
         const matchesPattern = (url, pattern) => {
           if (!pattern || !url || url.length > 2000 || pattern.length > 200) return false;
-          const parts = pattern.split('*');
-          if (parts.length === 1) return url.toLowerCase() === pattern.toLowerCase();
+
+          let lowerParts = patternCache.get(pattern);
+          if (!lowerParts) {
+            lowerParts = pattern.toLowerCase().split('*');
+            patternCache.set(pattern, lowerParts);
+          }
+
+          if (lowerParts.length === 1) return url.toLowerCase() === lowerParts[0];
 
           const lowerUrl = url.toLowerCase();
-          const lowerParts = parts.map(p => p.toLowerCase());
 
           if (!lowerUrl.startsWith(lowerParts[0])) return false;
 
