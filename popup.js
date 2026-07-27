@@ -354,6 +354,11 @@ function saveEditedUrl(index, newPattern) {
     return;
   }
   
+  if (newPattern.length > 200) {
+    alert('URL pattern cannot exceed 200 characters.');
+    return;
+  }
+
   // Check if pattern already exists (but allow same pattern at same index)
   const existingIndex = autoCloseSettings.urlPatterns.indexOf(newPattern);
   if (existingIndex !== -1 && existingIndex !== index) {
@@ -412,6 +417,11 @@ function saveEditedDuplicateAllowUrl(index, newPattern) {
     return;
   }
   
+  if (newPattern.length > 200) {
+    alert('Exception pattern cannot exceed 200 characters.');
+    return;
+  }
+
   // Check if pattern already exists (but allow same pattern at same index)
   const existingIndex = duplicatePreventionSettings.allowedDuplicatePatterns.indexOf(newPattern);
   if (existingIndex !== -1 && existingIndex !== index) {
@@ -442,6 +452,11 @@ function createGroupRule() {
     return;
   }
   
+  if (groupName.length > 50) {
+    alert('Group name cannot exceed 50 characters.');
+    return;
+  }
+
   // Check if group name already exists
   if (autoTabGroupingSettings.tabGroupRules.some(rule => rule.groupName === groupName)) {
     alert('A group with this name already exists!');
@@ -474,6 +489,11 @@ function addPattern(ruleIndex) {
     return;
   }
   
+  if (pattern.length > 200) {
+    alert('URL pattern cannot exceed 200 characters.');
+    return;
+  }
+
   // Check if pattern already exists in any rule
   const existingRule = autoTabGroupingSettings.tabGroupRules.find(rule => {
     const rulePatterns = rule.patterns || [];
@@ -638,6 +658,11 @@ function saveEditedGroupRule(index) {
     return;
   }
   
+  if (groupName.length > 50) {
+    alert('Group name cannot exceed 50 characters.');
+    return;
+  }
+
   // Check if group name already exists (but allow same name at same index)
   const existingIndex = autoTabGroupingSettings.tabGroupRules.findIndex((rule, ruleIndex) => {
     return ruleIndex !== index && rule.groupName === groupName;
@@ -669,11 +694,17 @@ function addUrlPattern() {
   const input = document.getElementById('urlInput');
   const pattern = input.value.trim();
   
-  if (pattern && !autoCloseSettings.urlPatterns.includes(pattern)) {
-    autoCloseSettings.urlPatterns.push(pattern);
-    input.value = '';
-    updateUrlList();
-    saveAutoCloseSettings();
+  if (pattern) {
+    if (pattern.length > 200) {
+      alert('URL pattern cannot exceed 200 characters.');
+      return;
+    }
+    if (!autoCloseSettings.urlPatterns.includes(pattern)) {
+      autoCloseSettings.urlPatterns.push(pattern);
+      input.value = '';
+      updateUrlList();
+      saveAutoCloseSettings();
+    }
   }
 }
 
@@ -682,11 +713,17 @@ function addDuplicateAllowPattern() {
   const input = document.getElementById('duplicateAllowInput');
   const pattern = input.value.trim();
   
-  if (pattern && !duplicatePreventionSettings.allowedDuplicatePatterns.includes(pattern)) {
-    duplicatePreventionSettings.allowedDuplicatePatterns.push(pattern);
-    input.value = '';
-    updateDuplicateAllowList();
-    saveDuplicatePreventionSettings();
+  if (pattern) {
+    if (pattern.length > 200) {
+      alert('Exception pattern cannot exceed 200 characters.');
+      return;
+    }
+    if (!duplicatePreventionSettings.allowedDuplicatePatterns.includes(pattern)) {
+      duplicatePreventionSettings.allowedDuplicatePatterns.push(pattern);
+      input.value = '';
+      updateDuplicateAllowList();
+      saveDuplicatePreventionSettings();
+    }
   }
 }
 
