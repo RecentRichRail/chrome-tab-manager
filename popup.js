@@ -1340,7 +1340,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Render titles in a responsive grid; collapsed by default
         const titleGrid = document.createElement('div');
         titleGrid.className = 'explorer-title-grid';
-        container.appendChild(titleGrid);
+
+        // ⚡ Bolt Performance Optimization:
+        // Use a DocumentFragment to batch the insertion of titleDivs.
+        // Appending elements to the live DOM (container) inside the loop triggers O(N) reflows.
+        const titleGridFragment = document.createDocumentFragment();
 
         // Sort titles alphabetically by base title for stable display
         const sortedEntries = Array.from(byTitle.entries()).sort((a, b) => a[0].localeCompare(b[0]));
@@ -1450,7 +1454,7 @@ document.addEventListener('DOMContentLoaded', () => {
             wHeader.setAttribute('aria-expanded', 'false');
           }
 
-          titleGrid.appendChild(titleDiv);
+          titleGridFragment.appendChild(titleDiv);
           titleDiv.appendChild(headerEl);
           titleDiv.appendChild(contentEl);
           const toggleTitle = () => {
@@ -1492,8 +1496,18 @@ document.addEventListener('DOMContentLoaded', () => {
             h.setAttribute('aria-expanded', 'false');
           });
         }
+
+        // Append the fully constructed fragment to the grid, and grid to container
+        titleGrid.appendChild(titleGridFragment);
+        container.appendChild(titleGrid);
       } else {
         // Original layout by window -> group -> tabs
+
+        // ⚡ Bolt Performance Optimization:
+        // Use a DocumentFragment to batch the insertion of windows.
+        // Appending elements to the live DOM (container) inside the loop triggers O(N) reflows.
+        const windowFragment = document.createDocumentFragment();
+
         for (const w of windows) {
           const winDiv = document.createElement('div');
           winDiv.className = 'menu-section explorer-window';
@@ -1515,7 +1529,7 @@ document.addEventListener('DOMContentLoaded', () => {
           `;
           winDiv.appendChild(headerEl);
           winDiv.appendChild(contentEl);
-          container.appendChild(winDiv);
+          windowFragment.appendChild(winDiv);
 
           const groups = {};
           for (const t of w.tabs) {
@@ -1609,6 +1623,9 @@ document.addEventListener('DOMContentLoaded', () => {
             h.setAttribute('aria-expanded', 'false');
           });
         }
+
+        // Append the fully constructed fragment to the container
+        container.appendChild(windowFragment);
       }
 
       // wire up tab click and keydown to activate

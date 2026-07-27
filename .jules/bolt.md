@@ -43,3 +43,6 @@
 ## 2026-07-24 - String Allocation Bottleneck in ReDoS Mitigation
 **Learning:** ReDoS mitigations that replace Regex with `split()` and `.map()` can inadvertently introduce a severe O(N*M) garbage collection bottleneck when executed inside tight loops (like checking many patterns against many tabs).
 **Action:** When migrating away from Regex to safe string matching for performance/security, explicitly pre-parse and cache the split patterns outside the hot path to avoid redundant memory allocations.
+## 2026-07-27 - Batch DOM Mutations in Popup
+**Learning:** Appending elements to a live DOM container inside a loop during popup rendering causes severe layout reflows and UI blocking when many tabs are open.
+**Action:** Always construct complex DOM trees offline (using `DocumentFragment`) and append them to the document in a single operation.
