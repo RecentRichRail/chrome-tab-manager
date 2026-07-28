@@ -227,6 +227,11 @@ function updateUrlList() {
     return;
   }
 
+  // ⚡ Bolt Performance Optimization:
+  // Batch DOM mutations using a DocumentFragment to prevent O(N) reflows
+  // and layout thrashing when updating the URL list.
+  const fragment = document.createDocumentFragment();
+
   autoCloseSettings.urlPatterns.forEach((pattern, index) => {
     const item = document.createElement('div');
     item.className = 'url-item';
@@ -237,8 +242,10 @@ function updateUrlList() {
         <button class="remove-btn" data-index="${index}" title="Remove" aria-label="Remove pattern: ${escapeHtml(pattern)}">Remove</button>
       </div>
     `;
-    container.appendChild(item);
+    fragment.appendChild(item);
   });
+
+  container.appendChild(fragment);
 }
 
 // Update the duplicate allow list display
@@ -251,6 +258,11 @@ function updateDuplicateAllowList() {
     return;
   }
 
+  // ⚡ Bolt Performance Optimization:
+  // Batch DOM mutations using a DocumentFragment to prevent O(N) reflows
+  // and layout thrashing when updating the duplicate allow list.
+  const fragment = document.createDocumentFragment();
+
   duplicatePreventionSettings.allowedDuplicatePatterns.forEach((pattern, index) => {
     const item = document.createElement('div');
     item.className = 'url-item';
@@ -261,8 +273,10 @@ function updateDuplicateAllowList() {
         <button class="duplicate-remove-btn" data-index="${index}" title="Remove" aria-label="Remove exception pattern: ${escapeHtml(pattern)}">Remove</button>
       </div>
     `;
-    container.appendChild(item);
+    fragment.appendChild(item);
   });
+
+  container.appendChild(fragment);
 }
 
 // Update the group rule list display
@@ -274,6 +288,11 @@ function updateGroupRuleList() {
     container.innerHTML = '<div class="help-text" style="text-align: center; margin-top: 8px; font-style: italic;">No tab group rules created yet. Create one above to start organizing tabs automatically.</div>';
     return;
   }
+
+  // ⚡ Bolt Performance Optimization:
+  // Batch DOM mutations using a DocumentFragment to prevent O(N) reflows
+  // and layout thrashing when updating the group rule list.
+  const fragment = document.createDocumentFragment();
 
   autoTabGroupingSettings.tabGroupRules.forEach((rule, index) => {
     const item = document.createElement('div');
@@ -309,8 +328,10 @@ function updateGroupRuleList() {
         </div>
       </div>
     `;
-    container.appendChild(item);
+    fragment.appendChild(item);
   });
+
+  container.appendChild(fragment);
 }
 
 // Start editing a URL pattern

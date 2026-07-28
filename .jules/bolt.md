@@ -46,3 +46,7 @@
 ## 2026-07-27 - Batch DOM Mutations in Popup
 **Learning:** Appending elements to a live DOM container inside a loop during popup rendering causes severe layout reflows and UI blocking when many tabs are open.
 **Action:** Always construct complex DOM trees offline (using `DocumentFragment`) and append them to the document in a single operation.
+
+## 2026-07-28 - Batched DOM mutations in popup
+**Learning:** In Chrome extension popups, appending elements to a live DOM container inside a loop can cause severe layout reflows and UI blocking when many tabs are open or many rules exist.
+**Action:** Always construct complex DOM trees offline (using DocumentFragment) and append them to the document in a single operation.
