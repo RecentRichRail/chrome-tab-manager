@@ -1189,12 +1189,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // Debounce the search input to prevent rapid, unnecessary DOM rebuilds
   // and async calls to chrome.windows.getAll on every keystroke.
   let searchTimeoutId = null;
-  document.getElementById('windowSearchInput').addEventListener('input', (e) => {
+  const searchInput = document.getElementById('windowSearchInput');
+  searchInput.addEventListener('input', (e) => {
     if (searchTimeoutId) clearTimeout(searchTimeoutId);
     searchTimeoutId = setTimeout(() => {
       // Rebuild to support the alternate grouped-by-title layout when filtering
       buildWindowExplorer();
     }, 250);
+  });
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      searchInput.value = '';
+      const filterSelect = document.getElementById('windowFilterSelect');
+      if (filterSelect) filterSelect.value = 'all';
+      buildWindowExplorer();
+    }
   });
 
   // Build explorer on open by default
@@ -1350,9 +1361,20 @@ document.addEventListener('DOMContentLoaded', () => {
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <div style="font-size:15px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No tabs found</div>
-            <div style="font-size:13px;">Try adjusting your search or filters.</div>
+            <div style="font-size:13px; margin-bottom: 16px;">Try adjusting your search or filters.</div>
+            <button id="clearSearchFiltersBtn" class="btn-glass">Clear Search & Filters</button>
           </div>
         `;
+        const clearBtn = container.querySelector('#clearSearchFiltersBtn');
+        if (clearBtn) {
+          clearBtn.addEventListener('click', () => {
+            const searchInputEl = document.getElementById('windowSearchInput');
+            if (searchInputEl) searchInputEl.value = '';
+            const filterSelectEl = document.getElementById('windowFilterSelect');
+            if (filterSelectEl) filterSelectEl.value = 'all';
+            buildWindowExplorer();
+          });
+        }
         return;
       }
 

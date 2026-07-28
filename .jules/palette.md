@@ -21,3 +21,6 @@
 ## 2026-07-24 - Consistent Theming and Layout Truncation
 **Learning:** Found that tab list items used hardcoded text colors (e.g., #111827) and lacked layout safeguards (like text-overflow: ellipsis) for long titles or URLs, which could break the flex layout or clash with dark mode themes.
 **Action:** Always prefer design system CSS variables (like `var(--text-primary)` and `var(--muted)`) over hardcoded colors, and explicitly handle text truncation for unbounded user-generated content (like URLs and page titles).
+## 2024-05-18 - Empty State Recovery
+**Learning:** Empty states in filtering UI often leave users stranded without an obvious way to recover, requiring manual backspacing or filter resetting.
+**Action:** Always provide a 'Clear Filters' or 'Reset' CTA directly within the empty state to provide a one-click recovery path.
