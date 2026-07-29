@@ -31,3 +31,7 @@
 **Vulnerability:** User inputs for URL patterns and tab group rules in `popup.js` were not subjected to length limitations before being saved to `chrome.storage.sync`.
 **Learning:** `chrome.storage.sync` has strict quotas (`QUOTA_BYTES_PER_ITEM` is 8KB, `MAX_ITEMS` is 512, and `QUOTA_BYTES` is 100KB total). Allowing unbounded text entry permits malicious or accidental inputs to easily exhaust these storage quotas, leading to a Denial of Service (DoS) for the extension's configuration capabilities, and potentially crippling the regex parser when extremely long strings are evaluated.
 **Prevention:** To prevent `chrome.storage.sync` quota exhaustion and potential Denial of Service (DoS) in Chrome extensions, strictly limit the character length of user inputs (such as URL patterns and group names) before saving them to storage.
+## 2026-07-29 - DoS Risks in Settings Inputs
+**Vulnerability:** Missing length and size limits on inputs that are saved to extension storage.
+**Learning:** Unconstrained inputs can exhaust storage quotas and memory, leading to DoS.
+**Prevention:** Always enforce strict length and size limits on all user-provided data, including file uploads and label inputs.
