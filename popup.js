@@ -1008,6 +1008,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const windowId = await getCurrentBrowserWindowId();
       if (!windowId) return;
       const label = document.getElementById('windowLabelInput').value.trim();
+
+      // 🛡️ Sentinel: Enforce length limit to prevent storage DoS
+      if (label.length > 50) {
+        alert('Window label cannot exceed 50 characters.');
+        return;
+      }
+
       chrome.runtime.sendMessage({ type: 'setWindowLabel', windowId, label }, (resp) => {
         if (resp && resp.ok) {
           // close popup to apply quickly
@@ -1029,6 +1036,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const windowId = await getCurrentBrowserWindowId();
         if (!windowId) return;
         const label = document.getElementById('initWindowLabelInput').value.trim();
+
+        // 🛡️ Sentinel: Enforce length limit to prevent storage DoS
+        if (label.length > 50) {
+          alert('Window label cannot exceed 50 characters.');
+          return;
+        }
+
         const initToggle = document.getElementById('initWindowLabelPrefixToggle');
         const prefixEnabled = initToggle ? !!initToggle.checked : true;
         chrome.runtime.sendMessage({ type: 'setWindowLabel', windowId, label }, async (resp) => {
@@ -1091,6 +1105,16 @@ document.addEventListener('DOMContentLoaded', () => {
   importFileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // 🛡️ Sentinel: Enforce file size limit (1MB) to prevent OOM/DoS
+    const MAX_FILE_SIZE = 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      alert('File is too large. Maximum size is 1MB.');
+      // clear the input so the same file can be selected again if needed after it's fixed
+      importFileInput.value = '';
+      return;
+    }
+
     try {
       const text = await file.text();
       const obj = JSON.parse(text);
