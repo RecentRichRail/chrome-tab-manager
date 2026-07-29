@@ -50,3 +50,6 @@
 ## 2026-07-28 - Batched DOM mutations in popup
 **Learning:** In Chrome extension popups, appending elements to a live DOM container inside a loop can cause severe layout reflows and UI blocking when many tabs are open or many rules exist.
 **Action:** Always construct complex DOM trees offline (using DocumentFragment) and append them to the document in a single operation.
+## 2024-05-18 - Batching Sequential IPC Calls
+**Learning:** Sequential `await` calls to Chrome extension APIs (like `chrome.action.setBadgeText`) introduce measurable Inter-Process Communication (IPC) overhead, especially on hot paths like tab updates.
+**Action:** Use `Promise.allSettled()` to batch and concurrently execute consecutive, independent API calls, reducing cumulative latency while gracefully handling individual operation failures.

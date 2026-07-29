@@ -976,20 +976,34 @@ async function _updateTabCountBadge() {
 
     // Global default badge: total tabs
     const tabCount = tabs.length;
-    await chrome.action.setBadgeText({ text: tabCount.toString() });
-    await chrome.action.setBadgeBackgroundColor({ color: '#4285f4' });
+
+    // ⚡ Bolt Performance Optimization:
+    // Batch consecutive chrome.action IPC calls via Promise.allSettled() to avoid sequential wait overhead
+    // and process all updates concurrently, checking for individual rejections.
+    const badgeUpdates = [
+      chrome.action.setBadgeText({ text: tabCount.toString() }),
+      chrome.action.setBadgeBackgroundColor({ color: '#4285f4' })
+    ];
 
     // Active tab: show '!' if unnamed; otherwise explicitly set count so it persists
     const activeTab = activeTabs[0];
-    if (!activeTab) return;
-    const hasLabel = !!labels[String(activeTab.windowId)];
-    if (!hasLabel) {
-      await chrome.action.setBadgeText({ tabId: activeTab.id, text: '!' });
-      await chrome.action.setBadgeBackgroundColor({ tabId: activeTab.id, color: '#ef4444' });
-    } else {
-      await chrome.action.setBadgeText({ tabId: activeTab.id, text: tabCount.toString() });
-      await chrome.action.setBadgeBackgroundColor({ tabId: activeTab.id, color: '#4285f4' });
+    if (activeTab) {
+      const hasLabel = !!labels[String(activeTab.windowId)];
+      if (!hasLabel) {
+        badgeUpdates.push(chrome.action.setBadgeText({ tabId: activeTab.id, text: '!' }));
+        badgeUpdates.push(chrome.action.setBadgeBackgroundColor({ tabId: activeTab.id, color: '#ef4444' }));
+      } else {
+        badgeUpdates.push(chrome.action.setBadgeText({ tabId: activeTab.id, text: tabCount.toString() }));
+        badgeUpdates.push(chrome.action.setBadgeBackgroundColor({ tabId: activeTab.id, color: '#4285f4' }));
+      }
     }
+
+    const results = await Promise.allSettled(badgeUpdates);
+    results.forEach((result, idx) => {
+      if (result.status === 'rejected') {
+        console.error(`Badge update failed for operation ${idx}:`, result.reason);
+      }
+    });
   } catch (error) {
     console.error('Error updating tab count badge:', error);
   }
