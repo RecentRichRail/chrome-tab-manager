@@ -182,10 +182,10 @@
       <div class="menu-header" id="windowNameHeader" role="button" tabindex="0"><span>Window Name</span><span class="menu-arrow">▶</span></div>
       <div class="menu-content" id="windowNameContent">
         <div style="display:flex;gap:8px;align-items:center;">
-          <input id="windowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)" aria-label="Give this window a name" />
+          <input id="windowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)" aria-label="Give this window a name" aria-describedby="windowLabelHelp" />
           <button id="saveWindowLabelBtn" class="btn-glass">Save</button>
         </div>
-        <div class="help-text" style="margin-top:8px;">This prefix will be added to the title of each tab in this window so the OS window title shows it when that tab is active.</div>
+        <div id="windowLabelHelp" class="help-text" style="margin-top:8px;">This prefix will be added to the title of each tab in this window so the OS window title shows it when that tab is active.</div>
         <div style="margin-top:6px;">
           <label class="glass-toggle">
             <input type="checkbox" id="windowLabelPrefixToggle" checked>
@@ -201,13 +201,13 @@
       <div class="menu-content" id="autoCollapseContent">
         <div class="actions">
           <label class="glass-toggle">
-            <input type="checkbox" id="autoCollapseToggle">
+            <input type="checkbox" id="autoCollapseToggle" aria-describedby="autoCollapseHelp">
             <span class="dot" aria-hidden="true"></span>
             <span class="toggle-text">Enable Auto-Collapse</span>
           </label>
         </div>
         <div class="actions"><label class="setting-label" for="collapseDelayInput">Collapse delay (seconds)</label><input type="number" id="collapseDelayInput" class="form-input" value="3" min="1" max="30" style="width:80px;" aria-label="Collapse delay in seconds"></div>
-        <div class="help-text">Automatically collapses inactive tab groups when you switch to a different group.</div>
+        <div id="autoCollapseHelp" class="help-text">Automatically collapses inactive tab groups when you switch to a different group.</div>
       </div>
     </div>
 
@@ -333,13 +333,13 @@
       <div class="menu-header" id="importExportHeader" role="button" tabindex="0"><span>Import / Export</span><span class="menu-arrow">▶</span></div>
       <div class="menu-content" id="importExportContent">
         <div style="display:flex;gap:8px;align-items:center;flex-direction:column;">
-          <button id="exportSettingsBtn" class="btn-glass">Export Settings (JSON)</button>
-          <label style="width:100%;margin-top:8px;">
+          <button id="exportSettingsBtn" class="btn-glass" aria-describedby="importExportHelp">Export Settings (JSON)</button>
+          <div style="width:100%;margin-top:8px;">
             <input id="importFileInput" type="file" accept="application/json" style="display:none;">
-            <button id="importSettingsBtn" class="btn-glass" style="width:100%;">Import Settings (JSON)</button>
-          </label>
+            <button id="importSettingsBtn" class="btn-glass" style="width:100%;" aria-describedby="importExportHelp">Import Settings (JSON)</button>
+          </div>
         </div>
-        <div class="help-text" style="margin-top:8px;">Export and import your settings as JSON. Importing will overwrite current stored settings in sync storage.</div>
+        <div id="importExportHelp" class="help-text" style="margin-top:8px;">Export and import your settings as JSON. Importing will overwrite current stored settings in sync storage.</div>
       </div>
     </div>
   </div>
@@ -350,7 +350,7 @@
       <div class="menu-header"><span>Name this window</span></div>
       <div class="menu-content expanded" style="display:block;">
         <div style="display:flex;gap:8px;align-items:center;">
-          <input id="initWindowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)" aria-label="Give this window a name">
+          <input id="initWindowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)" aria-label="Give this window a name" aria-describedby="initWindowLabelHelp">
           <button id="initSaveWindowLabelBtn" class="btn-glass">Save</button>
         </div>
         <div style="margin-top:6px;">
@@ -360,7 +360,7 @@
             <span class="toggle-text">Show label prefix on page titles</span>
           </label>
         </div>
-        <div class="help-text" style="margin-top:8px;">Set a short label so you can recognize this window. You can change this later in Settings.</div>
+        <div id="initWindowLabelHelp" class="help-text" style="margin-top:8px;">Set a short label so you can recognize this window. You can change this later in Settings.</div>
       </div>
     </div>
   </div>
