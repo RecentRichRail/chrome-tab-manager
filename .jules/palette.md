@@ -24,3 +24,6 @@
 ## 2024-05-18 - Empty State Recovery
 **Learning:** Empty states in filtering UI often leave users stranded without an obvious way to recover, requiring manual backspacing or filter resetting.
 **Action:** Always provide a 'Clear Filters' or 'Reset' CTA directly within the empty state to provide a one-click recovery path.
+## 2026-07-29 - Explicitly Associate Help Text with Inputs
+**Learning:** Found that explanatory text (.help-text) below inputs was not programmatically associated with the form fields. Screen reader users would hear the input label but miss crucial formatting instructions or consequences of their actions.
+**Action:** Always associate helper or explanatory text with its corresponding input using the `aria-describedby` attribute.
