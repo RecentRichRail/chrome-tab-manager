@@ -142,7 +142,7 @@
 
   <div id="explorerRoot" class="content">
     <div class="explorer-search-top">
-      <input id="windowSearchInput" type="search" class="form-input" placeholder="Search page titles or URLs..." aria-label="Search page titles or URLs" autofocus>
+      <input id="windowSearchInput" type="search" class="form-input" placeholder="Search page titles or URLs... (Press /)" aria-label="Search page titles or URLs (shortcut: /)" autofocus>
     </div>
     <div class="glass-card" style="padding:12px;">
       <div class="explorer-toolbar">
@@ -179,7 +179,7 @@
 
     <!-- Window Name section (second) -->
     <div class="menu-section">
-      <div class="menu-header" id="windowNameHeader" role="button" tabindex="0"><span>Window Name</span><span class="menu-arrow">▶</span></div>
+      <div class="menu-header" id="windowNameHeader" role="button" tabindex="0" aria-controls="windowNameContent"><span>Window Name</span><span class="menu-arrow">▶</span></div>
       <div class="menu-content" id="windowNameContent">
         <div style="display:flex;gap:8px;align-items:center;">
           <input id="windowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)" aria-label="Give this window a name" aria-describedby="windowLabelHelp" />
@@ -197,7 +197,7 @@
     </div>
 
     <div class="menu-section">
-      <div class="menu-header" id="autoCollapseHeader" role="button" tabindex="0"><span>Auto-Collapse Groups</span><span class="menu-arrow">▶</span></div>
+      <div class="menu-header" id="autoCollapseHeader" role="button" tabindex="0" aria-controls="autoCollapseContent"><span>Auto-Collapse Groups</span><span class="menu-arrow">▶</span></div>
       <div class="menu-content" id="autoCollapseContent">
         <div class="actions">
           <label class="glass-toggle">
@@ -212,7 +212,7 @@
     </div>
 
     <div class="menu-section">
-      <div class="menu-header" id="autoCloseHeader" role="button" tabindex="0"><span>Auto-Close Pages</span><span class="menu-arrow">▶</span></div>
+      <div class="menu-header" id="autoCloseHeader" role="button" tabindex="0" aria-controls="autoCloseContent"><span>Auto-Close Pages</span><span class="menu-arrow">▶</span></div>
       <div class="menu-content" id="autoCloseContent">
         <div class="actions">
           <label class="glass-toggle">
@@ -238,7 +238,7 @@
     </div>
 
     <div class="menu-section">
-      <div class="menu-header" id="autoTabGroupingHeader" role="button" tabindex="0"><span>Auto Tab Grouping</span><span class="menu-arrow">▶</span></div>
+      <div class="menu-header" id="autoTabGroupingHeader" role="button" tabindex="0" aria-controls="autoTabGroupingContent"><span>Auto Tab Grouping</span><span class="menu-arrow">▶</span></div>
       <div class="menu-content" id="autoTabGroupingContent">
         <div class="actions">
           <label class="glass-toggle">
@@ -297,7 +297,7 @@
     </div>
 
     <div class="menu-section">
-      <div class="menu-header" id="duplicatePreventionHeader" role="button" tabindex="0"><span>Duplicate Tab Prevention</span><span class="menu-arrow">▶</span></div>
+      <div class="menu-header" id="duplicatePreventionHeader" role="button" tabindex="0" aria-controls="duplicatePreventionContent"><span>Duplicate Tab Prevention</span><span class="menu-arrow">▶</span></div>
       <div class="menu-content" id="duplicatePreventionContent">
         <div class="actions">
           <label class="glass-toggle">
@@ -330,7 +330,7 @@
 
     <!-- Import/Export moved to bottom -->
     <div class="menu-section">
-      <div class="menu-header" id="importExportHeader" role="button" tabindex="0"><span>Import / Export</span><span class="menu-arrow">▶</span></div>
+      <div class="menu-header" id="importExportHeader" role="button" tabindex="0" aria-controls="importExportContent"><span>Import / Export</span><span class="menu-arrow">▶</span></div>
       <div class="menu-content" id="importExportContent">
         <div style="display:flex;gap:8px;align-items:center;flex-direction:column;">
           <button id="exportSettingsBtn" class="btn-glass" aria-describedby="importExportHelp">Export Settings (JSON)</button>

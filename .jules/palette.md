@@ -25,5 +25,6 @@
 **Learning:** Empty states in filtering UI often leave users stranded without an obvious way to recover, requiring manual backspacing or filter resetting.
 **Action:** Always provide a 'Clear Filters' or 'Reset' CTA directly within the empty state to provide a one-click recovery path.
 ## 2026-07-29 - Explicitly Associate Help Text with Inputs
-**Learning:** Found that explanatory text (.help-text) below inputs was not programmatically associated with the form fields. Screen reader users would hear the input label but miss crucial formatting instructions or consequences of their actions.
-**Action:** Always associate helper or explanatory text with its corresponding input using the `aria-describedby` attribute.
+## 2026-07-30 - Explicit ARIA controls and state for custom accordions
+**Learning:** When building custom div-based accordion elements, defining explicit `aria-controls` mappings between the toggle header and the content panel is crucial. It is also important to use `aria-expanded` to convey accordion state. Without this, screen readers cannot reliably convey the programmatic relationship and state.
+**Action:** Always verify that interactive custom components explicitly map their IDs via standard ARIA attributes like `aria-controls` and `aria-expanded`.
