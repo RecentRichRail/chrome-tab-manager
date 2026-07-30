@@ -99,7 +99,7 @@ function getRandomTabGroupColor() {
 }
 
 // Function to group existing tabs that match a rule
-async function groupExistingTabsForRule(rule) {
+async function groupExistingTabsForRule(rule, allTabs = null) {
   try {
     if (!rule.patterns || rule.patterns.length === 0) {
       console.log(`No patterns in rule for ${rule.groupName}`);
@@ -109,7 +109,7 @@ async function groupExistingTabsForRule(rule) {
     console.log(`Checking existing tabs for rule: ${rule.groupName}`);
 
     // Get all tabs across all windows
-    const tabs = await chrome.tabs.query({});
+    const tabs = allTabs || await chrome.tabs.query({});
     const matchingTabs = [];
 
     // Find tabs that match this rule's patterns
@@ -191,8 +191,14 @@ async function groupAllExistingTabs() {
     
     console.log('Grouping all existing tabs based on current rules...');
     
+    // ⚡ Bolt Performance Optimization:
+    // Fetch all tabs across all windows once, outside the loop.
+    // Passing this cached list to groupExistingTabsForRule eliminates the N+1 IPC overhead
+    // caused by calling chrome.tabs.query({}) repeatedly for every single group rule.
+    const allTabs = await chrome.tabs.query({});
+
     for (const rule of settings.tabGroupRules) {
-      await groupExistingTabsForRule(rule);
+      await groupExistingTabsForRule(rule, allTabs);
     }
   } catch (error) {
     console.error('Error grouping all existing tabs:', error);
