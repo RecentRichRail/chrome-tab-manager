@@ -1253,6 +1253,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Global keydown for search shortcut
+  document.addEventListener('keydown', (e) => {
+    // Only trigger if not already typing in an input, textarea, or select
+    if (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
+      e.preventDefault();
+      const inputEl = document.getElementById('windowSearchInput');
+      if (inputEl) inputEl.focus();
+    }
+  });
+
   // Build explorer on open by default
   buildWindowExplorer();
 
