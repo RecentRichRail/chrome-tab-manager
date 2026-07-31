@@ -1269,6 +1269,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function buildWindowExplorer() {
     const container = document.getElementById('windowListContainer');
     container.innerHTML = '';
+    let a11yIdCounter = 0;
     try {
       // ⚡ Bolt Performance Optimization:
       // Parallelize independent data fetches (windows, groups, labels, auto-close settings)
@@ -1468,13 +1469,16 @@ document.addEventListener('DOMContentLoaded', () => {
           titleDiv.className = 'menu-section explorer-title';
           const headerEl = document.createElement('div');
           headerEl.className = 'menu-header';
+          const contentId = `explorer-content-${++a11yIdCounter}`;
           headerEl.setAttribute('role', 'button');
           headerEl.setAttribute('tabindex', '0');
+          headerEl.setAttribute('aria-controls', contentId);
           // Count total tabs under this title across windows/groups
           let totalCount = 0;
           for (const m of winMap.values()) { for (const tabs of m.values()) totalCount += tabs.length; }
           headerEl.innerHTML = `<span>${escapeHtml(title)}</span><span class="count-badge">${totalCount}</span><span class="menu-arrow">▶</span>`;
           const contentEl = document.createElement('div');
+          contentEl.id = contentId;
           contentEl.className = 'menu-content';
           contentEl.style.display = 'none';
 
@@ -1486,10 +1490,13 @@ document.addEventListener('DOMContentLoaded', () => {
             winSection.className = 'menu-section explorer-window';
             const wHeader = document.createElement('div');
             wHeader.className = 'menu-header';
+            const wContentId = `explorer-wcontent-${++a11yIdCounter}`;
             wHeader.setAttribute('role', 'button');
             wHeader.setAttribute('tabindex', '0');
+            wHeader.setAttribute('aria-controls', wContentId);
             wHeader.innerHTML = `<span>${escapeHtml(headerTitle)}</span><span class="menu-arrow">▶</span>`;
             const wContent = document.createElement('div');
+            wContent.id = wContentId;
             wContent.className = 'menu-content';
             wContent.style.display = 'none';
 
@@ -1509,10 +1516,13 @@ document.addEventListener('DOMContentLoaded', () => {
               }
               const gHeader = document.createElement('div');
               gHeader.className = 'group-rule-header explorer-group-header';
+              const gContentId = `explorer-gcontent-${++a11yIdCounter}`;
               gHeader.setAttribute('role', 'button');
               gHeader.setAttribute('tabindex', '0');
+              gHeader.setAttribute('aria-controls', gContentId);
               gHeader.innerHTML = `<div class="group-rule-name">${escapeHtml(groupTitle)}</div><span class="menu-arrow">▶</span>`;
               const gContent = document.createElement('div');
+              gContent.id = gContentId;
               gContent.className = 'explorer-group-content';
               gContent.style.display = 'none';
 
@@ -1629,10 +1639,13 @@ document.addEventListener('DOMContentLoaded', () => {
           const headerTitle = winLabel ? `${winLabel}` : `Window ${w.id}`;
           const headerEl = document.createElement('div');
           headerEl.className = 'menu-header';
+          const contentId = `explorer-window-content-${++a11yIdCounter}`;
           headerEl.setAttribute('role', 'button');
           headerEl.setAttribute('tabindex', '0');
+          headerEl.setAttribute('aria-controls', contentId);
           headerEl.innerHTML = `<span>${escapeHtml(headerTitle)}</span><span class=\"menu-arrow\">▶</span>`;
           const contentEl = document.createElement('div');
+          contentEl.id = contentId;
           contentEl.className = 'menu-content';
           contentEl.style.display = 'none';
           contentEl.innerHTML = `
@@ -1665,10 +1678,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const groupHeader = document.createElement('div');
             groupHeader.className = 'group-rule-header explorer-group-header';
+            const groupContentId = `explorer-group-content-${++a11yIdCounter}`;
             groupHeader.setAttribute('role', 'button');
             groupHeader.setAttribute('tabindex', '0');
+            groupHeader.setAttribute('aria-controls', groupContentId);
             groupHeader.innerHTML = `<div class=\"group-rule-name\">${escapeHtml(groupTitle)}</div><span class=\"menu-arrow\">▶</span>`;
             const groupContent = document.createElement('div');
+            groupContent.id = groupContentId;
             groupContent.className = 'explorer-group-content';
             groupContent.style.display = 'none';
 
