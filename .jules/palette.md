@@ -28,3 +28,7 @@
 ## 2026-07-30 - Explicit ARIA controls and state for custom accordions
 **Learning:** When building custom div-based accordion elements, defining explicit `aria-controls` mappings between the toggle header and the content panel is crucial. It is also important to use `aria-expanded` to convey accordion state. Without this, screen readers cannot reliably convey the programmatic relationship and state.
 **Action:** Always verify that interactive custom components explicitly map their IDs via standard ARIA attributes like `aria-controls` and `aria-expanded`.
+
+## 2026-07-31 - Explicit ARIA controls for dynamic accordions
+**Learning:** When building custom div-based accordion elements dynamically in JS (like the Tab Explorer groups), screen readers cannot reliably convey the programmatic relationship between the toggle header and the content panel without explicit IDs and `aria-controls`.
+**Action:** Always verify that interactive custom components explicitly map their IDs via standard ARIA attributes like `aria-controls`, especially when generating elements on the fly in JavaScript.
