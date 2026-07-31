@@ -56,3 +56,6 @@
 ## 2026-07-30 - N+1 Query in Rules Loop
 **Learning:** Calling `chrome.tabs.query({})` inside a loop for each tab grouping rule causes significant N+1 IPC overhead and blocks the main thread during 'Regroup All Tabs' operations.
 **Action:** Fetch all tabs once before the loop and pass the cached list down to the rule processing function to minimize redundant IPC calls.
+## 2026-08-01 - Avoid Sequential IPC latency processing windows concurrently
+**Learning:** Processing tabs or tab groups across multiple windows sequentially using `for...of` loops and `await` for Chrome API calls (like `chrome.tabGroups.query`, `chrome.tabs.group`, `chrome.tabGroups.update`) causes significant IPC bottlenecks, slowing down background operations like auto-grouping.
+**Action:** When performing bulk grouping operations across multiple windows, collect the promises in an array and use `Promise.allSettled` to execute them concurrently.

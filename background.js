@@ -143,10 +143,10 @@ async function groupExistingTabsForRule(rule, allTabs = null) {
     // For positioning/color defaults
     const settings = await getAutoTabGroupingSettings();
 
-    // Process each window
-    for (const [windowIdStr, windowTabs] of Object.entries(tabsByWindow)) {
+    // Process each window concurrently to minimize sequential IPC latency
+    const windowPromises = Object.entries(tabsByWindow).map(async ([windowIdStr, windowTabs]) => {
       const windowId = Number(windowIdStr);
-      if (!Array.isArray(windowTabs) || windowTabs.length === 0) continue;
+      if (!Array.isArray(windowTabs) || windowTabs.length === 0) return;
 
       const existingGroups = await chrome.tabGroups.query({ windowId });
       let targetGroup = existingGroups.find(group => group.title === rule.groupName);
@@ -174,7 +174,15 @@ async function groupExistingTabsForRule(rule, allTabs = null) {
         await chrome.tabGroups.update(groupId, updateOptions);
         console.log(`Created group "${rule.groupName}" with ${windowTabs.length} tab(s) in window ${windowId}`);
       }
-    }
+    });
+
+    // Await all window processing concurrently
+    const results = await Promise.allSettled(windowPromises);
+    results.forEach((result, idx) => {
+      if (result.status === 'rejected') {
+        console.error(`Window processing failed for rule ${rule.groupName} at index ${idx}:`, result.reason);
+      }
+    });
   } catch (error) {
     console.error('Error grouping existing tabs for rule:', error);
   }
