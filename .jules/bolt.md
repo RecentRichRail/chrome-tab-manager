@@ -53,3 +53,6 @@
 ## 2024-05-18 - Batching Sequential IPC Calls
 **Learning:** Sequential `await` calls to Chrome extension APIs (like `chrome.action.setBadgeText`) introduce measurable Inter-Process Communication (IPC) overhead, especially on hot paths like tab updates.
 **Action:** Use `Promise.allSettled()` to batch and concurrently execute consecutive, independent API calls, reducing cumulative latency while gracefully handling individual operation failures.
+## 2026-07-30 - N+1 Query in Rules Loop
+**Learning:** Calling `chrome.tabs.query({})` inside a loop for each tab grouping rule causes significant N+1 IPC overhead and blocks the main thread during 'Regroup All Tabs' operations.
+**Action:** Fetch all tabs once before the loop and pass the cached list down to the rule processing function to minimize redundant IPC calls.
