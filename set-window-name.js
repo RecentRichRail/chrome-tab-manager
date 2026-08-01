@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   saveBtn.addEventListener('click', async () => {
     const label = labelInput.value.trim();
+    if (label.length > 50) {
+      alert('Window label cannot exceed 50 characters.');
+      return;
+    }
     try {
       await saveLabel(windowId, label);
       // Refocus the created window after save
@@ -45,6 +49,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   labelInput.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter') {
       const label = labelInput.value.trim();
+      if (label.length > 50) {
+        alert('Window label cannot exceed 50 characters.');
+        return;
+      }
       try {
         await saveLabel(windowId, label);
         chrome.runtime.sendMessage({ type: 'focusWindow', windowId: String(windowId) }, () => {});
