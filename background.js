@@ -115,8 +115,9 @@ async function groupExistingTabsForRule(rule, allTabs = null) {
     // Find tabs that match this rule's patterns
     for (const tab of tabs) {
       if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
+        const lowerUrl = tab.url.toLowerCase();
         const matches = rule.patterns.some(pattern => {
-          const result = matchesPattern(tab.url, pattern);
+          const result = matchesPattern(tab.url, pattern, lowerUrl);
           console.log(`Existing tab pattern check: "${pattern}" vs "${sanitizeUrlForLog(tab.url)}" = ${result}`);
           return result;
         });
@@ -245,13 +246,14 @@ async function handleAutoTabGrouping(tabId, url) {
     }
     
     // Find matching rule
+    const lowerUrl = url.toLowerCase();
     const matchingRule = settings.tabGroupRules.find(rule => {
       if (!rule.patterns || rule.patterns.length === 0) {
         return false;
       }
       
       const matches = rule.patterns.some(pattern => {
-        const result = matchesPattern(url, pattern);
+        const result = matchesPattern(url, pattern, lowerUrl);
         console.log(`Tab grouping pattern check: "${pattern}" vs "${sanitizeUrlForLog(url)}" = ${result}`);
         return result;
       });
@@ -397,9 +399,11 @@ async function getAutoCollapseSettings() {
 function isAllowedDuplicate(url, patterns) {
   // Check patterns against both original URL and normalized URL (without hash)
   const normalizedUrl = normalizeUrl(url);
+  const lowerUrl = url.toLowerCase();
+  const lowerNormalizedUrl = normalizedUrl.toLowerCase();
   return patterns.some(pattern => {
-    const matchesOriginal = matchesPattern(url, pattern);
-    const matchesNormalized = matchesPattern(normalizedUrl, pattern);
+    const matchesOriginal = matchesPattern(url, pattern, lowerUrl);
+    const matchesNormalized = matchesPattern(normalizedUrl, pattern, lowerNormalizedUrl);
     console.log(`Duplicate check: Pattern "${pattern}" vs Original "${sanitizeUrlForLog(url)}": ${matchesOriginal}, vs Normalized "${sanitizeUrlForLog(normalizedUrl)}": ${matchesNormalized}`);
     return matchesOriginal || matchesNormalized;
   });
@@ -658,7 +662,7 @@ const patternParseCache = new Map();
 const MAX_PATTERN_CACHE_SIZE = 500;
 
 // Function to check if a URL matches a pattern with wildcards
-function matchesPattern(url, pattern) {
+function matchesPattern(url, pattern, cachedLowerUrl = null) {
   try {
     // Handle empty pattern or URL, or excessively long patterns/URLs (DoS mitigation)
     if (!pattern || !url || url.length > 2000 || pattern.length > 200) {
@@ -686,7 +690,7 @@ function matchesPattern(url, pattern) {
       patternParseCache.set(pattern, parsedPattern);
     }
 
-    const lowerUrl = url.toLowerCase();
+    const lowerUrl = cachedLowerUrl || url.toLowerCase();
 
     if (parsedPattern.exact) {
       return lowerUrl === parsedPattern.lowerPattern;
@@ -765,8 +769,9 @@ async function handleAutoClose(tabId, url) {
     }
     
     // Check if URL matches any pattern
+    const lowerUrl = url.toLowerCase();
     const shouldClose = settings.urlPatterns.some(pattern => {
-      const matches = matchesPattern(url, pattern);
+      const matches = matchesPattern(url, pattern, lowerUrl);
       if (matches) {
         console.log(`✓ Auto-close pattern "${pattern}" matches "${sanitizeUrlForLog(url)}"`);
       }
@@ -827,9 +832,14 @@ function scheduleAutoCloseTimeout(tabId, settings) {
       }
       console.log(`Auto-close timeout triggered for tab ${tabId}`);
       const tab = await chrome.tabs.get(tabId);
-      if (tab && settings.urlPatterns.some(pattern => matchesPattern(tab.url, pattern))) {
-        await chrome.tabs.remove(tabId);
-        console.log(`Auto-closed tab: ${sanitizeUrlForLog(tab.url)}`);
+      if (tab && tab.url) {
+        const lowerUrl = tab.url.toLowerCase();
+        if (settings.urlPatterns.some(pattern => matchesPattern(tab.url, pattern, lowerUrl))) {
+          await chrome.tabs.remove(tabId);
+          console.log(`Auto-closed tab: ${sanitizeUrlForLog(tab.url)}`);
+        } else {
+          console.log(`Tab ${tabId} no longer matches patterns or doesn't exist`);
+        }
       } else {
         console.log(`Tab ${tabId} no longer matches patterns or doesn't exist`);
       }
@@ -961,9 +971,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         try {
           const settings = await getAutoCloseSettings();
           const tab = await chrome.tabs.get(ctx.tabId);
-          if (tab && settings.urlPatterns.some(pattern => matchesPattern(tab.url, pattern))) {
-            await chrome.tabs.remove(ctx.tabId);
-            console.log(`Auto-closed tab via banner: ${sanitizeUrlForLog(tab.url)}`);
+          if (tab && tab.url) {
+            const lowerUrl = tab.url.toLowerCase();
+            if (settings.urlPatterns.some(pattern => matchesPattern(tab.url, pattern, lowerUrl))) {
+              await chrome.tabs.remove(ctx.tabId);
+              console.log(`Auto-closed tab via banner: ${sanitizeUrlForLog(tab.url)}`);
+            }
           }
         } catch (e) { /* ignore */ }
         sendResponse && sendResponse({ ok: true });
