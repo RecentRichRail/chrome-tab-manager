@@ -1300,6 +1300,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request && request.type === 'setWindowLabel') {
     (async () => {
       try {
+        if (request.label && request.label.length > 50) {
+          sendResponse({ ok: false, error: 'Window label cannot exceed 50 characters.' });
+          return;
+        }
         const labels = await getWindowLabels();
         if (!request.label) {
           // remove label

@@ -35,3 +35,8 @@
 **Vulnerability:** Missing length and size limits on inputs that are saved to extension storage.
 **Learning:** Unconstrained inputs can exhaust storage quotas and memory, leading to DoS.
 **Prevention:** Always enforce strict length and size limits on all user-provided data, including file uploads and label inputs.
+
+## 2026-08-01 - DoS Risks in Settings Inputs via auxiliary UI
+**Vulnerability:** The standalone window naming prompt lacked input length limits, exposing the extension to storage quota exhaustion DoS.
+**Learning:** Input validation must be consistently applied across all entry points, including secondary UIs like popouts or standalone pages.
+**Prevention:** Enforce strict length limits at both the client-side UI and the backend message listener.
