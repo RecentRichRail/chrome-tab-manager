@@ -32,3 +32,6 @@
 ## 2026-07-31 - Explicit ARIA controls for dynamic accordions
 **Learning:** When building custom div-based accordion elements dynamically in JS (like the Tab Explorer groups), screen readers cannot reliably convey the programmatic relationship between the toggle header and the content panel without explicit IDs and `aria-controls`.
 **Action:** Always verify that interactive custom components explicitly map their IDs via standard ARIA attributes like `aria-controls`, especially when generating elements on the fly in JavaScript.
+## 2024-05-15 - Live Search Empty State DOM Preservation
+**Learning:** When implementing empty states for live search or filtering logic that manipulates sibling elements in a single container, destructively overwriting the container using `.innerHTML` completely breaks the UX by unmounting the cached items when the query is cleared or backspaced.
+**Action:** Always conditionally toggle the visibility of a dedicated, pre-existing (or isolated) empty state element instead of modifying the parent container's overall innerHTML.
