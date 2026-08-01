@@ -59,3 +59,6 @@
 ## 2026-08-01 - Avoid Sequential IPC latency processing windows concurrently
 **Learning:** Processing tabs or tab groups across multiple windows sequentially using `for...of` loops and `await` for Chrome API calls (like `chrome.tabGroups.query`, `chrome.tabs.group`, `chrome.tabGroups.update`) causes significant IPC bottlenecks, slowing down background operations like auto-grouping.
 **Action:** When performing bulk grouping operations across multiple windows, collect the promises in an array and use `Promise.allSettled` to execute them concurrently.
+## 2026-08-01 - String Allocation Bottleneck in Hot Loops
+**Learning:** Reusing string allocation methods like `.toLowerCase()` repeatedly inside `.some()` loops checking multiple configurations (like matching multiple URL patterns) during rapid tab lifecycle events leads to a significant garbage collection bottleneck and blocks the main thread.
+**Action:** When validating a single input against multiple rules or patterns in a hot loop, always pre-calculate transformed states (like case-normalization) outside the loop and pass it down to avoid redundant O(N) memory allocations.
