@@ -1526,7 +1526,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const groupsContainer = document.createElement('div');
             groupsContainer.style.padding = '8px';
-            groupsContainer.innerHTML = `<div style="font-size:12px;color:#6b7280;margin-bottom:6px;">Groups & Tabs</div>`;
+            groupsContainer.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Groups & Tabs</div>`;
 
             for (const [gid, tabs] of grpMap.entries()) {
               const groupContainer = document.createElement('div');
@@ -1676,7 +1676,7 @@ document.addEventListener('DOMContentLoaded', () => {
           contentEl.style.display = 'none';
           contentEl.innerHTML = `
               <div style=\"padding:8px;\">
-                <div style=\"font-size:12px;color:#6b7280;margin-bottom:6px;\">Groups & Tabs</div>
+                <div style=\"font-size:12px;color:var(--muted);margin-bottom:6px;\">Groups & Tabs</div>
                 <div id=\"window-${w.id}-groups\"></div>
               </div>
           `;

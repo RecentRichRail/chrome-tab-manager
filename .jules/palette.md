@@ -35,3 +35,6 @@
 ## 2024-05-15 - Live Search Empty State DOM Preservation
 **Learning:** When implementing empty states for live search or filtering logic that manipulates sibling elements in a single container, destructively overwriting the container using `.innerHTML` completely breaks the UX by unmounting the cached items when the query is cleared or backspaced.
 **Action:** Always conditionally toggle the visibility of a dedicated, pre-existing (or isolated) empty state element instead of modifying the parent container's overall innerHTML.
+## 2026-08-02 - Consistent Theming & Contrast
+**Learning:** When refactoring hardcoded colors to CSS variables for UI components (especially in glassmorphic/themed designs), changing only the text color to a variable while leaving backgrounds or borders hardcoded can create critical accessibility/contrast failures if the theme changes (e.g. to dark mode).
+**Action:** Always ensure that if a text color is updated to a theme variable, the element's background and border colors are also updated to corresponding theme variables to maintain safe contrast ratios across all states.
