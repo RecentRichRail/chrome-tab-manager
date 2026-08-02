@@ -62,3 +62,6 @@
 ## 2026-08-01 - String Allocation Bottleneck in Hot Loops
 **Learning:** Reusing string allocation methods like `.toLowerCase()` repeatedly inside `.some()` loops checking multiple configurations (like matching multiple URL patterns) during rapid tab lifecycle events leads to a significant garbage collection bottleneck and blocks the main thread.
 **Action:** When validating a single input against multiple rules or patterns in a hot loop, always pre-calculate transformed states (like case-normalization) outside the loop and pass it down to avoid redundant O(N) memory allocations.
+## 2025-08-01 - String Allocation Bottleneck in DOM Event Handlers
+**Learning:** Performing expensive string allocations like `.toLowerCase()` inside UI iteration loops directly bound to high-frequency DOM events (like search box `input` handlers) leads to noticeable typing jank and excessive garbage collection when processing hundreds of elements.
+**Action:** When creating filterable lists of DOM elements, always pre-calculate normalized strings (like lowercased values) during the initial fetch or render phase, attach them to the DOM elements as `data-` attributes, and read from those attributes during filtering to achieve O(1) string matching without allocations.
