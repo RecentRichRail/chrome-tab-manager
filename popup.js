@@ -1333,12 +1333,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const allTabs = [];
       for (const w of windows) {
         for (const t of w.tabs) {
+          const title = t.title || '(no title)';
+          const url = t.url || '';
           allTabs.push({
             windowId: w.id,
             groupId: t.groupId,
             tabId: t.id,
-            title: t.title || '(no title)',
-            url: t.url || '',
+            title: title,
+            url: url,
+            lowerTitle: title.toLowerCase(),
+            lowerUrl: url.toLowerCase(),
             lastAccessed: t.lastAccessed || 0
           });
         }
@@ -1408,7 +1412,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         filteredTabs = allTabs.filter(t => {
           if (!t.url || t.url.length > 2000) return false;
-          const lowerUrl = t.url.toLowerCase();
+          const lowerUrl = t.lowerUrl;
           return parsedPatterns.some(parsed => matchesParsedPattern(t.url, lowerUrl, parsed));
         });
       }
@@ -1423,7 +1427,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const searchQ = (document.getElementById('windowSearchInput')?.value || '').toLowerCase();
       const searchFilter = (tab) => {
         if (!searchQ) return true;
-        return (tab.title || '').toLowerCase().includes(searchQ) || (tab.url || '').toLowerCase().includes(searchQ);
+        const lTitle = tab.lowerTitle !== undefined ? tab.lowerTitle : (tab.title || '').toLowerCase();
+        const lUrl = tab.lowerUrl !== undefined ? tab.lowerUrl : (tab.url || '').toLowerCase();
+        return lTitle.includes(searchQ) || lUrl.includes(searchQ);
       };
 
       const hasVisibleTabs = filteredTabs.some(searchFilter);
@@ -1553,6 +1559,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 tEl.setAttribute('tabindex', '0');
                 tEl.dataset.title = String(tab.title || '(no title)');
                 tEl.dataset.url = String(tab.url || '');
+                tEl.dataset.lowertitle = tab.lowerTitle;
+                tEl.dataset.lowerurl = tab.lowerUrl;
                 tEl.dataset.tabid = String(tab.tabId);
                 tEl.dataset.windowid = String(tab.windowId);
                 tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
@@ -1708,13 +1716,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             for (const tab of tabs) {
               if (!searchFilter({ title: tab.title, url: tab.url })) continue;
+              const titleStr = String(tab.title || '(no title)');
+              const urlStr = String(tab.url || '');
               const tEl = document.createElement('div');
               tEl.className = 'url-item explorer-tab-item';
               tEl.style.margin = '6px 0';
               tEl.setAttribute('role', 'button');
               tEl.setAttribute('tabindex', '0');
-              tEl.dataset.title = String(tab.title || '(no title)');
-              tEl.dataset.url = String(tab.url || '');
+              tEl.dataset.title = titleStr;
+              tEl.dataset.url = urlStr;
+              tEl.dataset.lowertitle = tab.lowerTitle !== undefined ? tab.lowerTitle : titleStr.toLowerCase();
+              tEl.dataset.lowerurl = tab.lowerUrl !== undefined ? tab.lowerUrl : urlStr.toLowerCase();
               tEl.dataset.tabid = String(tab.id);
               tEl.dataset.windowid = String(w.id);
               tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
@@ -1864,9 +1876,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let groupHasMatch = false;
         const tabs = Array.from(g.querySelectorAll('.explorer-tab-item'));
         tabs.forEach(t => {
-          const title = (t.dataset.title || '').toLowerCase();
-          const url = (t.dataset.url || '').toLowerCase();
-          const match = title.includes(query) || url.includes(query);
+          const lowerTitle = t.dataset.lowertitle || '';
+          const lowerUrl = t.dataset.lowerurl || '';
+          const match = lowerTitle.includes(query) || lowerUrl.includes(query);
           t.style.display = match ? 'block' : 'none';
           if (match) groupHasMatch = true;
         });
