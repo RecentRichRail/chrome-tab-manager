@@ -40,3 +40,7 @@
 **Vulnerability:** The standalone window naming prompt lacked input length limits, exposing the extension to storage quota exhaustion DoS.
 **Learning:** Input validation must be consistently applied across all entry points, including secondary UIs like popouts or standalone pages.
 **Prevention:** Enforce strict length limits at both the client-side UI and the backend message listener.
+## 2026-08-03 - Prevent Type Confusion in JSON Import
+**Vulnerability:** Logic DoS via Type Confusion (missing type validation on imported JSON objects)
+**Learning:** When importing settings, arrays like `urlPatterns` could be overwritten with strings/other types, causing crashes when methods like `.some()` or `.forEach()` are called on them.
+**Prevention:** Always validate the structure and types of imported JSON configurations, enforcing arrays and string elements before storing them.
