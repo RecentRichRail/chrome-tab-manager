@@ -1160,6 +1160,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // 🛡️ Sentinel: Sanitize imported arrays to prevent Logic DoS (Type Confusion)
+      if (settingsToImport.urlPatterns) {
+        if (!Array.isArray(settingsToImport.urlPatterns)) settingsToImport.urlPatterns = [];
+        settingsToImport.urlPatterns = settingsToImport.urlPatterns
+          .filter(p => typeof p === 'string' && p.length <= 200)
+          .slice(0, 1000);
+      }
+      if (settingsToImport.allowedDuplicatePatterns) {
+        if (!Array.isArray(settingsToImport.allowedDuplicatePatterns)) settingsToImport.allowedDuplicatePatterns = [];
+        settingsToImport.allowedDuplicatePatterns = settingsToImport.allowedDuplicatePatterns
+          .filter(p => typeof p === 'string' && p.length <= 200)
+          .slice(0, 1000);
+      }
+      if (settingsToImport.tabGroupRules) {
+        if (!Array.isArray(settingsToImport.tabGroupRules)) settingsToImport.tabGroupRules = [];
+        settingsToImport.tabGroupRules = settingsToImport.tabGroupRules
+          .filter(r => r && typeof r === 'object')
+          .map(r => ({
+            groupName: typeof r.groupName === 'string' ? r.groupName.slice(0, 50) : 'Imported Group',
+            groupColor: typeof r.groupColor === 'string' ? r.groupColor : undefined,
+            patterns: Array.isArray(r.patterns) ? r.patterns.filter(p => typeof p === 'string' && p.length <= 200).slice(0, 500) : []
+          }))
+          .slice(0, 100);
+      }
+
       if (!confirm('Importing will overwrite your current settings in sync storage. Continue?')) return;
       await chrome.storage.sync.set(settingsToImport);
       alert('Settings imported. The popup will reload to reflect changes.');
