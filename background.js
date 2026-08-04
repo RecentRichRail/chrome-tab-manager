@@ -98,6 +98,26 @@ function getRandomTabGroupColor() {
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
+function getMatchingTabsForRule(tabs, rule) {
+  const matchingTabs = [];
+  for (const tab of tabs) {
+    if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
+      const lowerUrl = tab.url.toLowerCase();
+      const matches = rule.patterns.some(pattern => {
+        const result = matchesPattern(tab.url, pattern, lowerUrl);
+        console.log(`Existing tab pattern check: "${pattern}" vs "${sanitizeUrlForLog(tab.url)}" = ${result}`);
+        return result;
+      });
+
+      if (matches) {
+        matchingTabs.push(tab);
+        console.log(`✓ Found matching existing tab: ${sanitizeUrlForLog(tab.url)} for rule ${rule.groupName}`);
+      }
+    }
+  }
+  return matchingTabs;
+}
+
 // Function to group existing tabs that match a rule
 async function groupExistingTabsForRule(rule, allTabs = null) {
   try {
@@ -110,24 +130,7 @@ async function groupExistingTabsForRule(rule, allTabs = null) {
 
     // Get all tabs across all windows
     const tabs = allTabs || await chrome.tabs.query({});
-    const matchingTabs = [];
-
-    // Find tabs that match this rule's patterns
-    for (const tab of tabs) {
-      if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
-        const lowerUrl = tab.url.toLowerCase();
-        const matches = rule.patterns.some(pattern => {
-          const result = matchesPattern(tab.url, pattern, lowerUrl);
-          console.log(`Existing tab pattern check: "${pattern}" vs "${sanitizeUrlForLog(tab.url)}" = ${result}`);
-          return result;
-        });
-
-        if (matches) {
-          matchingTabs.push(tab);
-          console.log(`✓ Found matching existing tab: ${sanitizeUrlForLog(tab.url)} for rule ${rule.groupName}`);
-        }
-      }
-    }
+    const matchingTabs = getMatchingTabsForRule(tabs, rule);
 
     if (matchingTabs.length === 0) {
       console.log(`No existing tabs match rule ${rule.groupName}`);
