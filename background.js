@@ -490,24 +490,28 @@ const pendingDuplicateBanners = new Map(); // token -> { token, url, newTabId, e
 // Perform the default duplicate resolution action and fix focus behavior robustly
 async function performDuplicateDefaultAction({ newTabId, existingTabId, defaultClosesOlder, normalizedUrl }) {
   try {
-    // Update the map with the remaining tab BEFORE closing
-    const tabToKeep = defaultClosesOlder ? newTabId : existingTabId;
-    tabUrlMap.set(normalizedUrl, tabToKeep);
+    const tabToKeepId = defaultClosesOlder ? newTabId : existingTabId;
+    const tabToCloseId = defaultClosesOlder ? existingTabId : newTabId;
 
-    if (defaultClosesOlder) {
-      // Close older = close existing, keep the new tab
-      try { await chrome.tabs.remove(existingTabId); } catch (e) { /* ignore */ }
-      // Keep focus on the new tab (already active usually)
-    } else {
-      // Close newer = focus existing, then close new
-      let existingTab = null;
-      try { existingTab = await chrome.tabs.get(existingTabId); } catch {}
-      if (existingTab && typeof existingTab.windowId !== 'undefined') {
-        try { await chrome.windows.update(existingTab.windowId, { focused: true }); } catch (e) {}
+    // Update the map with the remaining tab BEFORE closing
+    tabUrlMap.set(normalizedUrl, tabToKeepId);
+
+    // Focus existing before closing new (or focus new before closing existing) to prevent focus jump
+    let tabToKeep = null;
+    try { tabToKeep = await chrome.tabs.get(tabToKeepId); } catch {}
+
+    if (tabToKeep) {
+      if (tabToKeep.groupId && tabToKeep.groupId !== -1 && chrome.tabGroups) {
+        try { await chrome.tabGroups.update(tabToKeep.groupId, { collapsed: false }); } catch (e) {}
       }
-      try { await chrome.tabs.update(existingTabId, { active: true }); } catch (e) {}
-      try { await chrome.tabs.remove(newTabId); } catch (e) { /* ignore */ }
+      if (typeof tabToKeep.windowId !== 'undefined') {
+        try { await chrome.windows.update(tabToKeep.windowId, { focused: true }); } catch (e) {}
+      }
+      try { await chrome.tabs.update(tabToKeepId, { active: true }); } catch (e) {}
     }
+
+    // Close the unwanted tab
+    try { await chrome.tabs.remove(tabToCloseId); } catch (e) { /* ignore */ }
   } catch (e) {
     console.error('performDuplicateDefaultAction failed', e);
   }
