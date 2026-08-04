@@ -897,13 +897,40 @@ function injectedShowAutoCloseBanner(opts) {
 
     const bar = document.createElement('div');
     bar.className = 'ctm-ac-banner ctm-glass';
-    bar.innerHTML = `<div class="ctm-ac-inner">
-      <span class="ctm-ac-title">This tab will auto-close</span>
-      <span class="ctm-ac-timer" id="ctmAcTimer">${seconds}s</span>
-      <span class="ctm-ac-spacer"></span>
-      <button class="ctm-ac-btn ctm-ac-primary" id="ctmAcCloseNowBtn">Close now</button>
-      <button class="ctm-ac-btn ctm-ac-secondary" id="ctmAcKeepBtn">Do not close</button>
-    </div>`;
+
+    // Security Fix: Use safe DOM creation methods instead of innerHTML to prevent XSS
+    const innerDiv = document.createElement('div');
+    innerDiv.className = 'ctm-ac-inner';
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'ctm-ac-title';
+    titleSpan.textContent = 'This tab will auto-close';
+
+    const timerEl = document.createElement('span');
+    timerEl.className = 'ctm-ac-timer';
+    timerEl.id = 'ctmAcTimer';
+    timerEl.textContent = `${seconds}s`;
+
+    const spacerSpan = document.createElement('span');
+    spacerSpan.className = 'ctm-ac-spacer';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'ctm-ac-btn ctm-ac-primary';
+    closeBtn.id = 'ctmAcCloseNowBtn';
+    closeBtn.textContent = 'Close now';
+
+    const keepBtn = document.createElement('button');
+    keepBtn.className = 'ctm-ac-btn ctm-ac-secondary';
+    keepBtn.id = 'ctmAcKeepBtn';
+    keepBtn.textContent = 'Do not close';
+
+    innerDiv.appendChild(titleSpan);
+    innerDiv.appendChild(timerEl);
+    innerDiv.appendChild(spacerSpan);
+    innerDiv.appendChild(closeBtn);
+    innerDiv.appendChild(keepBtn);
+    bar.appendChild(innerDiv);
+
     document.documentElement.appendChild(bar);
     window.__ctmAcBannerEl = bar;
 
@@ -911,10 +938,6 @@ function injectedShowAutoCloseBanner(opts) {
       if (decided) return; decided = true;
       try { chrome.runtime.sendMessage({ type: 'autoCloseBannerAction', token, decision }); } catch (e) {}
     };
-
-    const closeBtn = bar.querySelector('#ctmAcCloseNowBtn');
-    const keepBtn = bar.querySelector('#ctmAcKeepBtn');
-    const timerEl = bar.querySelector('#ctmAcTimer');
     const iv = setInterval(() => {
       if (decided) { try { clearInterval(iv); } catch (e) {} return; }
       seconds -= 1;

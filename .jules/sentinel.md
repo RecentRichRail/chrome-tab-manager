@@ -44,3 +44,7 @@
 **Vulnerability:** Logic DoS via Type Confusion (missing type validation on imported JSON objects)
 **Learning:** When importing settings, arrays like `urlPatterns` could be overwritten with strings/other types, causing crashes when methods like `.some()` or `.forEach()` are called on them.
 **Prevention:** Always validate the structure and types of imported JSON configurations, enforcing arrays and string elements before storing them.
+## 2026-08-04 - DOM-based XSS in Extension Content Scripts
+**Vulnerability:** XSS via auto close banner injection using innerHTML in a content script.
+**Learning:** Using innerHTML with potentially user-controlled data or even just string interpolation in injected scripts poses a significant XSS risk, as the content script runs in the context of the vulnerable page.
+**Prevention:** Always use safe DOM creation methods like document.createElement and textContent when building UI in injected scripts.
