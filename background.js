@@ -1737,3 +1737,4 @@ chrome.windows.onBoundsChanged.addListener((win) => {
     chrome.storage.sync.set({ [EXPLORER_SIZE_KEY]: { width, height } }).catch(() => {});
   }
 });
+if (typeof module !== "undefined" && module.exports) { module.exports = { matchesPattern }; }
