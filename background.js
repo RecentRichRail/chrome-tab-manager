@@ -1733,3 +1733,11 @@ chrome.windows.onBoundsChanged.addListener((win) => {
     chrome.storage.sync.set({ [EXPLORER_SIZE_KEY]: { width, height } }).catch(() => {});
   }
 });
+
+// Export functions for testing if we are in a Node environment
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    normalizeUrl,
+    sanitizeUrlForLog
+  };
+}
