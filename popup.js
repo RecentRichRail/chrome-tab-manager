@@ -1589,13 +1589,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 tEl.dataset.tabid = String(tab.tabId);
                 tEl.dataset.windowid = String(tab.windowId);
                 tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
+
+                const escapedBaseTitle = escapeHtml(baseTitle);
+                const escapedUrl = escapeHtml(tab.url || '');
+
                 tEl.innerHTML = `
                   <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(baseTitle)}">${escapeHtml(baseTitle)}</div>
-                    <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;" title="${escapeHtml(tab.url || '')}">${escapeHtml(tab.url || '')}</div>
+                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapedBaseTitle}">${escapedBaseTitle}</div>
+                    <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;" title="${escapedUrl}">${escapedUrl}</div>
                   </div>
                   <div style="margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;">
-                    <button class="close-tab-btn" title="Close tab" aria-label="Close tab: ${escapeHtml(baseTitle)}" data-tabid="${tab.tabId}">✕</button>
+                    <button class="close-tab-btn" title="Close tab" aria-label="Close tab: ${escapedBaseTitle}" data-tabid="${tab.tabId}">✕</button>
                   </div>
                 `;
                 gContent.appendChild(tEl);
@@ -1755,13 +1759,17 @@ document.addEventListener('DOMContentLoaded', () => {
               tEl.dataset.tabid = String(tab.id);
               tEl.dataset.windowid = String(w.id);
               tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
+
+              const escapedTitle = escapeHtml(tab.title || '(no title)');
+              const escapedUrl = escapeHtml(tab.url || '');
+
               tEl.innerHTML = `
                 <div style=\"flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;\">\
-                  <div style=\"font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\" title=\"${escapeHtml(tab.title || '(no title)')}\">${escapeHtml(tab.title || '(no title)')}</div>\
-                  <div style=\"font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;\" title=\"${escapeHtml(tab.url || '')}\">${escapeHtml(tab.url || '')}</div>\
+                  <div style=\"font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\" title=\"${escapedTitle}\">${escapedTitle}</div>\
+                  <div style=\"font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;\" title=\"${escapedUrl}\">${escapedUrl}</div>\
                 </div>
                 <div style=\"margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;\">\
-                  <button class=\"close-tab-btn\" title=\"Close tab\" aria-label=\"Close tab: ${escapeHtml(tab.title || '(no title)')}\" data-tabid=\"${tab.id}\">✕</button>\
+                  <button class=\"close-tab-btn\" title=\"Close tab\" aria-label=\"Close tab: ${escapedTitle}\" data-tabid=\"${tab.id}\">✕</button>\
                 </div>
               `;
               groupContent.appendChild(tEl);
