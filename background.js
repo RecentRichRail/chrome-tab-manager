@@ -118,7 +118,6 @@ async function groupExistingTabsForRule(rule, allTabs = null) {
         const lowerUrl = tab.url.toLowerCase();
         const matches = rule.patterns.some(pattern => {
           const result = matchesPattern(tab.url, pattern, lowerUrl);
-          console.log(`Existing tab pattern check: "${pattern}" vs "${sanitizeUrlForLog(tab.url)}" = ${result}`);
           return result;
         });
 
