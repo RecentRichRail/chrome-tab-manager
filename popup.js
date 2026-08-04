@@ -1008,10 +1008,25 @@ document.addEventListener('DOMContentLoaded', () => {
   if (prefixToggle) {
     prefixToggle.addEventListener('change', async (e) => {
       try {
-        const windowId = await getCurrentBrowserWindowId();
-        if (!windowId) return;
-        // Persist per-window and immediately apply/clear on current window
-        chrome.runtime.sendMessage({ type: 'applyWindowLabelPrefix', enabled: e.target.checked, windowId }, () => {});
+        if (e.target.checked) {
+          chrome.permissions.request({ origins: ['<all_urls>'] }, async (granted) => {
+            if (granted) {
+              const windowId = await getCurrentBrowserWindowId();
+              if (!windowId) return;
+              chrome.runtime.sendMessage({ type: 'applyWindowLabelPrefix', enabled: true, windowId }, () => {});
+            } else {
+              e.target.checked = false;
+              const windowId = await getCurrentBrowserWindowId();
+              if (!windowId) return;
+              chrome.runtime.sendMessage({ type: 'applyWindowLabelPrefix', enabled: false, windowId }, () => {});
+            }
+          });
+        } else {
+          const windowId = await getCurrentBrowserWindowId();
+          if (!windowId) return;
+          // Persist per-window and immediately apply/clear on current window
+          chrome.runtime.sendMessage({ type: 'applyWindowLabelPrefix', enabled: false, windowId }, () => {});
+        }
       } catch (err) {
         console.error('Failed to apply window label prefix setting', err);
       }
@@ -2054,8 +2069,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   const autoCloseBannerToggle = document.getElementById('autoCloseBannerToggle');
   if (autoCloseBannerToggle) autoCloseBannerToggle.addEventListener('change', (e) => {
-    autoCloseSettings.autoCloseBannerEnabled = e.target.checked;
-    saveAutoCloseSettings();
+    if (e.target.checked) {
+      chrome.permissions.request({ origins: ['<all_urls>'] }, (granted) => {
+        if (granted) {
+          autoCloseSettings.autoCloseBannerEnabled = true;
+          saveAutoCloseSettings();
+        } else {
+          e.target.checked = false;
+          autoCloseSettings.autoCloseBannerEnabled = false;
+          saveAutoCloseSettings();
+        }
+      });
+    } else {
+      autoCloseSettings.autoCloseBannerEnabled = false;
+      saveAutoCloseSettings();
+    }
   });
   
   document.getElementById('addUrlBtn').addEventListener('click', addUrlPattern);
@@ -2092,8 +2120,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const duplicateBannerToggle = document.getElementById('duplicateBannerToggle');
   if (duplicateBannerToggle) duplicateBannerToggle.addEventListener('change', (e) => {
-    duplicatePreventionSettings.duplicateBannerEnabled = e.target.checked;
-    saveDuplicatePreventionSettings();
+    if (e.target.checked) {
+      chrome.permissions.request({ origins: ['<all_urls>'] }, (granted) => {
+        if (granted) {
+          duplicatePreventionSettings.duplicateBannerEnabled = true;
+          saveDuplicatePreventionSettings();
+        } else {
+          e.target.checked = false;
+          duplicatePreventionSettings.duplicateBannerEnabled = false;
+          saveDuplicatePreventionSettings();
+        }
+      });
+    } else {
+      duplicatePreventionSettings.duplicateBannerEnabled = false;
+      saveDuplicatePreventionSettings();
+    }
   });
 
   const duplicateBannerDelayInput = document.getElementById('duplicateBannerDelayInput');
