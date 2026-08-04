@@ -545,14 +545,38 @@ function injectedShowDuplicateBanner(opts) {
     document.documentElement.appendChild(style);
 
     const bar = document.createElement('div');
-      bar.className = 'ctm-dup-banner ctm-glass';
-    bar.innerHTML = `<div class="ctm-dup-inner">
-        <span class="ctm-dup-title">Duplicate tab detected</span>
-        <span class="ctm-dup-timer" id="ctmDupTimer">${seconds}s</span>
-        <span class="ctm-dup-spacer"></span>
-        <button class="ctm-dup-btn ctm-dup-primary" id="ctmDupDefaultBtn"></button>
-        <button class="ctm-dup-btn ctm-dup-secondary" id="ctmDupKeepBtn">Keep this duplicate</button>
-      </div>`;
+    bar.className = 'ctm-dup-banner ctm-glass';
+
+    const innerDiv = document.createElement('div');
+    innerDiv.className = 'ctm-dup-inner';
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'ctm-dup-title';
+    titleSpan.textContent = 'Duplicate tab detected';
+    innerDiv.appendChild(titleSpan);
+
+    const timerSpan = document.createElement('span');
+    timerSpan.className = 'ctm-dup-timer';
+    timerSpan.id = 'ctmDupTimer';
+    timerSpan.textContent = `${seconds}s`;
+    innerDiv.appendChild(timerSpan);
+
+    const spacerSpan = document.createElement('span');
+    spacerSpan.className = 'ctm-dup-spacer';
+    innerDiv.appendChild(spacerSpan);
+
+    const defaultBtnEl = document.createElement('button');
+    defaultBtnEl.className = 'ctm-dup-btn ctm-dup-primary';
+    defaultBtnEl.id = 'ctmDupDefaultBtn';
+    innerDiv.appendChild(defaultBtnEl);
+
+    const keepBtnEl = document.createElement('button');
+    keepBtnEl.className = 'ctm-dup-btn ctm-dup-secondary';
+    keepBtnEl.id = 'ctmDupKeepBtn';
+    keepBtnEl.textContent = 'Keep this duplicate';
+    innerDiv.appendChild(keepBtnEl);
+
+    bar.appendChild(innerDiv);
     document.documentElement.appendChild(bar);
     window.__ctmDupBannerEl = bar;
 
