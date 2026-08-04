@@ -799,6 +799,20 @@ function toggleMenu(headerId, contentId) {
   }
 }
 
+// Setup menu toggle event listeners (click and enter/space to toggle)
+function setupMenuToggle(headerId, contentId) {
+  const header = document.getElementById(headerId);
+  if (header) {
+    header.addEventListener('click', () => toggleMenu(headerId, contentId));
+    header.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleMenu(headerId, contentId);
+      }
+    });
+  }
+}
+
 let tabCountUpdateTimeout = null;
 
 // Function to get and display the current tab count and group info
@@ -1977,41 +1991,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.setAttribute('aria-expanded', 'false');
   });
 
-  // Add auto-collapse menu event listeners
-  const autoCollapseHeader = document.getElementById('autoCollapseHeader');
-  if (autoCollapseHeader) {
-    autoCollapseHeader.addEventListener('click', () => {
-      toggleMenu('autoCollapseHeader', 'autoCollapseContent');
-    });
-    autoCollapseHeader.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleMenu('autoCollapseHeader', 'autoCollapseContent');
-      }
-    });
-  }
+  // Setup auto-collapse menu
+  setupMenuToggle('autoCollapseHeader', 'autoCollapseContent');
 
-  // Collapsible: Window Name and Import/Export sections
-  const windowNameHeader = document.getElementById('windowNameHeader');
-  if (windowNameHeader) {
-    windowNameHeader.addEventListener('click', () => toggleMenu('windowNameHeader', 'windowNameContent'));
-    windowNameHeader.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleMenu('windowNameHeader', 'windowNameContent');
-      }
-    });
-  }
-  const importExportHeader = document.getElementById('importExportHeader');
-  if (importExportHeader) {
-    importExportHeader.addEventListener('click', () => toggleMenu('importExportHeader', 'importExportContent'));
-    importExportHeader.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleMenu('importExportHeader', 'importExportContent');
-      }
-    });
-  }
+  // Setup Collapsible: Window Name and Import/Export sections
+  setupMenuToggle('windowNameHeader', 'windowNameContent');
+  setupMenuToggle('importExportHeader', 'importExportContent');
   
   document.getElementById('autoCollapseToggle').addEventListener('change', (e) => {
     autoCollapseSettings.autoCollapseEnabled = e.target.checked;
@@ -2026,19 +2011,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Add auto-close menu event listeners
-  const autoCloseHeader = document.getElementById('autoCloseHeader');
-  if (autoCloseHeader) {
-    autoCloseHeader.addEventListener('click', () => {
-      toggleMenu('autoCloseHeader', 'autoCloseContent');
-    });
-    autoCloseHeader.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleMenu('autoCloseHeader', 'autoCloseContent');
-      }
-    });
-  }
+  // Setup auto-close menu
+  setupMenuToggle('autoCloseHeader', 'autoCloseContent');
   
   document.getElementById('autoCloseToggle').addEventListener('change', (e) => {
     autoCloseSettings.autoCloseEnabled = e.target.checked;
@@ -2066,19 +2040,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Add duplicate prevention menu event listeners
-  const duplicatePreventionHeader = document.getElementById('duplicatePreventionHeader');
-  if (duplicatePreventionHeader) {
-    duplicatePreventionHeader.addEventListener('click', () => {
-      toggleMenu('duplicatePreventionHeader', 'duplicatePreventionContent');
-    });
-    duplicatePreventionHeader.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleMenu('duplicatePreventionHeader', 'duplicatePreventionContent');
-      }
-    });
-  }
+  // Setup duplicate prevention menu
+  setupMenuToggle('duplicatePreventionHeader', 'duplicatePreventionContent');
   
   document.getElementById('duplicatePreventionToggle').addEventListener('change', (e) => {
     duplicatePreventionSettings.duplicatePreventionEnabled = e.target.checked;
@@ -2113,19 +2076,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Add auto tab grouping menu event listeners
-  const autoTabGroupingHeader = document.getElementById('autoTabGroupingHeader');
-  if (autoTabGroupingHeader) {
-    autoTabGroupingHeader.addEventListener('click', () => {
-      toggleMenu('autoTabGroupingHeader', 'autoTabGroupingContent');
-    });
-    autoTabGroupingHeader.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleMenu('autoTabGroupingHeader', 'autoTabGroupingContent');
-      }
-    });
-  }
+  // Setup auto tab grouping menu
+  setupMenuToggle('autoTabGroupingHeader', 'autoTabGroupingContent');
   
   document.getElementById('autoTabGroupingToggle').addEventListener('change', (e) => {
     autoTabGroupingSettings.autoTabGroupingEnabled = e.target.checked;
