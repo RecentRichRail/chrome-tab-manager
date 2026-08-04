@@ -497,13 +497,30 @@ async function performDuplicateDefaultAction({ newTabId, existingTabId, defaultC
     if (defaultClosesOlder) {
       // Close older = close existing, keep the new tab
       try { await chrome.tabs.remove(existingTabId); } catch (e) { /* ignore */ }
-      // Keep focus on the new tab (already active usually)
+
+      // Keep focus on the new tab
+      let newTab = null;
+      try { newTab = await chrome.tabs.get(newTabId); } catch {}
+      if (newTab) {
+        if (newTab.groupId && newTab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) {
+          try { await chrome.tabGroups.update(newTab.groupId, { collapsed: false }); } catch (e) {}
+        }
+        if (typeof newTab.windowId !== 'undefined') {
+          try { await chrome.windows.update(newTab.windowId, { focused: true }); } catch (e) {}
+        }
+      }
+      try { await chrome.tabs.update(newTabId, { active: true }); } catch (e) {}
     } else {
       // Close newer = focus existing, then close new
       let existingTab = null;
       try { existingTab = await chrome.tabs.get(existingTabId); } catch {}
-      if (existingTab && typeof existingTab.windowId !== 'undefined') {
-        try { await chrome.windows.update(existingTab.windowId, { focused: true }); } catch (e) {}
+      if (existingTab) {
+        if (existingTab.groupId && existingTab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) {
+          try { await chrome.tabGroups.update(existingTab.groupId, { collapsed: false }); } catch (e) {}
+        }
+        if (typeof existingTab.windowId !== 'undefined') {
+          try { await chrome.windows.update(existingTab.windowId, { focused: true }); } catch (e) {}
+        }
       }
       try { await chrome.tabs.update(existingTabId, { active: true }); } catch (e) {}
       try { await chrome.tabs.remove(newTabId); } catch (e) { /* ignore */ }
