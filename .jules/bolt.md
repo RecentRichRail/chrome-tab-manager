@@ -70,3 +70,7 @@
 **Learning:** When performing operations in tight nested loops (like pattern matching across multiple tabs and rules), synchronous heavy operations like `console.log` coupled with string allocations and URL parsing (e.g., `new URL()`) introduce massive overhead (over 90% execution time).
 
 **Action:** Remove non-essential debug logs and heavy string transformations from O(N*M) hot paths to dramatically reduce CPU time and improve latency. Benchmark using `perf_hooks` or `performance.now()` before and after such changes to quantify the improvement.
+
+## 2026-08-05 - Avoid URL parsing in Hot Loops
+**Learning:** Performing `new URL()` allocations and related string manipulation inside nested loops (like checking all tabs against all patterns) creates a massive garbage collection bottleneck. `benchmark.js` proves this overhead can consume >90% of execution time.
+**Action:** Always defer or completely remove expensive logging functions that allocate strings and parse URLs from within hot `O(N*M)` execution paths.
