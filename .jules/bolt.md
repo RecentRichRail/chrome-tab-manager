@@ -65,3 +65,8 @@
 ## 2025-08-01 - String Allocation Bottleneck in DOM Event Handlers
 **Learning:** Performing expensive string allocations like `.toLowerCase()` inside UI iteration loops directly bound to high-frequency DOM events (like search box `input` handlers) leads to noticeable typing jank and excessive garbage collection when processing hundreds of elements.
 **Action:** When creating filterable lists of DOM elements, always pre-calculate normalized strings (like lowercased values) during the initial fetch or render phase, attach them to the DOM elements as `data-` attributes, and read from those attributes during filtering to achieve O(1) string matching without allocations.
+## 2026-08-04 - Optimize hot paths by removing heavy synchronous operations
+
+**Learning:** When performing operations in tight nested loops (like pattern matching across multiple tabs and rules), synchronous heavy operations like `console.log` coupled with string allocations and URL parsing (e.g., `new URL()`) introduce massive overhead (over 90% execution time).
+
+**Action:** Remove non-essential debug logs and heavy string transformations from O(N*M) hot paths to dramatically reduce CPU time and improve latency. Benchmark using `perf_hooks` or `performance.now()` before and after such changes to quantify the improvement.
