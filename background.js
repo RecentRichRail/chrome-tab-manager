@@ -7,6 +7,7 @@ let collapseTimeout = null;
 let autoCloseTimeouts = new Map(); // Track auto-close timeouts for tabs
 let tabProcessingTimeouts = new Map(); // Track pending tab processing updates
 let tabUrlMap = new Map(); // Track all open tabs by URL for duplicate detection
+let tabIdToUrlMap = new Map(); // Track all open tabs by ID for fast deletion
 // Window label storage key
 const WINDOW_LABEL_KEY = 'windowLabels';
 // Track which window IDs we've already prompted to avoid duplicate prompts
@@ -424,6 +425,7 @@ async function handleDuplicateTab(newTabId, newTabUrl) {
     if (isAllowedDuplicate(newTabUrl, settings.allowedDuplicatePatterns)) {
       console.log(`URL allowed to have duplicates: ${sanitizeUrlForLog(newTabUrl)} (normalized: ${sanitizeUrlForLog(normalizedUrl)})`);
       tabUrlMap.set(normalizedUrl, newTabId); // Still track it
+      tabIdToUrlMap.set(newTabId, normalizedUrl);
       return;
     }
     
@@ -472,12 +474,19 @@ async function handleDuplicateTab(newTabId, newTabUrl) {
         }
       } catch (error) {
         // Existing tab no longer exists, remove from map
+        if (existingTabId) tabIdToUrlMap.delete(existingTabId);
         tabUrlMap.delete(normalizedUrl);
       }
     }
     
     // Add/update the tab in our tracking map
+    // Keep both maps in sync if this URL was previously mapped to a different ID
+    const oldTabIdForUrl = tabUrlMap.get(normalizedUrl);
+    if (oldTabIdForUrl && oldTabIdForUrl !== newTabId) {
+      tabIdToUrlMap.delete(oldTabIdForUrl);
+    }
     tabUrlMap.set(normalizedUrl, newTabId);
+    tabIdToUrlMap.set(newTabId, normalizedUrl);
     
   } catch (error) {
     console.error('Error handling duplicate tab:', error);
@@ -492,7 +501,10 @@ async function performDuplicateDefaultAction({ newTabId, existingTabId, defaultC
   try {
     // Update the map with the remaining tab BEFORE closing
     const tabToKeep = defaultClosesOlder ? newTabId : existingTabId;
+    const tabToRemove = defaultClosesOlder ? existingTabId : newTabId;
     tabUrlMap.set(normalizedUrl, tabToKeep);
+    tabIdToUrlMap.set(tabToKeep, normalizedUrl);
+    tabIdToUrlMap.delete(tabToRemove);
 
     if (defaultClosesOlder) {
       // Close older = close existing, keep the new tab
@@ -639,16 +651,19 @@ async function updateTabUrlMap() {
   try {
     const tabs = await chrome.tabs.query({});
     const newMap = new Map();
+    const newIdMap = new Map();
     
     tabs.forEach(tab => {
       if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
         const normalizedUrl = normalizeUrl(tab.url);
         // Keep the most recent tab ID for each URL (in case of race conditions)
         newMap.set(normalizedUrl, tab.id);
+        newIdMap.set(tab.id, normalizedUrl);
       }
     });
     
     tabUrlMap = newMap;
+    tabIdToUrlMap = newIdMap;
     console.log(`Updated tab URL map with ${tabUrlMap.size} entries`);
   } catch (error) {
     console.error('Error updating tab URL map:', error);
@@ -1493,11 +1508,13 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
   }
 
   // Remove from URL map
-  for (const [url, id] of tabUrlMap.entries()) {
-    if (id === tabId) {
+  const url = tabIdToUrlMap.get(tabId);
+  if (url) {
+    // Only delete from tabUrlMap if it's currently tracking THIS specific tab
+    if (tabUrlMap.get(url) === tabId) {
       tabUrlMap.delete(url);
-      break;
     }
+    tabIdToUrlMap.delete(tabId);
   }
 });
 
