@@ -44,3 +44,7 @@
 **Vulnerability:** Logic DoS via Type Confusion (missing type validation on imported JSON objects)
 **Learning:** When importing settings, arrays like `urlPatterns` could be overwritten with strings/other types, causing crashes when methods like `.some()` or `.forEach()` are called on them.
 **Prevention:** Always validate the structure and types of imported JSON configurations, enforcing arrays and string elements before storing them.
+## 2026-08-04 - Fix XSS in duplicate tab banner
+**Vulnerability:** XSS via innerHTML injection
+**Learning:** Using innerHTML with template literals can introduce HTML injection and XSS vulnerabilities, even if variables seem benign.
+**Prevention:** Use safe DOM methods like document.createElement and textContent instead of innerHTML.
