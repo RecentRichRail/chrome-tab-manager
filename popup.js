@@ -954,6 +954,7 @@ async function regroupAllTabs() {
 }
 
 // Initialize popup when DOM is loaded
+if (typeof document !== 'undefined') {
 document.addEventListener('DOMContentLoaded', () => {
   // Update tab count when popup opens
   updateTabCount();
@@ -2163,6 +2164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+}
 
 // ⚡ Bolt Performance Optimization:
 // Debounce the updateTabCount function to prevent UI freezing and
@@ -2177,27 +2179,36 @@ function debouncedUpdateTabCount() {
 }
 
 // Listen for tab changes to update count in real-time
-chrome.tabs.onCreated.addListener(() => {
-  debouncedUpdateTabCount();
-});
+if (typeof chrome !== 'undefined' && chrome.tabs) {
+  chrome.tabs.onCreated.addListener(() => {
+    debouncedUpdateTabCount();
+  });
 
-chrome.tabs.onRemoved.addListener(() => {
-  debouncedUpdateTabCount();
-});
+  chrome.tabs.onRemoved.addListener(() => {
+    debouncedUpdateTabCount();
+  });
 
-chrome.tabs.onUpdated.addListener(() => {
-  debouncedUpdateTabCount();
-});
+  chrome.tabs.onUpdated.addListener(() => {
+    debouncedUpdateTabCount();
+  });
+}
 
 // Listen for tab group changes
-chrome.tabGroups.onCreated.addListener(() => {
-  debouncedUpdateTabCount();
-});
+if (typeof chrome !== 'undefined' && chrome.tabGroups) {
+  chrome.tabGroups.onCreated.addListener(() => {
+    debouncedUpdateTabCount();
+  });
 
-chrome.tabGroups.onRemoved.addListener(() => {
-  debouncedUpdateTabCount();
-});
+  chrome.tabGroups.onRemoved.addListener(() => {
+    debouncedUpdateTabCount();
+  });
 
-chrome.tabGroups.onUpdated.addListener(() => {
-  debouncedUpdateTabCount();
-});
+  chrome.tabGroups.onUpdated.addListener(() => {
+    debouncedUpdateTabCount();
+  });
+}
+
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { escapeHtml };
+}
