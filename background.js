@@ -218,6 +218,87 @@ async function groupAllExistingTabs() {
   }
 }
 
+// Helper function to find a matching rule for a given URL
+function findMatchingTabGroupRule(rules, url) {
+  const lowerUrl = url.toLowerCase();
+
+  return rules.find(rule => {
+    if (!rule.patterns || rule.patterns.length === 0) {
+      return false;
+    }
+
+    const matches = rule.patterns.some(pattern => {
+      const result = matchesPattern(url, pattern, lowerUrl);
+      console.log(`Tab grouping pattern check: "${pattern}" vs "${sanitizeUrlForLog(url)}" = ${result}`);
+      return result;
+    });
+
+    if (matches) {
+      console.log(`✓ Found matching tab grouping rule: "${rule.groupName}" for URL: ${sanitizeUrlForLog(url)}`);
+    }
+
+    return matches;
+  });
+}
+
+// Helper function to apply a tab group rule to a specific tab
+async function applyTabGroupRule(tabId, tab, matchingRule, settings) {
+  // Find existing group with the same name in the same window
+  const existingGroups = await chrome.tabGroups.query({
+    windowId: tab.windowId
+  });
+
+  let targetGroup = existingGroups.find(group =>
+    group.title === matchingRule.groupName
+  );
+
+  if (targetGroup) {
+    // Add tab to existing group
+    const groupTabs = await chrome.tabs.query({
+      groupId: targetGroup.id
+    });
+
+    // Determine position within the group
+    let index;
+    if (settings.addTabPosition === 'left') {
+      // Add to the beginning of the group
+      index = Math.min(...groupTabs.map(t => t.index));
+    } else {
+      // Add to the end of the group
+      index = Math.max(...groupTabs.map(t => t.index)) + 1;
+    }
+
+    // Move tab to the correct position and group
+    await chrome.tabs.move(tabId, { index });
+    await chrome.tabs.group({ tabIds: tabId, groupId: targetGroup.id });
+
+    console.log(`Added tab ${tabId} to existing group "${targetGroup.title}" at ${settings.addTabPosition}`);
+  } else {
+    // Create new group
+    console.log(`Creating new group for tab ${tabId} with rule: ${matchingRule.groupName}`);
+    const groupId = await chrome.tabs.group({ tabIds: tabId });
+    console.log(`Created group ${groupId} with tab ${tabId}`);
+
+    // Update group properties
+    const updateOptions = {
+      title: matchingRule.groupName
+    };
+
+    // Set color if specified
+    if (matchingRule.groupColor) {
+      updateOptions.color = matchingRule.groupColor === 'default' ? getRandomTabGroupColor() : matchingRule.groupColor;
+    } else {
+      // Use random color if no color specified (default)
+      updateOptions.color = getRandomTabGroupColor();
+    }
+
+    await chrome.tabGroups.update(groupId, updateOptions);
+    console.log(`Updated group ${groupId} with title "${matchingRule.groupName}" and color "${updateOptions.color}"`);
+
+    console.log(`Created new group "${matchingRule.groupName}" for tab ${tabId}`);
+  }
+}
+
 // Function to handle auto tab grouping
 async function handleAutoTabGrouping(tabId, url) {
   try {
@@ -250,24 +331,7 @@ async function handleAutoTabGrouping(tabId, url) {
     }
     
     // Find matching rule
-    const lowerUrl = url.toLowerCase();
-    const matchingRule = settings.tabGroupRules.find(rule => {
-      if (!rule.patterns || rule.patterns.length === 0) {
-        return false;
-      }
-      
-      const matches = rule.patterns.some(pattern => {
-        const result = matchesPattern(url, pattern, lowerUrl);
-        console.log(`Tab grouping pattern check: "${pattern}" vs "${sanitizeUrlForLog(url)}" = ${result}`);
-        return result;
-      });
-      
-      if (matches) {
-        console.log(`✓ Found matching tab grouping rule: "${rule.groupName}" for URL: ${sanitizeUrlForLog(url)}`);
-      }
-      
-      return matches;
-    });
+    const matchingRule = findMatchingTabGroupRule(settings.tabGroupRules, url);
     
     if (!matchingRule) {
       console.log(`No matching rule found for URL: ${sanitizeUrlForLog(url)}`);
@@ -276,60 +340,8 @@ async function handleAutoTabGrouping(tabId, url) {
     
     console.log(`Found matching rule for ${sanitizeUrlForLog(url)}: ${matchingRule.groupName}`);
     
-    // Find existing group with the same name in the same window
-    const existingGroups = await chrome.tabGroups.query({ 
-      windowId: tab.windowId 
-    });
-    
-    let targetGroup = existingGroups.find(group => 
-      group.title === matchingRule.groupName
-    );
-    
-    if (targetGroup) {
-      // Add tab to existing group
-      const groupTabs = await chrome.tabs.query({ 
-        groupId: targetGroup.id 
-      });
-      
-      // Determine position within the group
-      let index;
-      if (settings.addTabPosition === 'left') {
-        // Add to the beginning of the group
-        index = Math.min(...groupTabs.map(t => t.index));
-      } else {
-        // Add to the end of the group
-        index = Math.max(...groupTabs.map(t => t.index)) + 1;
-      }
-      
-      // Move tab to the correct position and group
-      await chrome.tabs.move(tabId, { index });
-      await chrome.tabs.group({ tabIds: tabId, groupId: targetGroup.id });
-      
-      console.log(`Added tab ${tabId} to existing group "${targetGroup.title}" at ${settings.addTabPosition}`);
-    } else {
-      // Create new group
-      console.log(`Creating new group for tab ${tabId} with rule: ${matchingRule.groupName}`);
-      const groupId = await chrome.tabs.group({ tabIds: tabId });
-      console.log(`Created group ${groupId} with tab ${tabId}`);
-      
-      // Update group properties
-      const updateOptions = {
-        title: matchingRule.groupName
-      };
-      
-      // Set color if specified
-      if (matchingRule.groupColor) {
-        updateOptions.color = matchingRule.groupColor === 'default' ? getRandomTabGroupColor() : matchingRule.groupColor;
-      } else {
-        // Use random color if no color specified (default)
-        updateOptions.color = getRandomTabGroupColor();
-      }
-      
-      await chrome.tabGroups.update(groupId, updateOptions);
-      console.log(`Updated group ${groupId} with title "${matchingRule.groupName}" and color "${updateOptions.color}"`);
-      
-      console.log(`Created new group "${matchingRule.groupName}" for tab ${tabId}`);
-    }
+    // Apply the matching rule
+    await applyTabGroupRule(tabId, tab, matchingRule, settings);
     
   } catch (error) {
     console.error('Error handling auto tab grouping:', error);
