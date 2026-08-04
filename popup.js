@@ -608,11 +608,6 @@ function togglePatterns(ruleIndex) {
   }
 }
 
-// Add group rule (legacy function - now creates group)
-function addGroupRule() {
-  createGroupRule();
-}
-
 // Remove group rule
 function removeGroupRule(index) {
   const rule = autoTabGroupingSettings.tabGroupRules[index];
