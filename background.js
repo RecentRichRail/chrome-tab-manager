@@ -16,6 +16,11 @@ const EXPLORER_SIZE_KEY = 'explorerWindowSize';
 let explorerWindowId = null;
 const WINDOW_PREFIX_ENABLED_KEY = 'windowPrefixEnabled';
 
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { sanitizeUrlForLog };
+}
+
 // ⚡ Bolt Performance Optimization:
 // Cache storage settings in memory to avoid redundant async chrome.storage.sync.get calls.
 // This significantly reduces IPC overhead when handling frequent tab lifecycle events.
