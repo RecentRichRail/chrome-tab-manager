@@ -334,14 +334,7 @@ async function handleAutoTabGrouping(tabId, url) {
 
 // Function to normalize URL for comparison (remove fragments, query params if needed)
 function normalizeUrl(url) {
-  try {
-    const urlObj = new URL(url);
-    // Remove fragment (hash) for comparison
-    urlObj.hash = '';
-    return urlObj.toString();
-  } catch (error) {
-    return url; // Return original if URL parsing fails
-  }
+  return typeof url === 'string' ? url.split('#')[0] : url;
 }
 
 // Function to sanitize URLs for logging to prevent sensitive data exposure

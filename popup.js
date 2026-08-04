@@ -1375,7 +1375,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Helper: normalize URL for duplicate detection (match background.js)
       const normalizeUrl = (url) => {
-        try { const u = new URL(url); u.hash = ''; return u.toString(); } catch { return url; }
+        return typeof url === 'string' ? url.split('#')[0] : url;
       };
 
       // Filter
