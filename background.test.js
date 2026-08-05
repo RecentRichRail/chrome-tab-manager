@@ -1,61 +1,116 @@
-const fs = require('fs');
 const test = require('node:test');
 const assert = require('node:assert');
+const fs = require('fs');
+const vm = require('vm');
 
-// Mock chrome API so background.js can load
-global.chrome = {
-  storage: { onChanged: { addListener: () => {} }, sync: { get: () => Promise.resolve({}) }, local: { get: () => Promise.resolve({}) } },
-  tabs: { query: () => Promise.resolve([]), onUpdated: { addListener: () => {} }, onCreated: { addListener: () => {} }, onRemoved: { addListener: () => {} }, onActivated: { addListener: () => {} } },
-  windows: { onRemoved: { addListener: () => {} }, onCreated: { addListener: () => {} }, onBoundsChanged: { addListener: () => {} } },
-  tabGroups: { onCreated: { addListener: () => {} }, onRemoved: { addListener: () => {} }, onUpdated: { addListener: () => {} } },
-  runtime: { onStartup: { addListener: () => {} }, onInstalled: { addListener: () => {} }, onMessage: { addListener: () => {} }, getURL: () => '' },
-  action: { setBadgeText: () => {}, setBadgeBackgroundColor: () => {} }
+const code = fs.readFileSync('./background.js', 'utf8');
+const context = {
+  chrome: {
+    storage: {
+      onChanged: { addListener: () => {} },
+      sync: { get: () => Promise.resolve({}), set: () => Promise.resolve({}) },
+      local: { get: () => Promise.resolve({}), set: () => Promise.resolve({}) }
+    },
+    tabs: {
+      onCreated: { addListener: () => {} },
+      onRemoved: { addListener: () => {} },
+      onUpdated: { addListener: () => {} },
+      onActivated: { addListener: () => {} },
+      onAttached: { addListener: () => {} },
+      onDetached: { addListener: () => {} },
+      query: () => Promise.resolve([])
+    },
+    tabGroups: {
+      onCreated: { addListener: () => {} },
+      onUpdated: { addListener: () => {} },
+      onRemoved: { addListener: () => {} }
+    },
+    runtime: {
+      onMessage: { addListener: () => {} },
+      onInstalled: { addListener: () => {} },
+      onStartup: { addListener: () => {} }
+    },
+    windows: {
+      onCreated: { addListener: () => {} },
+      onFocusChanged: { addListener: () => {} },
+      onBoundsChanged: { addListener: () => {} },
+      onRemoved: { addListener: () => {} }
+    },
+    action: {
+      setBadgeText: () => {},
+      setBadgeBackgroundColor: () => {}
+    }
+  },
+  console: { log: () => {}, error: () => {} },
+  setTimeout: setTimeout,
+  clearTimeout: clearTimeout,
+  Set: Set,
+  Map: Map,
+  URL: URL,
+  String: String,
+  Number: Number,
+  Math: Math,
+  Promise: Promise,
+  Date: Date,
+  setInterval: setInterval,
+  clearInterval: clearInterval
 };
-global.crypto = { randomUUID: () => 'uuid' };
 
-// Load the file in the global scope so functions are accessible
-const bgCode = fs.readFileSync('./background.js', 'utf8');
-eval(bgCode);
+vm.createContext(context);
+vm.runInContext(code, context);
+
+test('normalizeUrl', () => {
+    assert.strictEqual(context.normalizeUrl('http://example.com/path#hash'), 'http://example.com/path');
+    assert.strictEqual(context.normalizeUrl('http://example.com/path'), 'http://example.com/path');
+    assert.strictEqual(context.normalizeUrl('invalid-url'), 'invalid-url');
+});
+
+test('sanitizeUrlForLog', () => {
+    assert.strictEqual(context.sanitizeUrlForLog('http://example.com/path?query=123#hash'), 'http://example.com/path');
+    assert.strictEqual(context.sanitizeUrlForLog('invalid-url'), '[invalid/redacted url]');
+});
+
+test('matchesPattern', () => {
+    assert.strictEqual(context.matchesPattern('https://example.com', '*example.com*'), true);
+    assert.strictEqual(context.matchesPattern('https://example.com', '*test.com*'), false);
+    assert.strictEqual(context.matchesPattern('https://github.com/user/repo', '*github.com*'), true);
+    assert.strictEqual(context.matchesPattern('https://github.com/user/repo', 'https://github.com/*'), true);
+    assert.strictEqual(context.matchesPattern('https://github.com/user/repo', 'github.com/*'), false);
+    assert.strictEqual(context.matchesPattern('https://github.com/user/repo', '*github.com/*'), true);
+});
 
 test('isAllowedDuplicate', async (t) => {
-    // Suppress console.log during tests to avoid clutter
-    const originalLog = console.log;
-    console.log = () => {};
-
     await t.test('exact match', () => {
-        assert.strictEqual(isAllowedDuplicate('https://example.com/page1', ['https://example.com/page1']), true);
-        assert.strictEqual(isAllowedDuplicate('https://example.com/page2', ['https://example.com/page1']), false);
+        assert.strictEqual(context.isAllowedDuplicate('https://example.com/page1', ['https://example.com/page1']), true);
+        assert.strictEqual(context.isAllowedDuplicate('https://example.com/page2', ['https://example.com/page1']), false);
     });
 
     await t.test('wildcard match', () => {
-        assert.strictEqual(isAllowedDuplicate('https://example.com/page1', ['*example.com*']), true);
-        assert.strictEqual(isAllowedDuplicate('https://example.com/page1', ['https://example.com/*']), true);
-        assert.strictEqual(isAllowedDuplicate('https://example.com/page1', ['*page2*']), false);
+        assert.strictEqual(context.isAllowedDuplicate('https://example.com/page1', ['*example.com*']), true);
+        assert.strictEqual(context.isAllowedDuplicate('https://example.com/page1', ['https://example.com/*']), true);
+        assert.strictEqual(context.isAllowedDuplicate('https://example.com/page1', ['*page2*']), false);
     });
 
     await t.test('normalized url (without hash)', () => {
-        assert.strictEqual(isAllowedDuplicate('https://example.com/page#section1', ['https://example.com/page']), true);
+        assert.strictEqual(context.isAllowedDuplicate('https://example.com/page#section1', ['https://example.com/page']), true);
         // Wildcard ignoring hash
-        assert.strictEqual(isAllowedDuplicate('https://example.com/page#section2', ['*example.com/page']), true);
+        assert.strictEqual(context.isAllowedDuplicate('https://example.com/page#section2', ['*example.com/page']), true);
         // Match including hash
-        assert.strictEqual(isAllowedDuplicate('https://example.com/page#section1', ['https://example.com/page#section1']), true);
+        assert.strictEqual(context.isAllowedDuplicate('https://example.com/page#section1', ['https://example.com/page#section1']), true);
     });
 
     await t.test('case insensitivity', () => {
-        assert.strictEqual(isAllowedDuplicate('HTTPS://EXAMPLE.COM/page', ['https://example.com/page']), true);
-        assert.strictEqual(isAllowedDuplicate('https://example.com/PAGE', ['https://example.com/page']), true);
-        assert.strictEqual(isAllowedDuplicate('https://example.com/page', ['HTTPS://EXAMPLE.COM/PAGE']), true);
+        assert.strictEqual(context.isAllowedDuplicate('HTTPS://EXAMPLE.COM/page', ['https://example.com/page']), true);
+        assert.strictEqual(context.isAllowedDuplicate('https://example.com/PAGE', ['https://example.com/page']), true);
+        assert.strictEqual(context.isAllowedDuplicate('https://example.com/page', ['HTTPS://EXAMPLE.COM/PAGE']), true);
     });
 
     await t.test('empty patterns', () => {
-        assert.strictEqual(isAllowedDuplicate('https://example.com/page', []), false);
+        assert.strictEqual(context.isAllowedDuplicate('https://example.com/page', []), false);
     });
 
     await t.test('multiple patterns', () => {
-        assert.strictEqual(isAllowedDuplicate('https://example.com/page', ['*test.com*', 'https://example.com/page']), true);
-        assert.strictEqual(isAllowedDuplicate('https://example.com/page', ['*test.com*', '*other.com*']), false);
+        assert.strictEqual(context.isAllowedDuplicate('https://example.com/page', ['*test.com*', 'https://example.com/page']), true);
+        assert.strictEqual(context.isAllowedDuplicate('https://example.com/page', ['*test.com*', '*other.com*']), false);
     });
-
-    // Restore console.log
-    console.log = originalLog;
 });
