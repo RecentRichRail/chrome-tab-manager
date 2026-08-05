@@ -934,13 +934,38 @@ function injectedShowAutoCloseBanner(opts) {
 
     const bar = document.createElement('div');
     bar.className = 'ctm-ac-banner ctm-glass';
-    bar.innerHTML = `<div class="ctm-ac-inner">
-      <span class="ctm-ac-title">This tab will auto-close</span>
-      <span class="ctm-ac-timer" id="ctmAcTimer">${seconds}s</span>
-      <span class="ctm-ac-spacer"></span>
-      <button class="ctm-ac-btn ctm-ac-primary" id="ctmAcCloseNowBtn">Close now</button>
-      <button class="ctm-ac-btn ctm-ac-secondary" id="ctmAcKeepBtn">Do not close</button>
-    </div>`;
+
+    const innerDiv = document.createElement('div');
+    innerDiv.className = 'ctm-ac-inner';
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'ctm-ac-title';
+    titleSpan.textContent = 'This tab will auto-close';
+    innerDiv.appendChild(titleSpan);
+
+    const timerSpan = document.createElement('span');
+    timerSpan.className = 'ctm-ac-timer';
+    timerSpan.id = 'ctmAcTimer';
+    timerSpan.textContent = `${seconds}s`;
+    innerDiv.appendChild(timerSpan);
+
+    const spacerSpan = document.createElement('span');
+    spacerSpan.className = 'ctm-ac-spacer';
+    innerDiv.appendChild(spacerSpan);
+
+    const closeBtnEl = document.createElement('button');
+    closeBtnEl.className = 'ctm-ac-btn ctm-ac-primary';
+    closeBtnEl.id = 'ctmAcCloseNowBtn';
+    closeBtnEl.textContent = 'Close now';
+    innerDiv.appendChild(closeBtnEl);
+
+    const keepBtnEl = document.createElement('button');
+    keepBtnEl.className = 'ctm-ac-btn ctm-ac-secondary';
+    keepBtnEl.id = 'ctmAcKeepBtn';
+    keepBtnEl.textContent = 'Do not close';
+    innerDiv.appendChild(keepBtnEl);
+
+    bar.appendChild(innerDiv);
     document.documentElement.appendChild(bar);
     window.__ctmAcBannerEl = bar;
 

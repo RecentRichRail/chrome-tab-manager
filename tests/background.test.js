@@ -7,7 +7,7 @@ const code = fs.readFileSync(path.join(__dirname, '..', 'background.js'), 'utf8'
 
 global.chrome = {
   storage: { onChanged: { addListener: () => {} }, sync: {}, local: {} },
-  tabs: { onUpdated: { addListener: () => {} }, onCreated: { addListener: () => {} }, onRemoved: { addListener: () => {} }, onActivated: { addListener: () => {} }, query: () => {} },
+  tabs: { onUpdated: { addListener: () => {} }, onCreated: { addListener: () => {} }, onRemoved: { addListener: () => {} }, onActivated: { addListener: () => {} }, query: () => Promise.resolve([]) },
   windows: { onRemoved: { addListener: () => {} }, onCreated: { addListener: () => {} }, onBoundsChanged: { addListener: () => {} } },
   runtime: { onStartup: { addListener: () => {} }, onInstalled: { addListener: () => {} }, onMessage: { addListener: () => {} }, getURL: () => '' },
   tabGroups: { onCreated: { addListener: () => {} }, onRemoved: { addListener: () => {} }, onUpdated: { addListener: () => {} } },
