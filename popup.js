@@ -608,11 +608,6 @@ function togglePatterns(ruleIndex) {
   }
 }
 
-// Add group rule (legacy function - now creates group)
-function addGroupRule() {
-  createGroupRule();
-}
-
 // Remove group rule
 function removeGroupRule(index) {
   const rule = autoTabGroupingSettings.tabGroupRules[index];
@@ -799,6 +794,20 @@ function toggleMenu(headerId, contentId) {
   }
 }
 
+// Setup menu toggle event listeners (click and enter/space to toggle)
+function setupMenuToggle(headerId, contentId) {
+  const header = document.getElementById(headerId);
+  if (header) {
+    header.addEventListener('click', () => toggleMenu(headerId, contentId));
+    header.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleMenu(headerId, contentId);
+      }
+    });
+  }
+}
+
 let tabCountUpdateTimeout = null;
 
 // Function to get and display the current tab count and group info
@@ -945,6 +954,7 @@ async function regroupAllTabs() {
 }
 
 // Initialize popup when DOM is loaded
+if (typeof document !== 'undefined') {
 document.addEventListener('DOMContentLoaded', () => {
   // Update tab count when popup opens
   updateTabCount();
@@ -1008,10 +1018,25 @@ document.addEventListener('DOMContentLoaded', () => {
   if (prefixToggle) {
     prefixToggle.addEventListener('change', async (e) => {
       try {
-        const windowId = await getCurrentBrowserWindowId();
-        if (!windowId) return;
-        // Persist per-window and immediately apply/clear on current window
-        chrome.runtime.sendMessage({ type: 'applyWindowLabelPrefix', enabled: e.target.checked, windowId }, () => {});
+        if (e.target.checked) {
+          chrome.permissions.request({ origins: ['<all_urls>'] }, async (granted) => {
+            if (granted) {
+              const windowId = await getCurrentBrowserWindowId();
+              if (!windowId) return;
+              chrome.runtime.sendMessage({ type: 'applyWindowLabelPrefix', enabled: true, windowId }, () => {});
+            } else {
+              e.target.checked = false;
+              const windowId = await getCurrentBrowserWindowId();
+              if (!windowId) return;
+              chrome.runtime.sendMessage({ type: 'applyWindowLabelPrefix', enabled: false, windowId }, () => {});
+            }
+          });
+        } else {
+          const windowId = await getCurrentBrowserWindowId();
+          if (!windowId) return;
+          // Persist per-window and immediately apply/clear on current window
+          chrome.runtime.sendMessage({ type: 'applyWindowLabelPrefix', enabled: false, windowId }, () => {});
+        }
       } catch (err) {
         console.error('Failed to apply window label prefix setting', err);
       }
@@ -1096,7 +1121,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Export settings as JSON
-  document.getElementById('exportSettingsBtn').addEventListener('click', async () => {
+  const exportSettingsBtn = document.getElementById('exportSettingsBtn');
+  exportSettingsBtn.addEventListener('click', async () => {
     try {
       // Read all relevant keys from chrome.storage.sync
       const all = await chrome.storage.sync.get(null);
@@ -1112,14 +1138,34 @@ document.addEventListener('DOMContentLoaded', () => {
       a.download = 'chrome-tab-manager-settings.json';
       a.click();
       URL.revokeObjectURL(url);
+
+      const originalHTML = exportSettingsBtn.innerHTML;
+      exportSettingsBtn.innerHTML = 'Exported!';
+      exportSettingsBtn.style.color = 'var(--accent)';
+      exportSettingsBtn.disabled = true;
+      setTimeout(() => {
+        exportSettingsBtn.innerHTML = originalHTML;
+        exportSettingsBtn.style.color = '';
+        exportSettingsBtn.disabled = false;
+      }, 2000);
     } catch (e) {
-      alert('Failed to export settings: ' + e.message);
+      const originalHTML = exportSettingsBtn.innerHTML;
+      exportSettingsBtn.innerHTML = 'Export Failed';
+      exportSettingsBtn.style.color = '#ef4444';
+      exportSettingsBtn.disabled = true;
+      setTimeout(() => {
+        exportSettingsBtn.innerHTML = originalHTML;
+        exportSettingsBtn.style.color = '';
+        exportSettingsBtn.disabled = false;
+      }, 3000);
+      console.error('Failed to export settings:', e);
     }
   });
 
   // Import settings from JSON file
   const importFileInput = document.getElementById('importFileInput');
-  document.getElementById('importSettingsBtn').addEventListener('click', () => importFileInput.click());
+  const importSettingsBtn = document.getElementById('importSettingsBtn');
+  importSettingsBtn.addEventListener('click', () => importFileInput.click());
   importFileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1127,7 +1173,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🛡️ Sentinel: Enforce file size limit (1MB) to prevent OOM/DoS
     const MAX_FILE_SIZE = 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
-      alert('File is too large. Maximum size is 1MB.');
+      const orig = importSettingsBtn.innerHTML;
+      importSettingsBtn.innerHTML = 'File too large (Max 1MB)';
+      importSettingsBtn.style.color = '#ef4444';
+      importSettingsBtn.disabled = true;
+      setTimeout(() => { importSettingsBtn.innerHTML = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
       // clear the input so the same file can be selected again if needed after it's fixed
       importFileInput.value = '';
       return;
@@ -1137,7 +1187,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const text = await file.text();
       const obj = JSON.parse(text);
       if (!obj) {
-        alert('Invalid settings file');
+        const orig = importSettingsBtn.innerHTML;
+        importSettingsBtn.innerHTML = 'Invalid file';
+        importSettingsBtn.style.color = '#ef4444';
+        importSettingsBtn.disabled = true;
+        setTimeout(() => { importSettingsBtn.innerHTML = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
         return;
       }
 
@@ -1156,7 +1210,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (!settingsToImport) {
-        alert('Invalid settings file format. Expected exported settings JSON.');
+        const orig = importSettingsBtn.innerHTML;
+        importSettingsBtn.innerHTML = 'Invalid settings format';
+        importSettingsBtn.style.color = '#ef4444';
+        importSettingsBtn.disabled = true;
+        setTimeout(() => { importSettingsBtn.innerHTML = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
         return;
       }
 
@@ -1185,12 +1243,23 @@ document.addEventListener('DOMContentLoaded', () => {
           .slice(0, 100);
       }
 
-      if (!confirm('Importing will overwrite your current settings in sync storage. Continue?')) return;
+      if (!confirm('Importing will overwrite your current settings in sync storage. Continue?')) {
+        importFileInput.value = '';
+        return;
+      }
       await chrome.storage.sync.set(settingsToImport);
-      alert('Settings imported. The popup will reload to reflect changes.');
-      window.location.reload();
+      const orig = importSettingsBtn.innerHTML;
+      importSettingsBtn.innerHTML = 'Imported Successfully!';
+      importSettingsBtn.style.color = 'var(--accent)';
+      importSettingsBtn.disabled = true;
+      setTimeout(() => { window.location.reload(); }, 1500);
     } catch (err) {
-      alert('Failed to import settings: ' + err.message);
+      const orig = importSettingsBtn.innerHTML;
+      importSettingsBtn.innerHTML = 'Import Failed';
+      importSettingsBtn.style.color = '#ef4444';
+      importSettingsBtn.disabled = true;
+      setTimeout(() => { importSettingsBtn.innerHTML = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
+      console.error('Failed to import settings:', err);
     }
   });
   loadAutoCloseSettings();
@@ -1309,145 +1378,521 @@ document.addEventListener('DOMContentLoaded', () => {
   // Build explorer on open by default
   buildWindowExplorer();
 
+
+  // --- Window Explorer Refactored Helpers ---
+
+  async function fetchExplorerData() {
+    const [windows, allGroupsList, labelsMsg, ac] = await Promise.all([
+      chrome.windows.getAll({ populate: true }),
+      chrome.tabGroups.query({}),
+      new Promise(resolve => chrome.runtime.sendMessage({ type: 'getAllWindowLabels' }, resolve)),
+      chrome.storage.sync.get({ autoCloseEnabled: false, urlPatterns: [] })
+    ]);
+    return { windows, allGroupsList, labelsMsg, ac };
+  }
+
+  function getNormalizedTabs(windows) {
+    const allTabs = [];
+    for (const w of windows) {
+      for (const t of w.tabs) {
+        const title = t.title || '(no title)';
+        const url = t.url || '';
+        allTabs.push({
+          windowId: w.id,
+          groupId: t.groupId,
+          tabId: t.id,
+          title: title,
+          url: url,
+          lowerTitle: title.toLowerCase(),
+          lowerUrl: url.toLowerCase(),
+          lastAccessed: t.lastAccessed || 0
+        });
+      }
+    }
+    return allTabs;
+  }
+
+  function applyExplorerFilters(allTabs, filterMode, ac) {
+    let filteredTabs = allTabs.slice();
+    if (filterMode === 'duplicates') {
+      const byUrl = new Map();
+      const normalizeUrl = (url) => {
+        return typeof url === 'string' ? url.split('#')[0] : url;
+      };
+      for (const t of allTabs) {
+        const key = normalizeUrl(t.url);
+        if (!byUrl.has(key)) byUrl.set(key, []);
+        byUrl.get(key).push(t);
+      }
+      const allDups = [];
+      for (const list of byUrl.values()) {
+        if (list.length > 1) allDups.push(...list);
+      }
+      filteredTabs = allDups;
+    } else if (filterMode === 'autoclose') {
+      const patterns = ac.urlPatterns || [];
+      const parsedPatterns = patterns.map(pattern => {
+        if (!pattern || pattern.length > 200) return null;
+        const parts = pattern.split('*');
+        return {
+          exact: parts.length === 1,
+          lowerPattern: parts.length === 1 ? pattern.toLowerCase() : null,
+          lowerParts: parts.length > 1 ? parts.map(p => p.toLowerCase()) : []
+        };
+      }).filter(Boolean);
+
+      const matchesParsedPattern = (url, lowerUrl, parsed) => {
+        if (!url || url.length > 2000) return false;
+        if (parsed.exact) return lowerUrl === parsed.lowerPattern;
+
+        const lowerParts = parsed.lowerParts;
+        if (!lowerUrl.startsWith(lowerParts[0])) return false;
+
+        let currentIndex = lowerParts[0].length;
+        for (let i = 1; i < lowerParts.length - 1; i++) {
+          const part = lowerParts[i];
+          if (part === '') continue;
+          const foundIndex = lowerUrl.indexOf(part, currentIndex);
+          if (foundIndex === -1) return false;
+          currentIndex = foundIndex + part.length;
+        }
+
+        const lastPart = lowerParts[lowerParts.length - 1];
+        if (lastPart !== '') {
+          if (!lowerUrl.endsWith(lastPart)) return false;
+          if (lowerUrl.length - lastPart.length < currentIndex) return false;
+        }
+        return true;
+      };
+
+      filteredTabs = allTabs.filter(t => {
+        if (!t.url || t.url.length > 2000) return false;
+        return parsedPatterns.some(parsed => matchesParsedPattern(t.url, t.lowerUrl, parsed));
+      });
+    }
+    return filteredTabs;
+  }
+
+  function sortExplorerTabs(tabs, sortMode) {
+    const cmp = {
+      'title-asc': (a, b) => a.title.localeCompare(b.title),
+      'lastAccessed-desc': (a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0)
+    }[sortMode] || ((a, b) => a.title.localeCompare(b.title));
+    tabs.sort(cmp);
+  }
+
+  function renderExplorerEmptyState(container) {
+    container.innerHTML = `
+      <div style="text-align:center; padding: 40px 20px; color: var(--muted);">
+        <svg viewBox="0 0 24 24" style="width:48px;height:48px;margin:0 auto 12px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <div style="font-size:15px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No tabs found</div>
+        <div style="font-size:13px; margin-bottom: 16px;">Try adjusting your search or filters.</div>
+        <button id="clearSearchFiltersBtn" class="btn-glass">Clear Search & Filters</button>
+      </div>
+    `;
+    const clearBtn = container.querySelector('#clearSearchFiltersBtn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        const searchInputEl = document.getElementById('windowSearchInput');
+        if (searchInputEl) searchInputEl.value = '';
+        const filterSelectEl = document.getElementById('windowFilterSelect');
+        if (filterSelectEl) filterSelectEl.value = 'all';
+        buildWindowExplorer();
+      });
+    }
+  }
+
+  const escapeRegExpExplorer = (s) => String(s).replace(/[.*+?^$\{}()|[\]\\]/g, '\\$&');
+  const labelRegexCache = new Map();
+  const stripWindowLabel = (title, windowId, labelMap) => {
+    const lbl = labelMap[String(windowId)];
+    if (!lbl) return title || '(no title)';
+    try {
+      let re = labelRegexCache.get(lbl);
+      if (!re) {
+        re = new RegExp('^\\[' + escapeRegExpExplorer(lbl) + '\\]\\s*');
+        labelRegexCache.set(lbl, re);
+      }
+      const base = (title || '(no title)').replace(re, '').trim();
+      return base || '(no title)';
+    } catch {
+      return title || '(no title)';
+    }
+  };
+
+  function renderExplorerByTitle(container, filteredTabs, searchFilter, labelMap, groupMap) {
+    let a11yIdCounter = 0;
+    const byTitle = new Map();
+    for (const t of filteredTabs) {
+      if (!searchFilter(t)) continue;
+      const baseTitle = stripWindowLabel(t.title, t.windowId, labelMap);
+      if (!byTitle.has(baseTitle)) byTitle.set(baseTitle, new Map());
+      const mWin = byTitle.get(baseTitle);
+      if (!mWin.has(t.windowId)) mWin.set(t.windowId, new Map());
+      const mGrp = mWin.get(t.windowId);
+      const gk = t.groupId === -1 ? 'ungrouped' : String(t.groupId);
+      if (!mGrp.has(gk)) mGrp.set(gk, []);
+      mGrp.get(gk).push(t);
+    }
+
+    const titleGrid = document.createElement('div');
+    titleGrid.className = 'explorer-title-grid';
+    const titleGridFragment = document.createDocumentFragment();
+    const sortedEntries = Array.from(byTitle.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+
+    for (const [title, winMap] of sortedEntries) {
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'menu-section explorer-title';
+      const headerEl = document.createElement('div');
+      headerEl.className = 'menu-header';
+      const contentId = `explorer-content-${++a11yIdCounter}`;
+      headerEl.setAttribute('role', 'button');
+      headerEl.setAttribute('tabindex', '0');
+      headerEl.setAttribute('aria-controls', contentId);
+      let totalCount = 0;
+      for (const m of winMap.values()) { for (const tabs of m.values()) totalCount += tabs.length; }
+      headerEl.innerHTML = `<span>${escapeHtml(title)}</span><span class="count-badge">${totalCount}</span><span class="menu-arrow">▶</span>`;
+      const contentEl = document.createElement('div');
+      contentEl.id = contentId;
+      contentEl.className = 'menu-content';
+      contentEl.style.display = 'none';
+
+      for (const [winId, grpMap] of winMap.entries()) {
+        const winLabel = labelMap[String(winId)] || '';
+        const headerTitle = winLabel ? `${winLabel}` : `Window ${winId}`;
+        const winSection = document.createElement('div');
+        winSection.className = 'menu-section explorer-window';
+        const wHeader = document.createElement('div');
+        wHeader.className = 'menu-header';
+        const wContentId = `explorer-wcontent-${++a11yIdCounter}`;
+        wHeader.setAttribute('role', 'button');
+        wHeader.setAttribute('tabindex', '0');
+        wHeader.setAttribute('aria-controls', wContentId);
+        wHeader.innerHTML = `<span>${escapeHtml(headerTitle)}</span><span class="menu-arrow">▶</span>`;
+        const wContent = document.createElement('div');
+        wContent.id = wContentId;
+        wContent.className = 'menu-content';
+        wContent.style.display = 'none';
+
+        const groupsContainer = document.createElement('div');
+        groupsContainer.style.padding = '8px';
+        groupsContainer.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Groups & Tabs</div>`;
+
+        for (const [gid, tabs] of grpMap.entries()) {
+          const groupContainer = document.createElement('div');
+          groupContainer.className = 'group-rule-item explorer-group';
+          let groupTitle = 'Ungrouped';
+          if (gid !== 'ungrouped') {
+            try {
+              const tg = groupMap.get(String(gid));
+              groupTitle = tg && tg.title ? tg.title : `Group ${gid}`;
+            } catch { groupTitle = `Group ${gid}`; }
+          }
+          const gHeader = document.createElement('div');
+          gHeader.className = 'group-rule-header explorer-group-header';
+          const gContentId = `explorer-gcontent-${++a11yIdCounter}`;
+          gHeader.setAttribute('role', 'button');
+          gHeader.setAttribute('tabindex', '0');
+          gHeader.setAttribute('aria-controls', gContentId);
+          gHeader.innerHTML = `<div class="group-rule-name">${escapeHtml(groupTitle)}</div><span class="menu-arrow">▶</span>`;
+          const gContent = document.createElement('div');
+          gContent.id = gContentId;
+          gContent.className = 'explorer-group-content';
+          gContent.style.display = 'none';
+
+          for (const tab of tabs) {
+            const baseTitle = stripWindowLabel(tab.title, tab.windowId, labelMap);
+            const tEl = document.createElement('div');
+            tEl.className = 'url-item explorer-tab-item';
+            tEl.style.margin = '6px 0';
+            tEl.setAttribute('role', 'button');
+            tEl.setAttribute('tabindex', '0');
+            tEl.dataset.title = String(tab.title || '(no title)');
+            tEl.dataset.url = String(tab.url || '');
+            tEl.dataset.lowertitle = tab.lowerTitle;
+            tEl.dataset.lowerurl = tab.lowerUrl;
+            tEl.dataset.tabid = String(tab.tabId);
+            tEl.dataset.windowid = String(tab.windowId);
+            tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
+            tEl.innerHTML = `
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
+                <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(baseTitle)}">${escapeHtml(baseTitle)}</div>
+                <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;" title="${escapeHtml(tab.url || '')}">${escapeHtml(tab.url || '')}</div>
+              </div>
+              <div style="margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;">
+                <button class="close-tab-btn" title="Close tab" aria-label="Close tab: ${escapeHtml(baseTitle)}" data-tabid="${tab.tabId}">✕</button>
+              </div>
+            `;
+            gContent.appendChild(tEl);
+          }
+          groupContainer.appendChild(gHeader);
+          groupContainer.appendChild(gContent);
+          groupsContainer.appendChild(groupContainer);
+        }
+
+        wContent.appendChild(groupsContainer);
+        winSection.appendChild(wHeader);
+        winSection.appendChild(wContent);
+        contentEl.appendChild(winSection);
+
+        const toggleWindow = () => {
+          const expand = wContent.style.display === 'none';
+          wContent.style.display = expand ? 'block' : 'none';
+          wHeader.setAttribute('aria-expanded', expand.toString());
+          const arrow = wHeader.querySelector('.menu-arrow');
+          if (arrow) arrow.classList.toggle('expanded', expand);
+        };
+        wHeader.addEventListener('click', toggleWindow);
+        wHeader.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleWindow();
+          }
+        });
+        wHeader.setAttribute('aria-expanded', 'false');
+      }
+
+      titleGridFragment.appendChild(titleDiv);
+      titleDiv.appendChild(headerEl);
+      titleDiv.appendChild(contentEl);
+      const toggleTitle = () => {
+        const expand = contentEl.style.display === 'none';
+        contentEl.style.display = expand ? 'block' : 'none';
+        headerEl.setAttribute('aria-expanded', expand.toString());
+        const arrow = headerEl.querySelector('.menu-arrow');
+        if (arrow) arrow.classList.toggle('expanded', expand);
+      };
+      headerEl.addEventListener('click', toggleTitle);
+      headerEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleTitle();
+        }
+      });
+      headerEl.setAttribute('aria-expanded', 'false');
+
+      contentEl.querySelectorAll('.explorer-group-header').forEach(h => {
+        const toggleGroup = () => {
+          const gc = h.parentElement.querySelector('.explorer-group-content');
+          if (gc) {
+            const expand = gc.style.display === 'none';
+            gc.style.display = expand ? 'block' : 'none';
+            h.setAttribute('aria-expanded', expand.toString());
+            const arrow = h.querySelector('.menu-arrow');
+            if (arrow) arrow.classList.toggle('expanded', expand);
+          }
+        };
+        h.addEventListener('click', toggleGroup);
+        h.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleGroup();
+          }
+        });
+        h.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    titleGrid.appendChild(titleGridFragment);
+    container.appendChild(titleGrid);
+  }
+
+  function renderExplorerByWindow(container, windows, searchFilter, labelMap, groupMap) {
+    let a11yIdCounter = 0;
+    const windowFragment = document.createDocumentFragment();
+
+    for (const w of windows) {
+      const winDiv = document.createElement('div');
+      winDiv.className = 'menu-section explorer-window';
+      const winLabel = labelMap[String(w.id)] || '';
+      const headerTitle = winLabel ? `${winLabel}` : `Window ${w.id}`;
+      const headerEl = document.createElement('div');
+      headerEl.className = 'menu-header';
+      const contentId = `explorer-window-content-${++a11yIdCounter}`;
+      headerEl.setAttribute('role', 'button');
+      headerEl.setAttribute('tabindex', '0');
+      headerEl.setAttribute('aria-controls', contentId);
+      headerEl.innerHTML = `<span>${escapeHtml(headerTitle)}</span><span class="menu-arrow">▶</span>`;
+      const contentEl = document.createElement('div');
+      contentEl.id = contentId;
+      contentEl.className = 'menu-content';
+      contentEl.style.display = 'none';
+      contentEl.innerHTML = `
+          <div style="padding:8px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Groups & Tabs</div>
+            <div id="window-${w.id}-groups"></div>
+          </div>
+      `;
+      winDiv.appendChild(headerEl);
+      winDiv.appendChild(contentEl);
+      windowFragment.appendChild(winDiv);
+
+      const groups = {};
+      for (const t of w.tabs) {
+        const gid = t.groupId === -1 ? 'ungrouped' : String(t.groupId);
+        if (!groups[gid]) groups[gid] = [];
+        groups[gid].push(t);
+      }
+
+      const groupsContainer = winDiv.querySelector(`#window-${w.id}-groups`);
+      for (const [gid, tabs] of Object.entries(groups)) {
+        const groupContainer = document.createElement('div');
+        groupContainer.className = 'group-rule-item explorer-group';
+        let groupTitle = 'Ungrouped';
+        if (gid !== 'ungrouped') {
+          try {
+            const tg = groupMap.get(String(gid));
+            groupTitle = tg && tg.title ? tg.title : `Group ${gid}`;
+          } catch { groupTitle = `Group ${gid}`; }
+        }
+        const groupHeader = document.createElement('div');
+        groupHeader.className = 'group-rule-header explorer-group-header';
+        const groupContentId = `explorer-group-content-${++a11yIdCounter}`;
+        groupHeader.setAttribute('role', 'button');
+        groupHeader.setAttribute('tabindex', '0');
+        groupHeader.setAttribute('aria-controls', groupContentId);
+        groupHeader.innerHTML = `<div class="group-rule-name">${escapeHtml(groupTitle)}</div><span class="menu-arrow">▶</span>`;
+        const groupContent = document.createElement('div');
+        groupContent.id = groupContentId;
+        groupContent.className = 'explorer-group-content';
+        groupContent.style.display = 'none';
+
+        for (const tab of tabs) {
+          if (!searchFilter({ title: tab.title, url: tab.url, lowerTitle: tab.lowerTitle, lowerUrl: tab.lowerUrl })) continue;
+          const titleStr = String(tab.title || '(no title)');
+          const urlStr = String(tab.url || '');
+          const tEl = document.createElement('div');
+          tEl.className = 'url-item explorer-tab-item';
+          tEl.style.margin = '6px 0';
+          tEl.setAttribute('role', 'button');
+          tEl.setAttribute('tabindex', '0');
+          tEl.dataset.title = titleStr;
+          tEl.dataset.url = urlStr;
+          tEl.dataset.lowertitle = tab.lowerTitle !== undefined ? tab.lowerTitle : titleStr.toLowerCase();
+          tEl.dataset.lowerurl = tab.lowerUrl !== undefined ? tab.lowerUrl : urlStr.toLowerCase();
+          tEl.dataset.tabid = String(tab.id);
+          tEl.dataset.windowid = String(w.id);
+          tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
+          tEl.innerHTML = `
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(tab.title || '(no title)')}">${escapeHtml(tab.title || '(no title)')}</div>
+              <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;" title="${escapeHtml(tab.url || '')}">${escapeHtml(tab.url || '')}</div>
+            </div>
+            <div style="margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;">
+              <button class="close-tab-btn" title="Close tab" aria-label="Close tab: ${escapeHtml(tab.title || '(no title)')}" data-tabid="${tab.id}">✕</button>
+            </div>
+          `;
+          groupContent.appendChild(tEl);
+        }
+
+        groupContainer.appendChild(groupHeader);
+        groupContainer.appendChild(groupContent);
+        groupsContainer.appendChild(groupContainer);
+      }
+
+      const toggleWindowStatic = () => {
+        const expand = contentEl.style.display === 'none';
+        contentEl.style.display = expand ? 'block' : 'none';
+        headerEl.setAttribute('aria-expanded', expand.toString());
+        const arrow = headerEl.querySelector('.menu-arrow');
+        if (arrow) arrow.classList.toggle('expanded', expand);
+      };
+      headerEl.addEventListener('click', toggleWindowStatic);
+      headerEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleWindowStatic();
+        }
+      });
+      headerEl.setAttribute('aria-expanded', 'false');
+      groupsContainer.querySelectorAll('.explorer-group-header').forEach(h => {
+        const toggleStaticGroup = () => {
+          const gc = h.parentElement.querySelector('.explorer-group-content');
+          if (gc) {
+            const expand = gc.style.display === 'none';
+            gc.style.display = expand ? 'block' : 'none';
+            h.setAttribute('aria-expanded', expand.toString());
+            const arrow = h.querySelector('.menu-arrow');
+            if (arrow) arrow.classList.toggle('expanded', expand);
+          }
+        };
+        h.addEventListener('click', toggleStaticGroup);
+        h.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleStaticGroup();
+          }
+        });
+        h.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    container.appendChild(windowFragment);
+  }
+
+  function attachExplorerEventHandlers(container) {
+    container.querySelectorAll('.explorer-tab-item').forEach(item => {
+      const activateTab = async (e) => {
+        if (e.target && e.target.classList.contains('close-tab-btn')) return;
+        const tabId = Number(item.dataset.tabid);
+        const windowId = Number(item.dataset.windowid);
+        const groupId = Number(item.dataset.groupid);
+        try {
+          chrome.runtime.sendMessage({ type: 'activateTab', tabId, windowId, groupId }, () => {});
+          window.close();
+        } catch (err) {
+          console.error('Failed to go to tab', err);
+        }
+      };
+      item.addEventListener('click', activateTab);
+      item.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activateTab(e);
+        }
+      });
+    });
+
+    container.querySelectorAll('.close-tab-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const tabId = Number(btn.getAttribute('data-tabid'));
+        try {
+          chrome.runtime.sendMessage({ type: 'closeTab', tabId }, () => {});
+          const parent = btn.closest('.explorer-tab-item');
+          if (parent) parent.remove();
+          setTimeout(async () => {
+            try {
+              await updateTabCount();
+              await buildWindowExplorer();
+            } catch {}
+          }, 100);
+        } catch (err) {
+          console.error('Failed to close tab', err);
+        }
+      });
+    });
+  }
+
   async function buildWindowExplorer() {
     const container = document.getElementById('windowListContainer');
     container.innerHTML = '';
-    let a11yIdCounter = 0;
-    try {
-      // ⚡ Bolt Performance Optimization:
-      // Parallelize independent data fetches (windows, groups, labels, auto-close settings)
-      // into a single Promise.all() rather than sequential awaits to minimize IPC blocking overhead.
-      const [windows, allGroupsList, labelsMsg, ac] = await Promise.all([
-        chrome.windows.getAll({ populate: true }),
-        chrome.tabGroups.query({}),
-        new Promise(resolve => chrome.runtime.sendMessage({ type: 'getAllWindowLabels' }, resolve)),
-        chrome.storage.sync.get({ autoCloseEnabled: false, urlPatterns: [] })
-      ]);
-      const groupMap = new Map(allGroupsList.map(g => [String(g.id), g]));
 
+    try {
+      const { windows, allGroupsList, labelsMsg, ac } = await fetchExplorerData();
+      const groupMap = new Map(allGroupsList.map(g => [String(g.id), g]));
       const labels = labelsMsg || {};
       const labelMap = labels.labels ? labels.labels : {};
+
       const filterMode = (document.getElementById('windowFilterSelect')?.value) || 'all';
       const sortMode = (document.getElementById('windowSortSelect')?.value) || 'title-asc';
 
-      // Helper: escape a string for use in RegExp
-      const escapeRegExp = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-      const labelRegexCache = new Map();
-
-      // Helper: strip a window label prefix like "[Label] " from a title, but only
-      // if it matches the known label for that window. This avoids stripping
-      // legitimate bracketed prefixes in real page titles.
-      const stripWindowLabel = (title, windowId) => {
-        const lbl = labelMap[String(windowId)];
-        if (!lbl) return title || '(no title)';
-        try {
-          let re = labelRegexCache.get(lbl);
-          if (!re) {
-            re = new RegExp('^\\[' + escapeRegExp(lbl) + '\\]\\s*');
-            labelRegexCache.set(lbl, re);
-          }
-          const base = (title || '(no title)').replace(re, '').trim();
-          return base || '(no title)';
-        } catch {
-          return title || '(no title)';
-        }
-      };
-
-      // Gather all tabs with rich metadata
-      const allTabs = [];
-      for (const w of windows) {
-        for (const t of w.tabs) {
-          const title = t.title || '(no title)';
-          const url = t.url || '';
-          allTabs.push({
-            windowId: w.id,
-            groupId: t.groupId,
-            tabId: t.id,
-            title: title,
-            url: url,
-            lowerTitle: title.toLowerCase(),
-            lowerUrl: url.toLowerCase(),
-            lastAccessed: t.lastAccessed || 0
-          });
-        }
-      }
-
-      // Helper: normalize URL for duplicate detection (match background.js)
-      const normalizeUrl = (url) => {
-        try { const u = new URL(url); u.hash = ''; return u.toString(); } catch { return url; }
-      };
-
-      // Filter
-      let filteredTabs = allTabs.slice();
-      if (filterMode === 'duplicates') {
-        // Group by normalized URL and include all members of any group with count > 1
-        const byUrl = new Map();
-        for (const t of allTabs) {
-          const key = normalizeUrl(t.url);
-          if (!byUrl.has(key)) byUrl.set(key, []);
-          byUrl.get(key).push(t);
-        }
-        const allDups = [];
-        for (const list of byUrl.values()) {
-          if (list.length > 1) allDups.push(...list);
-        }
-        filteredTabs = allDups;
-      } else if (filterMode === 'autoclose') {
-        const patterns = ac.urlPatterns || [];
-
-        // ⚡ Bolt Performance Optimization:
-        // Pre-parse and lower-case patterns once outside the filter loop
-        // to prevent O(N * M) redundant string allocations where N = tabs, M = patterns.
-        const parsedPatterns = patterns.map(pattern => {
-          if (!pattern || pattern.length > 200) return null;
-          const parts = pattern.split('*');
-          return {
-            exact: parts.length === 1,
-            lowerPattern: parts.length === 1 ? pattern.toLowerCase() : null,
-            lowerParts: parts.length > 1 ? parts.map(p => p.toLowerCase()) : []
-          };
-        }).filter(Boolean);
-        // Helper for safe pattern matching (ReDoS prevention) using pre-parsed parts
-        const matchesParsedPattern = (url, lowerUrl, parsed) => {
-          if (!url || url.length > 2000) return false;
-          if (!url || url.length > 2000) return false;
-
-          if (parsed.exact) return lowerUrl === parsed.lowerPattern;
-
-          const lowerParts = parsed.lowerParts;
-          if (!lowerUrl.startsWith(lowerParts[0])) return false;
-
-          let currentIndex = lowerParts[0].length;
-          for (let i = 1; i < lowerParts.length - 1; i++) {
-            const part = lowerParts[i];
-            if (part === '') continue;
-            const foundIndex = lowerUrl.indexOf(part, currentIndex);
-            if (foundIndex === -1) return false;
-            currentIndex = foundIndex + part.length;
-          }
-
-          const lastPart = lowerParts[lowerParts.length - 1];
-          if (lastPart !== '') {
-            if (!lowerUrl.endsWith(lastPart)) return false;
-            if (lowerUrl.length - lastPart.length < currentIndex) return false;
-          }
-          return true;
-        };
-
-        filteredTabs = allTabs.filter(t => {
-          if (!t.url || t.url.length > 2000) return false;
-          const lowerUrl = t.lowerUrl;
-          return parsedPatterns.some(parsed => matchesParsedPattern(t.url, lowerUrl, parsed));
-        });
-      }
-
-      // Sort
-      const cmp = {
-        'title-asc': (a, b) => a.title.localeCompare(b.title),
-        'lastAccessed-desc': (a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0)
-      }[sortMode] || ((a, b) => a.title.localeCompare(b.title));
-      filteredTabs.sort(cmp);
+      const allTabs = getNormalizedTabs(windows);
+      let filteredTabs = applyExplorerFilters(allTabs, filterMode, ac);
+      sortExplorerTabs(filteredTabs, sortMode);
 
       const searchQ = (document.getElementById('windowSearchInput')?.value || '').toLowerCase();
       const searchFilter = (tab) => {
@@ -1459,411 +1904,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const hasVisibleTabs = filteredTabs.some(searchFilter);
       if (!hasVisibleTabs) {
-        container.innerHTML = `
-          <div style="text-align:center; padding: 40px 20px; color: var(--muted);">
-            <svg viewBox="0 0 24 24" style="width:48px;height:48px;margin:0 auto 12px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <div style="font-size:15px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No tabs found</div>
-            <div style="font-size:13px; margin-bottom: 16px;">Try adjusting your search or filters.</div>
-            <button id="clearSearchFiltersBtn" class="btn-glass">Clear Search & Filters</button>
-          </div>
-        `;
-        const clearBtn = container.querySelector('#clearSearchFiltersBtn');
-        if (clearBtn) {
-          clearBtn.addEventListener('click', () => {
-            const searchInputEl = document.getElementById('windowSearchInput');
-            if (searchInputEl) searchInputEl.value = '';
-            const filterSelectEl = document.getElementById('windowFilterSelect');
-            if (filterSelectEl) filterSelectEl.value = 'all';
-            buildWindowExplorer();
-          });
-        }
+        renderExplorerEmptyState(container);
         return;
       }
 
       const usingTopLevelByTitle = filterMode !== 'all' || !!searchQ;
 
       if (usingTopLevelByTitle) {
-        // New layout: Top-level by page title -> then by window -> then by group
-        // Build map title -> windowId -> groupId -> tabs[]
-        const byTitle = new Map();
-        for (const t of filteredTabs) {
-          if (!searchFilter(t)) continue;
-          const baseTitle = stripWindowLabel(t.title, t.windowId);
-          if (!byTitle.has(baseTitle)) byTitle.set(baseTitle, new Map());
-          const mWin = byTitle.get(baseTitle);
-          if (!mWin.has(t.windowId)) mWin.set(t.windowId, new Map());
-          const mGrp = mWin.get(t.windowId);
-          const gk = t.groupId === -1 ? 'ungrouped' : String(t.groupId);
-          if (!mGrp.has(gk)) mGrp.set(gk, []);
-          mGrp.get(gk).push(t);
-        }
-
-        // Render titles in a responsive grid; collapsed by default
-        const titleGrid = document.createElement('div');
-        titleGrid.className = 'explorer-title-grid';
-
-        // ⚡ Bolt Performance Optimization:
-        // Use a DocumentFragment to batch the insertion of titleDivs.
-        // Appending elements to the live DOM (container) inside the loop triggers O(N) reflows.
-        const titleGridFragment = document.createDocumentFragment();
-
-        // Sort titles alphabetically by base title for stable display
-        const sortedEntries = Array.from(byTitle.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-
-        for (const [title, winMap] of sortedEntries) {
-          const titleDiv = document.createElement('div');
-          titleDiv.className = 'menu-section explorer-title';
-          const headerEl = document.createElement('div');
-          headerEl.className = 'menu-header';
-          const contentId = `explorer-content-${++a11yIdCounter}`;
-          headerEl.setAttribute('role', 'button');
-          headerEl.setAttribute('tabindex', '0');
-          headerEl.setAttribute('aria-controls', contentId);
-          // Count total tabs under this title across windows/groups
-          let totalCount = 0;
-          for (const m of winMap.values()) { for (const tabs of m.values()) totalCount += tabs.length; }
-          headerEl.innerHTML = `<span>${escapeHtml(title)}</span><span class="count-badge">${totalCount}</span><span class="menu-arrow">▶</span>`;
-          const contentEl = document.createElement('div');
-          contentEl.id = contentId;
-          contentEl.className = 'menu-content';
-          contentEl.style.display = 'none';
-
-          // windows under this title
-          for (const [winId, grpMap] of winMap.entries()) {
-            const winLabel = labelMap[String(winId)] || '';
-            const headerTitle = winLabel ? `${winLabel}` : `Window ${winId}`;
-            const winSection = document.createElement('div');
-            winSection.className = 'menu-section explorer-window';
-            const wHeader = document.createElement('div');
-            wHeader.className = 'menu-header';
-            const wContentId = `explorer-wcontent-${++a11yIdCounter}`;
-            wHeader.setAttribute('role', 'button');
-            wHeader.setAttribute('tabindex', '0');
-            wHeader.setAttribute('aria-controls', wContentId);
-            wHeader.innerHTML = `<span>${escapeHtml(headerTitle)}</span><span class="menu-arrow">▶</span>`;
-            const wContent = document.createElement('div');
-            wContent.id = wContentId;
-            wContent.className = 'menu-content';
-            wContent.style.display = 'none';
-
-            const groupsContainer = document.createElement('div');
-            groupsContainer.style.padding = '8px';
-            groupsContainer.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Groups & Tabs</div>`;
-
-            for (const [gid, tabs] of grpMap.entries()) {
-              const groupContainer = document.createElement('div');
-              groupContainer.className = 'group-rule-item explorer-group';
-              let groupTitle = 'Ungrouped';
-              if (gid !== 'ungrouped') {
-                try {
-                  const tg = groupMap.get(String(gid));
-                  groupTitle = tg && tg.title ? tg.title : `Group ${gid}`;
-                } catch { groupTitle = `Group ${gid}`; }
-              }
-              const gHeader = document.createElement('div');
-              gHeader.className = 'group-rule-header explorer-group-header';
-              const gContentId = `explorer-gcontent-${++a11yIdCounter}`;
-              gHeader.setAttribute('role', 'button');
-              gHeader.setAttribute('tabindex', '0');
-              gHeader.setAttribute('aria-controls', gContentId);
-              gHeader.innerHTML = `<div class="group-rule-name">${escapeHtml(groupTitle)}</div><span class="menu-arrow">▶</span>`;
-              const gContent = document.createElement('div');
-              gContent.id = gContentId;
-              gContent.className = 'explorer-group-content';
-              gContent.style.display = 'none';
-
-              for (const tab of tabs) {
-                const baseTitle = stripWindowLabel(tab.title, tab.windowId);
-                const tEl = document.createElement('div');
-                tEl.className = 'url-item explorer-tab-item';
-                tEl.style.margin = '6px 0';
-                tEl.setAttribute('role', 'button');
-                tEl.setAttribute('tabindex', '0');
-                tEl.dataset.title = String(tab.title || '(no title)');
-                tEl.dataset.url = String(tab.url || '');
-                tEl.dataset.lowertitle = tab.lowerTitle;
-                tEl.dataset.lowerurl = tab.lowerUrl;
-                tEl.dataset.tabid = String(tab.tabId);
-                tEl.dataset.windowid = String(tab.windowId);
-                tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
-                tEl.innerHTML = `
-                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(baseTitle)}">${escapeHtml(baseTitle)}</div>
-                    <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;" title="${escapeHtml(tab.url || '')}">${escapeHtml(tab.url || '')}</div>
-                  </div>
-                  <div style="margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;">
-                    <button class="close-tab-btn" title="Close tab" aria-label="Close tab: ${escapeHtml(baseTitle)}" data-tabid="${tab.tabId}">✕</button>
-                  </div>
-                `;
-                gContent.appendChild(tEl);
-              }
-              groupContainer.appendChild(gHeader);
-              groupContainer.appendChild(gContent);
-              groupsContainer.appendChild(groupContainer);
-            }
-
-            wContent.appendChild(groupsContainer);
-            winSection.appendChild(wHeader);
-            winSection.appendChild(wContent);
-            contentEl.appendChild(winSection);
-
-            // toggles
-            const toggleWindow = () => {
-              const expand = wContent.style.display === 'none';
-              wContent.style.display = expand ? 'block' : 'none';
-              wHeader.setAttribute('aria-expanded', expand.toString());
-              const arrow = wHeader.querySelector('.menu-arrow');
-              if (arrow) arrow.classList.toggle('expanded', expand);
-            };
-            wHeader.addEventListener('click', toggleWindow);
-            wHeader.addEventListener('keydown', (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                toggleWindow();
-              }
-            });
-            // Initial ARIA state
-            wHeader.setAttribute('aria-expanded', 'false');
-          }
-
-          titleGridFragment.appendChild(titleDiv);
-          titleDiv.appendChild(headerEl);
-          titleDiv.appendChild(contentEl);
-          const toggleTitle = () => {
-            const expand = contentEl.style.display === 'none';
-            contentEl.style.display = expand ? 'block' : 'none';
-            headerEl.setAttribute('aria-expanded', expand.toString());
-            const arrow = headerEl.querySelector('.menu-arrow');
-            if (arrow) arrow.classList.toggle('expanded', expand);
-          };
-          headerEl.addEventListener('click', toggleTitle);
-          headerEl.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              toggleTitle();
-            }
-          });
-          // Initial ARIA state
-          headerEl.setAttribute('aria-expanded', 'false');
-
-          // Wire group toggles inside titles
-          contentEl.querySelectorAll('.explorer-group-header').forEach(h => {
-            const toggleGroup = () => {
-              const gc = h.parentElement.querySelector('.explorer-group-content');
-              if (gc) {
-                const expand = gc.style.display === 'none';
-                gc.style.display = expand ? 'block' : 'none';
-                h.setAttribute('aria-expanded', expand.toString());
-                const arrow = h.querySelector('.menu-arrow');
-                if (arrow) arrow.classList.toggle('expanded', expand);
-              }
-            };
-            h.addEventListener('click', toggleGroup);
-            h.addEventListener('keydown', (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                toggleGroup();
-              }
-            });
-            h.setAttribute('aria-expanded', 'false');
-          });
-        }
-
-        // Append the fully constructed fragment to the grid, and grid to container
-        titleGrid.appendChild(titleGridFragment);
-        container.appendChild(titleGrid);
+        renderExplorerByTitle(container, filteredTabs, searchFilter, labelMap, groupMap);
       } else {
-        // Original layout by window -> group -> tabs
-
-        // ⚡ Bolt Performance Optimization:
-        // Use a DocumentFragment to batch the insertion of windows.
-        // Appending elements to the live DOM (container) inside the loop triggers O(N) reflows.
-        const windowFragment = document.createDocumentFragment();
-
-        for (const w of windows) {
-          const winDiv = document.createElement('div');
-          winDiv.className = 'menu-section explorer-window';
-          const winLabel = labelMap[String(w.id)] || '';
-          const headerTitle = winLabel ? `${winLabel}` : `Window ${w.id}`;
-          const headerEl = document.createElement('div');
-          headerEl.className = 'menu-header';
-          const contentId = `explorer-window-content-${++a11yIdCounter}`;
-          headerEl.setAttribute('role', 'button');
-          headerEl.setAttribute('tabindex', '0');
-          headerEl.setAttribute('aria-controls', contentId);
-          headerEl.innerHTML = `<span>${escapeHtml(headerTitle)}</span><span class=\"menu-arrow\">▶</span>`;
-          const contentEl = document.createElement('div');
-          contentEl.id = contentId;
-          contentEl.className = 'menu-content';
-          contentEl.style.display = 'none';
-          contentEl.innerHTML = `
-              <div style=\"padding:8px;\">
-                <div style=\"font-size:12px;color:var(--muted);margin-bottom:6px;\">Groups & Tabs</div>
-                <div id=\"window-${w.id}-groups\"></div>
-              </div>
-          `;
-          winDiv.appendChild(headerEl);
-          winDiv.appendChild(contentEl);
-          windowFragment.appendChild(winDiv);
-
-          const groups = {};
-          for (const t of w.tabs) {
-            const gid = t.groupId === -1 ? 'ungrouped' : String(t.groupId);
-            if (!groups[gid]) groups[gid] = [];
-            groups[gid].push(t);
-          }
-
-          const groupsContainer = winDiv.querySelector(`#window-${w.id}-groups`);
-          for (const [gid, tabs] of Object.entries(groups)) {
-            const groupContainer = document.createElement('div');
-            groupContainer.className = 'group-rule-item explorer-group';
-            let groupTitle = 'Ungrouped';
-            if (gid !== 'ungrouped') {
-              try {
-                const tg = groupMap.get(String(gid));
-                groupTitle = tg && tg.title ? tg.title : `Group ${gid}`;
-              } catch { groupTitle = `Group ${gid}`; }
-            }
-            const groupHeader = document.createElement('div');
-            groupHeader.className = 'group-rule-header explorer-group-header';
-            const groupContentId = `explorer-group-content-${++a11yIdCounter}`;
-            groupHeader.setAttribute('role', 'button');
-            groupHeader.setAttribute('tabindex', '0');
-            groupHeader.setAttribute('aria-controls', groupContentId);
-            groupHeader.innerHTML = `<div class=\"group-rule-name\">${escapeHtml(groupTitle)}</div><span class=\"menu-arrow\">▶</span>`;
-            const groupContent = document.createElement('div');
-            groupContent.id = groupContentId;
-            groupContent.className = 'explorer-group-content';
-            groupContent.style.display = 'none';
-
-            for (const tab of tabs) {
-              if (!searchFilter({ title: tab.title, url: tab.url })) continue;
-              const titleStr = String(tab.title || '(no title)');
-              const urlStr = String(tab.url || '');
-              const tEl = document.createElement('div');
-              tEl.className = 'url-item explorer-tab-item';
-              tEl.style.margin = '6px 0';
-              tEl.setAttribute('role', 'button');
-              tEl.setAttribute('tabindex', '0');
-              tEl.dataset.title = titleStr;
-              tEl.dataset.url = urlStr;
-              tEl.dataset.lowertitle = tab.lowerTitle !== undefined ? tab.lowerTitle : titleStr.toLowerCase();
-              tEl.dataset.lowerurl = tab.lowerUrl !== undefined ? tab.lowerUrl : urlStr.toLowerCase();
-              tEl.dataset.tabid = String(tab.id);
-              tEl.dataset.windowid = String(w.id);
-              tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
-              tEl.innerHTML = `
-                <div style=\"flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;\">\
-                  <div style=\"font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\" title=\"${escapeHtml(tab.title || '(no title)')}\">${escapeHtml(tab.title || '(no title)')}</div>\
-                  <div style=\"font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;\" title=\"${escapeHtml(tab.url || '')}\">${escapeHtml(tab.url || '')}</div>\
-                </div>
-                <div style=\"margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;\">\
-                  <button class=\"close-tab-btn\" title=\"Close tab\" aria-label=\"Close tab: ${escapeHtml(tab.title || '(no title)')}\" data-tabid=\"${tab.id}\">✕</button>\
-                </div>
-              `;
-              groupContent.appendChild(tEl);
-            }
-
-            groupContainer.appendChild(groupHeader);
-            groupContainer.appendChild(groupContent);
-            groupsContainer.appendChild(groupContainer);
-          }
-
-          const toggleWindowStatic = () => {
-            const expand = contentEl.style.display === 'none';
-            contentEl.style.display = expand ? 'block' : 'none';
-            headerEl.setAttribute('aria-expanded', expand.toString());
-            const arrow = headerEl.querySelector('.menu-arrow');
-            if (arrow) arrow.classList.toggle('expanded', expand);
-          };
-          headerEl.addEventListener('click', toggleWindowStatic);
-          headerEl.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              toggleWindowStatic();
-            }
-          });
-          headerEl.setAttribute('aria-expanded', 'false');
-          groupsContainer.querySelectorAll('.explorer-group-header').forEach(h => {
-            const toggleStaticGroup = () => {
-              const gc = h.parentElement.querySelector('.explorer-group-content');
-              if (gc) {
-                const expand = gc.style.display === 'none';
-                gc.style.display = expand ? 'block' : 'none';
-                h.setAttribute('aria-expanded', expand.toString());
-                const arrow = h.querySelector('.menu-arrow');
-                if (arrow) arrow.classList.toggle('expanded', expand);
-              }
-            };
-            h.addEventListener('click', toggleStaticGroup);
-            h.addEventListener('keydown', (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                toggleStaticGroup();
-              }
-            });
-            h.setAttribute('aria-expanded', 'false');
-          });
-        }
-
-        // Append the fully constructed fragment to the container
-        container.appendChild(windowFragment);
+        renderExplorerByWindow(container, windows, searchFilter, labelMap, groupMap);
       }
 
-      // wire up tab click and keydown to activate
-      container.querySelectorAll('.explorer-tab-item').forEach(item => {
-        const activateTab = async (e) => {
-          // Ignore interactions on the close button
-          if (e.target && e.target.classList.contains('close-tab-btn')) return;
-          const tabId = Number(item.dataset.tabid);
-          const windowId = Number(item.dataset.windowid);
-          const groupId = Number(item.dataset.groupid);
-          try {
-            chrome.runtime.sendMessage({ type: 'activateTab', tabId, windowId, groupId }, () => {});
-            window.close();
-          } catch (err) {
-            console.error('Failed to go to tab', err);
-          }
-        };
-
-        item.addEventListener('click', activateTab);
-        item.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            activateTab(e);
-          }
-        });
-      });
-
-      // wire up close buttons
-      container.querySelectorAll('.close-tab-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          const tabId = Number(btn.getAttribute('data-tabid'));
-          try {
-            chrome.runtime.sendMessage({ type: 'closeTab', tabId }, () => {});
-            // Optimistically remove from UI
-            const parent = btn.closest('.explorer-tab-item');
-            if (parent) parent.remove();
-            // Then refresh counts and lists to keep duplicate filters current
-            setTimeout(async () => {
-              try {
-                await updateTabCount();
-                await buildWindowExplorer();
-              } catch {}
-            }, 100);
-          } catch (err) {
-            console.error('Failed to close tab', err);
-          }
-        });
-      });
+      attachExplorerEventHandlers(container);
     } catch (err) {
       console.error('Error building window explorer', err);
     }
   }
+
 
   function filterWindowExplorer(q) {
     const container = document.getElementById('windowListContainer');
@@ -1977,41 +2035,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.setAttribute('aria-expanded', 'false');
   });
 
-  // Add auto-collapse menu event listeners
-  const autoCollapseHeader = document.getElementById('autoCollapseHeader');
-  if (autoCollapseHeader) {
-    autoCollapseHeader.addEventListener('click', () => {
-      toggleMenu('autoCollapseHeader', 'autoCollapseContent');
-    });
-    autoCollapseHeader.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleMenu('autoCollapseHeader', 'autoCollapseContent');
-      }
-    });
-  }
+  // Setup auto-collapse menu
+  setupMenuToggle('autoCollapseHeader', 'autoCollapseContent');
 
-  // Collapsible: Window Name and Import/Export sections
-  const windowNameHeader = document.getElementById('windowNameHeader');
-  if (windowNameHeader) {
-    windowNameHeader.addEventListener('click', () => toggleMenu('windowNameHeader', 'windowNameContent'));
-    windowNameHeader.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleMenu('windowNameHeader', 'windowNameContent');
-      }
-    });
-  }
-  const importExportHeader = document.getElementById('importExportHeader');
-  if (importExportHeader) {
-    importExportHeader.addEventListener('click', () => toggleMenu('importExportHeader', 'importExportContent'));
-    importExportHeader.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleMenu('importExportHeader', 'importExportContent');
-      }
-    });
-  }
+  // Setup Collapsible: Window Name and Import/Export sections
+  setupMenuToggle('windowNameHeader', 'windowNameContent');
+  setupMenuToggle('importExportHeader', 'importExportContent');
   
   document.getElementById('autoCollapseToggle').addEventListener('change', (e) => {
     autoCollapseSettings.autoCollapseEnabled = e.target.checked;
@@ -2026,19 +2055,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Add auto-close menu event listeners
-  const autoCloseHeader = document.getElementById('autoCloseHeader');
-  if (autoCloseHeader) {
-    autoCloseHeader.addEventListener('click', () => {
-      toggleMenu('autoCloseHeader', 'autoCloseContent');
-    });
-    autoCloseHeader.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleMenu('autoCloseHeader', 'autoCloseContent');
-      }
-    });
-  }
+  // Setup auto-close menu
+  setupMenuToggle('autoCloseHeader', 'autoCloseContent');
   
   document.getElementById('autoCloseToggle').addEventListener('change', (e) => {
     autoCloseSettings.autoCloseEnabled = e.target.checked;
@@ -2054,8 +2072,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   const autoCloseBannerToggle = document.getElementById('autoCloseBannerToggle');
   if (autoCloseBannerToggle) autoCloseBannerToggle.addEventListener('change', (e) => {
-    autoCloseSettings.autoCloseBannerEnabled = e.target.checked;
-    saveAutoCloseSettings();
+    if (e.target.checked) {
+      chrome.permissions.request({ origins: ['<all_urls>'] }, (granted) => {
+        if (granted) {
+          autoCloseSettings.autoCloseBannerEnabled = true;
+          saveAutoCloseSettings();
+        } else {
+          e.target.checked = false;
+          autoCloseSettings.autoCloseBannerEnabled = false;
+          saveAutoCloseSettings();
+        }
+      });
+    } else {
+      autoCloseSettings.autoCloseBannerEnabled = false;
+      saveAutoCloseSettings();
+    }
   });
   
   document.getElementById('addUrlBtn').addEventListener('click', addUrlPattern);
@@ -2066,19 +2097,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Add duplicate prevention menu event listeners
-  const duplicatePreventionHeader = document.getElementById('duplicatePreventionHeader');
-  if (duplicatePreventionHeader) {
-    duplicatePreventionHeader.addEventListener('click', () => {
-      toggleMenu('duplicatePreventionHeader', 'duplicatePreventionContent');
-    });
-    duplicatePreventionHeader.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleMenu('duplicatePreventionHeader', 'duplicatePreventionContent');
-      }
-    });
-  }
+  // Setup duplicate prevention menu
+  setupMenuToggle('duplicatePreventionHeader', 'duplicatePreventionContent');
   
   document.getElementById('duplicatePreventionToggle').addEventListener('change', (e) => {
     duplicatePreventionSettings.duplicatePreventionEnabled = e.target.checked;
@@ -2092,8 +2112,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const duplicateBannerToggle = document.getElementById('duplicateBannerToggle');
   if (duplicateBannerToggle) duplicateBannerToggle.addEventListener('change', (e) => {
-    duplicatePreventionSettings.duplicateBannerEnabled = e.target.checked;
-    saveDuplicatePreventionSettings();
+    if (e.target.checked) {
+      chrome.permissions.request({ origins: ['<all_urls>'] }, (granted) => {
+        if (granted) {
+          duplicatePreventionSettings.duplicateBannerEnabled = true;
+          saveDuplicatePreventionSettings();
+        } else {
+          e.target.checked = false;
+          duplicatePreventionSettings.duplicateBannerEnabled = false;
+          saveDuplicatePreventionSettings();
+        }
+      });
+    } else {
+      duplicatePreventionSettings.duplicateBannerEnabled = false;
+      saveDuplicatePreventionSettings();
+    }
   });
 
   const duplicateBannerDelayInput = document.getElementById('duplicateBannerDelayInput');
@@ -2113,19 +2146,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Add auto tab grouping menu event listeners
-  const autoTabGroupingHeader = document.getElementById('autoTabGroupingHeader');
-  if (autoTabGroupingHeader) {
-    autoTabGroupingHeader.addEventListener('click', () => {
-      toggleMenu('autoTabGroupingHeader', 'autoTabGroupingContent');
-    });
-    autoTabGroupingHeader.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleMenu('autoTabGroupingHeader', 'autoTabGroupingContent');
-      }
-    });
-  }
+  // Setup auto tab grouping menu
+  setupMenuToggle('autoTabGroupingHeader', 'autoTabGroupingContent');
   
   document.getElementById('autoTabGroupingToggle').addEventListener('change', (e) => {
     autoTabGroupingSettings.autoTabGroupingEnabled = e.target.checked;
@@ -2227,6 +2249,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+}
 
 // ⚡ Bolt Performance Optimization:
 // Debounce the updateTabCount function to prevent UI freezing and
@@ -2241,27 +2264,36 @@ function debouncedUpdateTabCount() {
 }
 
 // Listen for tab changes to update count in real-time
-chrome.tabs.onCreated.addListener(() => {
-  debouncedUpdateTabCount();
-});
+if (typeof chrome !== 'undefined' && chrome.tabs) {
+  chrome.tabs.onCreated.addListener(() => {
+    debouncedUpdateTabCount();
+  });
 
-chrome.tabs.onRemoved.addListener(() => {
-  debouncedUpdateTabCount();
-});
+  chrome.tabs.onRemoved.addListener(() => {
+    debouncedUpdateTabCount();
+  });
 
-chrome.tabs.onUpdated.addListener(() => {
-  debouncedUpdateTabCount();
-});
+  chrome.tabs.onUpdated.addListener(() => {
+    debouncedUpdateTabCount();
+  });
+}
 
 // Listen for tab group changes
-chrome.tabGroups.onCreated.addListener(() => {
-  debouncedUpdateTabCount();
-});
+if (typeof chrome !== 'undefined' && chrome.tabGroups) {
+  chrome.tabGroups.onCreated.addListener(() => {
+    debouncedUpdateTabCount();
+  });
 
-chrome.tabGroups.onRemoved.addListener(() => {
-  debouncedUpdateTabCount();
-});
+  chrome.tabGroups.onRemoved.addListener(() => {
+    debouncedUpdateTabCount();
+  });
 
-chrome.tabGroups.onUpdated.addListener(() => {
-  debouncedUpdateTabCount();
-});
+  chrome.tabGroups.onUpdated.addListener(() => {
+    debouncedUpdateTabCount();
+  });
+}
+
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { escapeHtml };
+}
