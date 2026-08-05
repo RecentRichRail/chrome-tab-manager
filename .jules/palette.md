@@ -38,3 +38,6 @@
 ## 2026-08-02 - Consistent Theming & Contrast
 **Learning:** When refactoring hardcoded colors to CSS variables for UI components (especially in glassmorphic/themed designs), changing only the text color to a variable while leaving backgrounds or borders hardcoded can create critical accessibility/contrast failures if the theme changes (e.g. to dark mode).
 **Action:** Always ensure that if a text color is updated to a theme variable, the element's background and border colors are also updated to corresponding theme variables to maintain safe contrast ratios across all states.
+## 2023-10-24 - Replace disruptive alerts with inline UI feedback
+**Learning:** Using native `alert()` dialogs in browser extension popups provides a jarring user experience and blocks the main thread.
+**Action:** Replace `alert()` calls with inline UI feedback (such as temporarily changing a button's text to "Success!" or "Failed" and its color) to apply feedback smoothly.

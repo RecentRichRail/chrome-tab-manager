@@ -16,6 +16,11 @@ const EXPLORER_SIZE_KEY = 'explorerWindowSize';
 let explorerWindowId = null;
 const WINDOW_PREFIX_ENABLED_KEY = 'windowPrefixEnabled';
 
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { sanitizeUrlForLog };
+}
+
 // ⚡ Bolt Performance Optimization:
 // Cache storage settings in memory to avoid redundant async chrome.storage.sync.get calls.
 // This significantly reduces IPC overhead when handling frequent tab lifecycle events.
@@ -217,6 +222,84 @@ async function groupAllExistingTabs() {
   }
 }
 
+// Helper function to find a matching rule for a given URL
+function findMatchingTabGroupRule(rules, url) {
+  const lowerUrl = url.toLowerCase();
+
+  return rules.find(rule => {
+    if (!rule.patterns || rule.patterns.length === 0) {
+      return false;
+    }
+
+    const matches = rule.patterns.some(pattern => {
+      const result = matchesPattern(url, pattern, lowerUrl);
+      return result;
+    });
+
+
+
+    return matches;
+  });
+}
+
+// Helper function to apply a tab group rule to a specific tab
+async function applyTabGroupRule(tabId, tab, matchingRule, settings) {
+  // Find existing group with the same name in the same window
+  const existingGroups = await chrome.tabGroups.query({
+    windowId: tab.windowId
+  });
+
+  let targetGroup = existingGroups.find(group =>
+    group.title === matchingRule.groupName
+  );
+
+  if (targetGroup) {
+    // Add tab to existing group
+    const groupTabs = await chrome.tabs.query({
+      groupId: targetGroup.id
+    });
+
+    // Determine position within the group
+    let index;
+    if (settings.addTabPosition === 'left') {
+      // Add to the beginning of the group
+      index = Math.min(...groupTabs.map(t => t.index));
+    } else {
+      // Add to the end of the group
+      index = Math.max(...groupTabs.map(t => t.index)) + 1;
+    }
+
+    // Move tab to the correct position and group
+    await chrome.tabs.move(tabId, { index });
+    await chrome.tabs.group({ tabIds: tabId, groupId: targetGroup.id });
+
+    console.log(`Added tab ${tabId} to existing group "${targetGroup.title}" at ${settings.addTabPosition}`);
+  } else {
+    // Create new group
+    console.log(`Creating new group for tab ${tabId} with rule: ${matchingRule.groupName}`);
+    const groupId = await chrome.tabs.group({ tabIds: tabId });
+    console.log(`Created group ${groupId} with tab ${tabId}`);
+
+    // Update group properties
+    const updateOptions = {
+      title: matchingRule.groupName
+    };
+
+    // Set color if specified
+    if (matchingRule.groupColor) {
+      updateOptions.color = matchingRule.groupColor === 'default' ? getRandomTabGroupColor() : matchingRule.groupColor;
+    } else {
+      // Use random color if no color specified (default)
+      updateOptions.color = getRandomTabGroupColor();
+    }
+
+    await chrome.tabGroups.update(groupId, updateOptions);
+    console.log(`Updated group ${groupId} with title "${matchingRule.groupName}" and color "${updateOptions.color}"`);
+
+    console.log(`Created new group "${matchingRule.groupName}" for tab ${tabId}`);
+  }
+}
+
 // Function to handle auto tab grouping
 async function handleAutoTabGrouping(tabId, url) {
   try {
@@ -249,24 +332,7 @@ async function handleAutoTabGrouping(tabId, url) {
     }
     
     // Find matching rule
-    const lowerUrl = url.toLowerCase();
-    const matchingRule = settings.tabGroupRules.find(rule => {
-      if (!rule.patterns || rule.patterns.length === 0) {
-        return false;
-      }
-      
-      const matches = rule.patterns.some(pattern => {
-        const result = matchesPattern(url, pattern, lowerUrl);
-        console.log(`Tab grouping pattern check: "${pattern}" vs "${sanitizeUrlForLog(url)}" = ${result}`);
-        return result;
-      });
-      
-      if (matches) {
-        console.log(`✓ Found matching tab grouping rule: "${rule.groupName}" for URL: ${sanitizeUrlForLog(url)}`);
-      }
-      
-      return matches;
-    });
+    const matchingRule = findMatchingTabGroupRule(settings.tabGroupRules, url);
     
     if (!matchingRule) {
       console.log(`No matching rule found for URL: ${sanitizeUrlForLog(url)}`);
@@ -275,60 +341,8 @@ async function handleAutoTabGrouping(tabId, url) {
     
     console.log(`Found matching rule for ${sanitizeUrlForLog(url)}: ${matchingRule.groupName}`);
     
-    // Find existing group with the same name in the same window
-    const existingGroups = await chrome.tabGroups.query({ 
-      windowId: tab.windowId 
-    });
-    
-    let targetGroup = existingGroups.find(group => 
-      group.title === matchingRule.groupName
-    );
-    
-    if (targetGroup) {
-      // Add tab to existing group
-      const groupTabs = await chrome.tabs.query({ 
-        groupId: targetGroup.id 
-      });
-      
-      // Determine position within the group
-      let index;
-      if (settings.addTabPosition === 'left') {
-        // Add to the beginning of the group
-        index = Math.min(...groupTabs.map(t => t.index));
-      } else {
-        // Add to the end of the group
-        index = Math.max(...groupTabs.map(t => t.index)) + 1;
-      }
-      
-      // Move tab to the correct position and group
-      await chrome.tabs.move(tabId, { index });
-      await chrome.tabs.group({ tabIds: tabId, groupId: targetGroup.id });
-      
-      console.log(`Added tab ${tabId} to existing group "${targetGroup.title}" at ${settings.addTabPosition}`);
-    } else {
-      // Create new group
-      console.log(`Creating new group for tab ${tabId} with rule: ${matchingRule.groupName}`);
-      const groupId = await chrome.tabs.group({ tabIds: tabId });
-      console.log(`Created group ${groupId} with tab ${tabId}`);
-      
-      // Update group properties
-      const updateOptions = {
-        title: matchingRule.groupName
-      };
-      
-      // Set color if specified
-      if (matchingRule.groupColor) {
-        updateOptions.color = matchingRule.groupColor === 'default' ? getRandomTabGroupColor() : matchingRule.groupColor;
-      } else {
-        // Use random color if no color specified (default)
-        updateOptions.color = getRandomTabGroupColor();
-      }
-      
-      await chrome.tabGroups.update(groupId, updateOptions);
-      console.log(`Updated group ${groupId} with title "${matchingRule.groupName}" and color "${updateOptions.color}"`);
-      
-      console.log(`Created new group "${matchingRule.groupName}" for tab ${tabId}`);
-    }
+    // Apply the matching rule
+    await applyTabGroupRule(tabId, tab, matchingRule, settings);
     
   } catch (error) {
     console.error('Error handling auto tab grouping:', error);
@@ -337,14 +351,7 @@ async function handleAutoTabGrouping(tabId, url) {
 
 // Function to normalize URL for comparison (remove fragments, query params if needed)
 function normalizeUrl(url) {
-  try {
-    const urlObj = new URL(url);
-    // Remove fragment (hash) for comparison
-    urlObj.hash = '';
-    return urlObj.toString();
-  } catch (error) {
-    return url; // Return original if URL parsing fails
-  }
+  return typeof url === 'string' ? url.split('#')[0] : url;
 }
 
 // Function to sanitize URLs for logging to prevent sensitive data exposure
@@ -399,6 +406,9 @@ async function getAutoCollapseSettings() {
 }
 
 // Function to check if URL is allowed to have duplicates
+// ⚡ Bolt Performance Optimization:
+// Removed heavy console.log calls and string allocations (sanitizeUrlForLog)
+// from hot path loops like pattern checking to prevent CPU and main thread blocking.
 function isAllowedDuplicate(url, patterns) {
   // Check patterns against both original URL and normalized URL (without hash)
   const normalizedUrl = normalizeUrl(url);
@@ -407,7 +417,6 @@ function isAllowedDuplicate(url, patterns) {
   return patterns.some(pattern => {
     const matchesOriginal = matchesPattern(url, pattern, lowerUrl);
     const matchesNormalized = matchesPattern(normalizedUrl, pattern, lowerNormalizedUrl);
-    console.log(`Duplicate check: Pattern "${pattern}" vs Original "${sanitizeUrlForLog(url)}": ${matchesOriginal}, vs Normalized "${sanitizeUrlForLog(normalizedUrl)}": ${matchesNormalized}`);
     return matchesOriginal || matchesNormalized;
   });
 }
@@ -493,24 +502,28 @@ const pendingDuplicateBanners = new Map(); // token -> { token, url, newTabId, e
 // Perform the default duplicate resolution action and fix focus behavior robustly
 async function performDuplicateDefaultAction({ newTabId, existingTabId, defaultClosesOlder, normalizedUrl }) {
   try {
-    // Update the map with the remaining tab BEFORE closing
-    const tabToKeep = defaultClosesOlder ? newTabId : existingTabId;
-    tabUrlMap.set(normalizedUrl, tabToKeep);
+    const tabToKeepId = defaultClosesOlder ? newTabId : existingTabId;
+    const tabToCloseId = defaultClosesOlder ? existingTabId : newTabId;
 
-    if (defaultClosesOlder) {
-      // Close older = close existing, keep the new tab
-      try { await chrome.tabs.remove(existingTabId); } catch (e) { /* ignore */ }
-      // Keep focus on the new tab (already active usually)
-    } else {
-      // Close newer = focus existing, then close new
-      let existingTab = null;
-      try { existingTab = await chrome.tabs.get(existingTabId); } catch {}
-      if (existingTab && typeof existingTab.windowId !== 'undefined') {
-        try { await chrome.windows.update(existingTab.windowId, { focused: true }); } catch (e) {}
+    // Update the map with the remaining tab BEFORE closing
+    tabUrlMap.set(normalizedUrl, tabToKeepId);
+
+    // Focus existing before closing new (or focus new before closing existing) to prevent focus jump
+    let tabToKeep = null;
+    try { tabToKeep = await chrome.tabs.get(tabToKeepId); } catch {}
+
+    if (tabToKeep) {
+      if (tabToKeep.groupId && tabToKeep.groupId !== -1 && chrome.tabGroups) {
+        try { await chrome.tabGroups.update(tabToKeep.groupId, { collapsed: false }); } catch (e) {}
       }
-      try { await chrome.tabs.update(existingTabId, { active: true }); } catch (e) {}
-      try { await chrome.tabs.remove(newTabId); } catch (e) { /* ignore */ }
+      if (typeof tabToKeep.windowId !== 'undefined') {
+        try { await chrome.windows.update(tabToKeep.windowId, { focused: true }); } catch (e) {}
+      }
+      try { await chrome.tabs.update(tabToKeepId, { active: true }); } catch (e) {}
     }
+
+    // Close the unwanted tab
+    try { await chrome.tabs.remove(tabToCloseId); } catch (e) { /* ignore */ }
   } catch (e) {
     console.error('performDuplicateDefaultAction failed', e);
   }
@@ -548,14 +561,38 @@ function injectedShowDuplicateBanner(opts) {
     document.documentElement.appendChild(style);
 
     const bar = document.createElement('div');
-      bar.className = 'ctm-dup-banner ctm-glass';
-    bar.innerHTML = `<div class="ctm-dup-inner">
-        <span class="ctm-dup-title">Duplicate tab detected</span>
-        <span class="ctm-dup-timer" id="ctmDupTimer">${seconds}s</span>
-        <span class="ctm-dup-spacer"></span>
-        <button class="ctm-dup-btn ctm-dup-primary" id="ctmDupDefaultBtn"></button>
-        <button class="ctm-dup-btn ctm-dup-secondary" id="ctmDupKeepBtn">Keep this duplicate</button>
-      </div>`;
+    bar.className = 'ctm-dup-banner ctm-glass';
+
+    const innerDiv = document.createElement('div');
+    innerDiv.className = 'ctm-dup-inner';
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'ctm-dup-title';
+    titleSpan.textContent = 'Duplicate tab detected';
+    innerDiv.appendChild(titleSpan);
+
+    const timerSpan = document.createElement('span');
+    timerSpan.className = 'ctm-dup-timer';
+    timerSpan.id = 'ctmDupTimer';
+    timerSpan.textContent = `${seconds}s`;
+    innerDiv.appendChild(timerSpan);
+
+    const spacerSpan = document.createElement('span');
+    spacerSpan.className = 'ctm-dup-spacer';
+    innerDiv.appendChild(spacerSpan);
+
+    const defaultBtnEl = document.createElement('button');
+    defaultBtnEl.className = 'ctm-dup-btn ctm-dup-primary';
+    defaultBtnEl.id = 'ctmDupDefaultBtn';
+    innerDiv.appendChild(defaultBtnEl);
+
+    const keepBtnEl = document.createElement('button');
+    keepBtnEl.className = 'ctm-dup-btn ctm-dup-secondary';
+    keepBtnEl.id = 'ctmDupKeepBtn';
+    keepBtnEl.textContent = 'Keep this duplicate';
+    innerDiv.appendChild(keepBtnEl);
+
+    bar.appendChild(innerDiv);
     document.documentElement.appendChild(bar);
     window.__ctmDupBannerEl = bar;
 
@@ -726,10 +763,7 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
       }
     }
     
-    // Only log for debugging when needed
-    if (pattern.includes('spicerhome.net')) {
-      console.log(`Pattern match: "${pattern}" vs "${sanitizeUrlForLog(url)}" = true`);
-    }
+
     
     return true;
   } catch (error) {
@@ -775,9 +809,7 @@ async function handleAutoClose(tabId, url) {
     const lowerUrl = url.toLowerCase();
     const shouldClose = settings.urlPatterns.some(pattern => {
       const matches = matchesPattern(url, pattern, lowerUrl);
-      if (matches) {
-        console.log(`✓ Auto-close pattern "${pattern}" matches "${sanitizeUrlForLog(url)}"`);
-      }
+
       return matches;
     });
     
@@ -900,13 +932,38 @@ function injectedShowAutoCloseBanner(opts) {
 
     const bar = document.createElement('div');
     bar.className = 'ctm-ac-banner ctm-glass';
-    bar.innerHTML = `<div class="ctm-ac-inner">
-      <span class="ctm-ac-title">This tab will auto-close</span>
-      <span class="ctm-ac-timer" id="ctmAcTimer">${seconds}s</span>
-      <span class="ctm-ac-spacer"></span>
-      <button class="ctm-ac-btn ctm-ac-primary" id="ctmAcCloseNowBtn">Close now</button>
-      <button class="ctm-ac-btn ctm-ac-secondary" id="ctmAcKeepBtn">Do not close</button>
-    </div>`;
+
+    const innerDiv = document.createElement('div');
+    innerDiv.className = 'ctm-ac-inner';
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'ctm-ac-title';
+    titleSpan.textContent = 'This tab will auto-close';
+    innerDiv.appendChild(titleSpan);
+
+    const timerSpan = document.createElement('span');
+    timerSpan.className = 'ctm-ac-timer';
+    timerSpan.id = 'ctmAcTimer';
+    timerSpan.textContent = `${seconds}s`;
+    innerDiv.appendChild(timerSpan);
+
+    const spacerSpan = document.createElement('span');
+    spacerSpan.className = 'ctm-ac-spacer';
+    innerDiv.appendChild(spacerSpan);
+
+    const closeBtnEl = document.createElement('button');
+    closeBtnEl.className = 'ctm-ac-btn ctm-ac-primary';
+    closeBtnEl.id = 'ctmAcCloseNowBtn';
+    closeBtnEl.textContent = 'Close now';
+    innerDiv.appendChild(closeBtnEl);
+
+    const keepBtnEl = document.createElement('button');
+    keepBtnEl.className = 'ctm-ac-btn ctm-ac-secondary';
+    keepBtnEl.id = 'ctmAcKeepBtn';
+    keepBtnEl.textContent = 'Do not close';
+    innerDiv.appendChild(keepBtnEl);
+
+    bar.appendChild(innerDiv);
     document.documentElement.appendChild(bar);
     window.__ctmAcBannerEl = bar;
 
@@ -1740,3 +1797,11 @@ chrome.windows.onBoundsChanged.addListener((win) => {
     chrome.storage.sync.set({ [EXPLORER_SIZE_KEY]: { width, height } }).catch(() => {});
   }
 });
+
+// Export functions for testing if we are in a Node environment
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    normalizeUrl,
+    sanitizeUrlForLog
+  };
+}
