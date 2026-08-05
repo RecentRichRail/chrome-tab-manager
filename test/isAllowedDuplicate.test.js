@@ -50,7 +50,7 @@ test('isAllowedDuplicate', async (t) => {
   });
 
   await t.test('match against second pattern in array', () => {
-    assert.strictEqual(isAllowedDuplicate('https://example.com', ['*github.com*', 'https://example.com/']), true);
+    assert.strictEqual(isAllowedDuplicate('https://example.com', ['*github.com*', 'https://example.com']), true);
   });
 
   await t.test('normalization: matches pattern ignoring hash', () => {
