@@ -1121,7 +1121,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Export settings as JSON
-  document.getElementById('exportSettingsBtn').addEventListener('click', async () => {
+  const exportSettingsBtn = document.getElementById('exportSettingsBtn');
+  exportSettingsBtn.addEventListener('click', async () => {
     try {
       // Read all relevant keys from chrome.storage.sync
       const all = await chrome.storage.sync.get(null);
@@ -1137,14 +1138,34 @@ document.addEventListener('DOMContentLoaded', () => {
       a.download = 'chrome-tab-manager-settings.json';
       a.click();
       URL.revokeObjectURL(url);
+
+      const originalHTML = exportSettingsBtn.innerHTML;
+      exportSettingsBtn.innerHTML = 'Exported!';
+      exportSettingsBtn.style.color = 'var(--accent)';
+      exportSettingsBtn.disabled = true;
+      setTimeout(() => {
+        exportSettingsBtn.innerHTML = originalHTML;
+        exportSettingsBtn.style.color = '';
+        exportSettingsBtn.disabled = false;
+      }, 2000);
     } catch (e) {
-      alert('Failed to export settings: ' + e.message);
+      const originalHTML = exportSettingsBtn.innerHTML;
+      exportSettingsBtn.innerHTML = 'Export Failed';
+      exportSettingsBtn.style.color = '#ef4444';
+      exportSettingsBtn.disabled = true;
+      setTimeout(() => {
+        exportSettingsBtn.innerHTML = originalHTML;
+        exportSettingsBtn.style.color = '';
+        exportSettingsBtn.disabled = false;
+      }, 3000);
+      console.error('Failed to export settings:', e);
     }
   });
 
   // Import settings from JSON file
   const importFileInput = document.getElementById('importFileInput');
-  document.getElementById('importSettingsBtn').addEventListener('click', () => importFileInput.click());
+  const importSettingsBtn = document.getElementById('importSettingsBtn');
+  importSettingsBtn.addEventListener('click', () => importFileInput.click());
   importFileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1152,7 +1173,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🛡️ Sentinel: Enforce file size limit (1MB) to prevent OOM/DoS
     const MAX_FILE_SIZE = 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
-      alert('File is too large. Maximum size is 1MB.');
+      const orig = importSettingsBtn.innerHTML;
+      importSettingsBtn.innerHTML = 'File too large (Max 1MB)';
+      importSettingsBtn.style.color = '#ef4444';
+      importSettingsBtn.disabled = true;
+      setTimeout(() => { importSettingsBtn.innerHTML = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
       // clear the input so the same file can be selected again if needed after it's fixed
       importFileInput.value = '';
       return;
@@ -1162,7 +1187,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const text = await file.text();
       const obj = JSON.parse(text);
       if (!obj) {
-        alert('Invalid settings file');
+        const orig = importSettingsBtn.innerHTML;
+        importSettingsBtn.innerHTML = 'Invalid file';
+        importSettingsBtn.style.color = '#ef4444';
+        importSettingsBtn.disabled = true;
+        setTimeout(() => { importSettingsBtn.innerHTML = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
         return;
       }
 
@@ -1181,7 +1210,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (!settingsToImport) {
-        alert('Invalid settings file format. Expected exported settings JSON.');
+        const orig = importSettingsBtn.innerHTML;
+        importSettingsBtn.innerHTML = 'Invalid settings format';
+        importSettingsBtn.style.color = '#ef4444';
+        importSettingsBtn.disabled = true;
+        setTimeout(() => { importSettingsBtn.innerHTML = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
         return;
       }
 
@@ -1210,12 +1243,23 @@ document.addEventListener('DOMContentLoaded', () => {
           .slice(0, 100);
       }
 
-      if (!confirm('Importing will overwrite your current settings in sync storage. Continue?')) return;
+      if (!confirm('Importing will overwrite your current settings in sync storage. Continue?')) {
+        importFileInput.value = '';
+        return;
+      }
       await chrome.storage.sync.set(settingsToImport);
-      alert('Settings imported. The popup will reload to reflect changes.');
-      window.location.reload();
+      const orig = importSettingsBtn.innerHTML;
+      importSettingsBtn.innerHTML = 'Imported Successfully!';
+      importSettingsBtn.style.color = 'var(--accent)';
+      importSettingsBtn.disabled = true;
+      setTimeout(() => { window.location.reload(); }, 1500);
     } catch (err) {
-      alert('Failed to import settings: ' + err.message);
+      const orig = importSettingsBtn.innerHTML;
+      importSettingsBtn.innerHTML = 'Import Failed';
+      importSettingsBtn.style.color = '#ef4444';
+      importSettingsBtn.disabled = true;
+      setTimeout(() => { importSettingsBtn.innerHTML = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
+      console.error('Failed to import settings:', err);
     }
   });
   loadAutoCloseSettings();
