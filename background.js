@@ -128,7 +128,7 @@ async function groupExistingTabsForRule(rule, allTabs = null) {
 
         if (matches) {
           matchingTabs.push(tab);
-          console.log(`✓ Found matching existing tab: ${sanitizeUrlForLog(tab.url)} for rule ${rule.groupName}`);
+
         }
       }
     }
@@ -229,13 +229,10 @@ function findMatchingTabGroupRule(rules, url) {
 
     const matches = rule.patterns.some(pattern => {
       const result = matchesPattern(url, pattern, lowerUrl);
-      console.log(`Tab grouping pattern check: "${pattern}" vs "${sanitizeUrlForLog(url)}" = ${result}`);
       return result;
     });
 
-    if (matches) {
-      console.log(`✓ Found matching tab grouping rule: "${rule.groupName}" for URL: ${sanitizeUrlForLog(url)}`);
-    }
+
 
     return matches;
   });
@@ -405,6 +402,9 @@ async function getAutoCollapseSettings() {
 }
 
 // Function to check if URL is allowed to have duplicates
+// ⚡ Bolt Performance Optimization:
+// Removed heavy console.log calls and string allocations (sanitizeUrlForLog)
+// from hot path loops like pattern checking to prevent CPU and main thread blocking.
 function isAllowedDuplicate(url, patterns) {
   // Check patterns against both original URL and normalized URL (without hash)
   const normalizedUrl = normalizeUrl(url);
@@ -413,7 +413,6 @@ function isAllowedDuplicate(url, patterns) {
   return patterns.some(pattern => {
     const matchesOriginal = matchesPattern(url, pattern, lowerUrl);
     const matchesNormalized = matchesPattern(normalizedUrl, pattern, lowerNormalizedUrl);
-    console.log(`Duplicate check: Pattern "${pattern}" vs Original "${sanitizeUrlForLog(url)}": ${matchesOriginal}, vs Normalized "${sanitizeUrlForLog(normalizedUrl)}": ${matchesNormalized}`);
     return matchesOriginal || matchesNormalized;
   });
 }
@@ -760,10 +759,7 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
       }
     }
     
-    // Only log for debugging when needed
-    if (pattern.includes('spicerhome.net')) {
-      console.log(`Pattern match: "${pattern}" vs "${sanitizeUrlForLog(url)}" = true`);
-    }
+
     
     return true;
   } catch (error) {
@@ -809,9 +805,7 @@ async function handleAutoClose(tabId, url) {
     const lowerUrl = url.toLowerCase();
     const shouldClose = settings.urlPatterns.some(pattern => {
       const matches = matchesPattern(url, pattern, lowerUrl);
-      if (matches) {
-        console.log(`✓ Auto-close pattern "${pattern}" matches "${sanitizeUrlForLog(url)}"`);
-      }
+
       return matches;
     });
     

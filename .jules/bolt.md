@@ -70,3 +70,6 @@
 **Learning:** When performing operations in tight nested loops (like pattern matching across multiple tabs and rules), synchronous heavy operations like `console.log` coupled with string allocations and URL parsing (e.g., `new URL()`) introduce massive overhead (over 90% execution time).
 
 **Action:** Remove non-essential debug logs and heavy string transformations from O(N*M) hot paths to dramatically reduce CPU time and improve latency. Benchmark using `perf_hooks` or `performance.now()` before and after such changes to quantify the improvement.
+## 2026-08-05 - Avoid heavy logs in hot loops
+**Learning:** Placing `console.log` statements combined with string manipulations/allocations (like `sanitizeUrlForLog`) inside tight nested loops (O(N*M)) leads to massive CPU overhead and blocks the main thread in background scripts, even if the user isn't actively looking at the console.
+**Action:** Always verify that heavy logging operations, especially those performing URL parsing or string replacements, are completely removed from or gated out of high-frequency loops like array `.some()` or `.forEach()` in production code.
