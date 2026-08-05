@@ -11,7 +11,7 @@
     "scripting",
     "windows"
   ],
-  "host_permissions": [
+  "optional_host_permissions": [
     "<all_urls>"
   ],
   "background": {
