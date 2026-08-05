@@ -44,3 +44,11 @@
 **Vulnerability:** Logic DoS via Type Confusion (missing type validation on imported JSON objects)
 **Learning:** When importing settings, arrays like `urlPatterns` could be overwritten with strings/other types, causing crashes when methods like `.some()` or `.forEach()` are called on them.
 **Prevention:** Always validate the structure and types of imported JSON configurations, enforcing arrays and string elements before storing them.
+## 2026-08-04 - Fix XSS in duplicate tab banner
+**Vulnerability:** XSS via innerHTML injection
+**Learning:** Using innerHTML with template literals can introduce HTML injection and XSS vulnerabilities, even if variables seem benign.
+**Prevention:** Use safe DOM methods like document.createElement and textContent instead of innerHTML.
+## 2024-05-20 - XSS in Notification Banners via innerHTML
+**Vulnerability:** A potential DOM-based Cross-Site Scripting (XSS) vulnerability was found in `background.js` where notification banners (such as the auto-close banner) were constructed using `innerHTML` combined with template literals that interpolated data (e.g., `${seconds}`).
+**Learning:** Using `innerHTML` with template literals is inherently risky for injecting UI components dynamically, even when interpolating seemingly benign numeric data or text. If future refactoring introduces unescaped string data into the template, it instantly creates an XSS vector. Furthermore, `innerHTML` violates strict Content Security Policies (CSP) common in Manifest V3 extensions.
+**Prevention:** To prevent DOM-based XSS and ensure CSP compliance when constructing dynamic UI elements, strictly avoid `innerHTML`. Instead, programmatically create elements using safe DOM APIs like `document.createElement()`, configure them using `.className` and `.id`, and set their textual content securely using `.textContent`, then combine them using `.appendChild()`.
