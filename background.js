@@ -110,13 +110,11 @@ function getMatchingTabsForRule(tabs, rule) {
       const lowerUrl = tab.url.toLowerCase();
       const matches = rule.patterns.some(pattern => {
         const result = matchesPattern(tab.url, pattern, lowerUrl);
-        console.log(`Existing tab pattern check: "${pattern}" vs "${sanitizeUrlForLog(tab.url)}" = ${result}`);
         return result;
       });
 
       if (matches) {
         matchingTabs.push(tab);
-        console.log(`✓ Found matching existing tab: ${sanitizeUrlForLog(tab.url)} for rule ${rule.groupName}`);
       }
     }
   }
