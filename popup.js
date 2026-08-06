@@ -379,7 +379,7 @@ function startEditingUrl(index) {
   // Handle Enter key to save
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-      saveEditedUrl(index, input.value.trim());
+      saveEditedUrl(index, input.value.trim(), e && e.target ? (e.target.classList.contains('save-btn') ? e.target : document.querySelector(`.save-btn[data-index="${index}"]`)) : null);
     } else if (e.key === 'Escape') {
       cancelEditUrl(index);
     }
@@ -387,21 +387,21 @@ function startEditingUrl(index) {
 }
 
 // Save edited URL pattern
-function saveEditedUrl(index, newPattern) {
+function saveEditedUrl(index, newPattern, btn = null) {
   if (!newPattern) {
     cancelEditUrl(index);
     return;
   }
   
   if (newPattern.length > 200) {
-    alert('URL pattern cannot exceed 200 characters.');
+    if (btn) showButtonFeedback(btn, 'Max 200 chars', true);
     return;
   }
 
   // Check if pattern already exists (but allow same pattern at same index)
   const existingIndex = autoCloseSettings.urlPatterns.indexOf(newPattern);
   if (existingIndex !== -1 && existingIndex !== index) {
-    alert('This URL pattern already exists!');
+    if (btn) showButtonFeedback(btn, 'Already exists', true);
     return;
   }
   
@@ -442,7 +442,7 @@ function startEditingDuplicateAllowUrl(index) {
   // Handle Enter key to save
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-      saveEditedDuplicateAllowUrl(index, input.value.trim());
+      saveEditedDuplicateAllowUrl(index, input.value.trim(), e && e.target ? (e.target.classList.contains('duplicate-save-btn') ? e.target : document.querySelector(`.duplicate-save-btn[data-index="${index}"]`)) : null);
     } else if (e.key === 'Escape') {
       cancelEditDuplicateAllowUrl(index);
     }
@@ -450,21 +450,21 @@ function startEditingDuplicateAllowUrl(index) {
 }
 
 // Save edited duplicate allow URL pattern
-function saveEditedDuplicateAllowUrl(index, newPattern) {
+function saveEditedDuplicateAllowUrl(index, newPattern, btn = null) {
   if (!newPattern) {
     cancelEditDuplicateAllowUrl(index);
     return;
   }
   
   if (newPattern.length > 200) {
-    alert('Exception pattern cannot exceed 200 characters.');
+    if (btn) showButtonFeedback(btn, 'Max 200 chars', true);
     return;
   }
 
   // Check if pattern already exists (but allow same pattern at same index)
   const existingIndex = duplicatePreventionSettings.allowedDuplicatePatterns.indexOf(newPattern);
   if (existingIndex !== -1 && existingIndex !== index) {
-    alert('This URL pattern already exists!');
+    if (btn) showButtonFeedback(btn, 'Already exists', true);
     return;
   }
   
@@ -482,23 +482,24 @@ function cancelEditDuplicateAllowUrl(index) {
 function createGroupRule() {
   const nameInput = document.getElementById('groupRuleNameInput');
   const colorSelect = document.getElementById('groupRuleColorSelect');
+  const btn = document.getElementById('createGroupRuleBtn');
   
   const groupName = nameInput.value.trim();
   const groupColor = colorSelect.value;
   
   if (!groupName) {
-    alert('Please enter a group name');
+    if (btn) showButtonFeedback(btn, 'Enter a group name', true);
     return;
   }
   
   if (groupName.length > 50) {
-    alert('Group name cannot exceed 50 characters.');
+    if (btn) showButtonFeedback(btn, 'Max 50 chars', true);
     return;
   }
 
   // Check if group name already exists
   if (autoTabGroupingSettings.tabGroupRules.some(rule => rule.groupName === groupName)) {
-    alert('A group with this name already exists!');
+    if (btn) showButtonFeedback(btn, 'Name already exists', true);
     return;
   }
   
@@ -519,17 +520,20 @@ function createGroupRule() {
 }
 
 // Add pattern to existing group rule
-function addPattern(ruleIndex) {
+function addPattern(ruleIndex, btn = null) {
   const input = document.getElementById(`pattern-input-${ruleIndex}`);
   const pattern = input.value.trim();
+  if (!btn) {
+    btn = input.parentElement.querySelector('.add-pattern-btn');
+  }
   
   if (!pattern) {
-    alert('Please enter a URL pattern');
+    if (btn) showButtonFeedback(btn, 'Enter a URL pattern', true);
     return;
   }
   
   if (pattern.length > 200) {
-    alert('URL pattern cannot exceed 200 characters.');
+    if (btn) showButtonFeedback(btn, 'Max 200 chars', true);
     return;
   }
 
@@ -540,7 +544,7 @@ function addPattern(ruleIndex) {
   });
   
   if (existingRule) {
-    alert('This URL pattern already exists in another group!');
+    if (btn) showButtonFeedback(btn, 'Already in a group', true);
     return;
   }
   
@@ -667,7 +671,7 @@ function startEditingGroupRule(index) {
   if (editForm) {
     editForm.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
-        saveEditedGroupRule(index);
+        saveEditedGroupRule(index, e && e.target ? (e.target.classList.contains('group-rule-save-btn') ? e.target : null) : null);
       } else if (e.key === 'Escape') {
         cancelEditGroupRule(index);
       }
@@ -676,11 +680,15 @@ function startEditingGroupRule(index) {
 }
 
 // Save edited group rule
-function saveEditedGroupRule(index) {
+function saveEditedGroupRule(index, btn = null) {
   const container = document.getElementById('groupRuleListContainer');
   const items = container.querySelectorAll('.group-rule-item');
   const item = items[index];
   
+  if (!btn) {
+    btn = item.querySelector('.group-rule-save-btn');
+  }
+
   const nameInput = item.querySelector('.group-rule-name-edit');
   const colorSelect = item.querySelector('.group-rule-color-edit');
   
@@ -688,12 +696,12 @@ function saveEditedGroupRule(index) {
   const groupColor = colorSelect.value;
   
   if (!groupName) {
-    alert('Please enter a group name');
+    if (btn) showButtonFeedback(btn, 'Enter a name', true);
     return;
   }
   
   if (groupName.length > 50) {
-    alert('Group name cannot exceed 50 characters.');
+    if (btn) showButtonFeedback(btn, 'Max 50 chars', true);
     return;
   }
 
@@ -703,7 +711,7 @@ function saveEditedGroupRule(index) {
   });
   
   if (existingIndex !== -1) {
-    alert('A group with this name already exists!');
+    if (btn) showButtonFeedback(btn, 'Name already exists', true);
     return;
   }
   
@@ -727,10 +735,11 @@ function cancelEditGroupRule(index) {
 function addUrlPattern() {
   const input = document.getElementById('urlInput');
   const pattern = input.value.trim();
+  const btn = document.getElementById('addUrlBtn');
   
   if (pattern) {
     if (pattern.length > 200) {
-      alert('URL pattern cannot exceed 200 characters.');
+      if (btn) showButtonFeedback(btn, 'Max 200 chars', true);
       return;
     }
     if (!autoCloseSettings.urlPatterns.includes(pattern)) {
@@ -738,6 +747,8 @@ function addUrlPattern() {
       input.value = '';
       updateUrlList();
       saveAutoCloseSettings();
+    } else {
+      if (btn) showButtonFeedback(btn, 'Already exists', true);
     }
   }
 }
@@ -746,10 +757,11 @@ function addUrlPattern() {
 function addDuplicateAllowPattern() {
   const input = document.getElementById('duplicateAllowInput');
   const pattern = input.value.trim();
+  const btn = document.getElementById('addDuplicateAllowBtn');
   
   if (pattern) {
     if (pattern.length > 200) {
-      alert('Exception pattern cannot exceed 200 characters.');
+      if (btn) showButtonFeedback(btn, 'Max 200 chars', true);
       return;
     }
     if (!duplicatePreventionSettings.allowedDuplicatePatterns.includes(pattern)) {
@@ -757,6 +769,8 @@ function addDuplicateAllowPattern() {
       input.value = '';
       updateDuplicateAllowList();
       saveDuplicatePreventionSettings();
+    } else {
+      if (btn) showButtonFeedback(btn, 'Already exists', true);
     }
   }
 }
@@ -1045,16 +1059,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // openNamePromptBtn removed; init flow handles naming within popup
 
+
   // Save window label
-  document.getElementById('saveWindowLabelBtn').addEventListener('click', async () => {
+  document.getElementById('saveWindowLabelBtn').addEventListener('click', async (e) => {
     try {
+      const btn = e.target;
       const windowId = await getCurrentBrowserWindowId();
       if (!windowId) return;
       const label = document.getElementById('windowLabelInput').value.trim();
 
       // 🛡️ Sentinel: Enforce length limit to prevent storage DoS
       if (label.length > 50) {
-        alert('Window label cannot exceed 50 characters.');
+        showButtonFeedback(btn, 'Max 50 chars', true);
         return;
       }
 
@@ -1063,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // close popup to apply quickly
           window.close();
         } else if (resp && resp.error) {
-          alert('Failed to save label: ' + resp.error);
+          showButtonFeedback(btn, 'Failed to save', true);
         }
       });
     } catch (e) {
@@ -1071,18 +1087,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+
   // Save from init view and refresh the popup
   const initSaveBtn = document.getElementById('initSaveWindowLabelBtn');
   if (initSaveBtn) {
-    initSaveBtn.addEventListener('click', async () => {
+    initSaveBtn.addEventListener('click', async (e) => {
       try {
+        const btn = e.target;
         const windowId = await getCurrentBrowserWindowId();
         if (!windowId) return;
         const label = document.getElementById('initWindowLabelInput').value.trim();
 
         // 🛡️ Sentinel: Enforce length limit to prevent storage DoS
         if (label.length > 50) {
-          alert('Window label cannot exceed 50 characters.');
+          showButtonFeedback(btn, 'Max 50 chars', true);
           return;
         }
 
@@ -1111,7 +1129,7 @@ document.addEventListener('DOMContentLoaded', () => {
               try { await buildWindowExplorer(); } catch {}
             } catch {}
           } else if (resp && resp.error) {
-            alert('Failed to save label: ' + resp.error);
+            showButtonFeedback(btn, 'Failed to save', true);
           }
         });
       } catch (e) {
@@ -1617,13 +1635,15 @@ document.addEventListener('DOMContentLoaded', () => {
             tEl.dataset.tabid = String(tab.tabId);
             tEl.dataset.windowid = String(tab.windowId);
             tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
+            const escapedTitle = escapeHtml(baseTitle);
+            const escapedUrl = escapeHtml(tab.url || '');
             tEl.innerHTML = `
               <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
-                <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(baseTitle)}">${escapeHtml(baseTitle)}</div>
-                <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;" title="${escapeHtml(tab.url || '')}">${escapeHtml(tab.url || '')}</div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapedTitle}">${escapedTitle}</div>
+                <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;" title="${escapedUrl}">${escapedUrl}</div>
               </div>
               <div style="margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;">
-                <button class="close-tab-btn" title="Close tab" aria-label="Close tab: ${escapeHtml(baseTitle)}" data-tabid="${tab.tabId}">✕</button>
+                <button class="close-tab-btn" title="Close tab" aria-label="Close tab: ${escapedTitle}" data-tabid="${tab.tabId}">✕</button>
               </div>
             `;
             gContent.appendChild(tEl);
@@ -1776,13 +1796,15 @@ document.addEventListener('DOMContentLoaded', () => {
           tEl.dataset.tabid = String(tab.id);
           tEl.dataset.windowid = String(w.id);
           tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
-          tEl.innerHTML = `
+          const escapedTitle = escapeHtml(tab.title || '(no title)');
+            const escapedUrl = escapeHtml(tab.url || '');
+            tEl.innerHTML = `
             <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
-              <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(tab.title || '(no title)')}">${escapeHtml(tab.title || '(no title)')}</div>
-              <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;" title="${escapeHtml(tab.url || '')}">${escapeHtml(tab.url || '')}</div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapedTitle}">${escapedTitle}</div>
+              <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;" title="${escapedUrl}">${escapedUrl}</div>
             </div>
             <div style="margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;">
-              <button class="close-tab-btn" title="Close tab" aria-label="Close tab: ${escapeHtml(tab.title || '(no title)')}" data-tabid="${tab.id}">✕</button>
+              <button class="close-tab-btn" title="Close tab" aria-label="Close tab: ${escapedTitle}" data-tabid="${tab.id}">✕</button>
             </div>
           `;
           groupContent.appendChild(tEl);
@@ -2192,7 +2214,7 @@ document.addEventListener('DOMContentLoaded', () => {
       startEditingUrl(index);
     } else if (e.target.classList.contains('save-btn')) {
       const input = e.target.parentElement.parentElement.querySelector('.url-edit-input');
-      saveEditedUrl(index, input.value.trim());
+      saveEditedUrl(index, input.value.trim(), e && e.target ? (e.target.classList.contains('save-btn') ? e.target : document.querySelector(`.save-btn[data-index="${index}"]`)) : null);
     } else if (e.target.classList.contains('cancel-btn')) {
       cancelEditUrl(index);
     } else if (e.target.classList.contains('url-text')) {
@@ -2210,7 +2232,7 @@ document.addEventListener('DOMContentLoaded', () => {
       startEditingDuplicateAllowUrl(index);
     } else if (e.target.classList.contains('duplicate-save-btn')) {
       const input = e.target.parentElement.parentElement.querySelector('.duplicate-url-edit-input');
-      saveEditedDuplicateAllowUrl(index, input.value.trim());
+      saveEditedDuplicateAllowUrl(index, input.value.trim(), e && e.target ? (e.target.classList.contains('duplicate-save-btn') ? e.target : document.querySelector(`.duplicate-save-btn[data-index="${index}"]`)) : null);
     } else if (e.target.classList.contains('duplicate-cancel-btn')) {
       cancelEditDuplicateAllowUrl(index);
     } else if (e.target.classList.contains('duplicate-url-text')) {
@@ -2229,13 +2251,13 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.target.classList.contains('group-rule-edit-btn')) {
       startEditingGroupRule(index);
     } else if (e.target.classList.contains('group-rule-save-btn')) {
-      saveEditedGroupRule(index);
+      saveEditedGroupRule(index, e && e.target ? (e.target.classList.contains('group-rule-save-btn') ? e.target : null) : null);
     } else if (e.target.classList.contains('group-rule-cancel-btn')) {
       cancelEditGroupRule(index);
     } else if (e.target.classList.contains('expand-btn')) {
       togglePatterns(index);
     } else if (e.target.classList.contains('add-pattern-btn')) {
-      addPattern(ruleIndex);
+      addPattern(ruleIndex, e && e.target ? (e.target.classList.contains('add-pattern-btn') ? e.target : null) : null);
     } else if (e.target.classList.contains('remove-pattern-btn')) {
       removePattern(ruleIndex, patternIndex);
     }
@@ -2245,7 +2267,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('groupRuleListContainer').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.target.classList.contains('pattern-input')) {
       const ruleIndex = parseInt(e.target.getAttribute('id').split('-')[2]);
-      addPattern(ruleIndex);
+      addPattern(ruleIndex, e && e.target ? (e.target.classList.contains('add-pattern-btn') ? e.target : null) : null);
     }
   });
 });
