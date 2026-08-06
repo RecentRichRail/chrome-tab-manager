@@ -73,3 +73,7 @@
 ## 2026-08-05 - Avoid heavy logs in hot loops
 **Learning:** Placing `console.log` statements combined with string manipulations/allocations (like `sanitizeUrlForLog`) inside tight nested loops (O(N*M)) leads to massive CPU overhead and blocks the main thread in background scripts, even if the user isn't actively looking at the console.
 **Action:** Always verify that heavy logging operations, especially those performing URL parsing or string replacements, are completely removed from or gated out of high-frequency loops like array `.some()` or `.forEach()` in production code.
+
+## 2026-08-05 - Cache string transformations before template literals in hot loops
+**Learning:** Calling functions like `escapeHtml` repeatedly inside template literals within a hot loop (like rendering many tabs in the UI) causes redundant CPU overhead and slows down UI rendering.
+**Action:** Cache the results of string transformations in local variables immediately before constructing the template string to minimize CPU cycles and improve rendering performance.
