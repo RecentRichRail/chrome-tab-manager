@@ -239,13 +239,18 @@ function updateUrlList() {
   const fragment = document.createDocumentFragment();
 
   autoCloseSettings.urlPatterns.forEach((pattern, index) => {
+    // ⚡ Bolt Performance Optimization:
+    // Cache the output of escapeHtml to avoid redundant function calls and string allocations
+    // inside the template literal. This reduces CPU overhead during list rendering.
+    const escapedPattern = escapeHtml(pattern);
+
     const item = document.createElement('div');
     item.className = 'url-item';
     item.innerHTML = `
-      <code class="url-text" data-index="${index}" title="Click to edit">${escapeHtml(pattern)}</code>
+      <code class="url-text" data-index="${index}" title="Click to edit">${escapedPattern}</code>
       <div class="url-item-buttons">
-        <button class="edit-btn" data-index="${index}" title="Edit" aria-label="Edit pattern: ${escapeHtml(pattern)}">Edit</button>
-        <button class="remove-btn" data-index="${index}" title="Remove" aria-label="Remove pattern: ${escapeHtml(pattern)}">Remove</button>
+        <button class="edit-btn" data-index="${index}" title="Edit" aria-label="Edit pattern: ${escapedPattern}">Edit</button>
+        <button class="remove-btn" data-index="${index}" title="Remove" aria-label="Remove pattern: ${escapedPattern}">Remove</button>
       </div>
     `;
     fragment.appendChild(item);
@@ -276,13 +281,18 @@ function updateDuplicateAllowList() {
   const fragment = document.createDocumentFragment();
 
   duplicatePreventionSettings.allowedDuplicatePatterns.forEach((pattern, index) => {
+    // ⚡ Bolt Performance Optimization:
+    // Cache the output of escapeHtml to avoid redundant function calls and string allocations
+    // inside the template literal. This reduces CPU overhead during list rendering.
+    const escapedPattern = escapeHtml(pattern);
+
     const item = document.createElement('div');
     item.className = 'url-item';
     item.innerHTML = `
-      <code class="duplicate-url-text" data-index="${index}" title="Click to edit">${escapeHtml(pattern)}</code>
+      <code class="duplicate-url-text" data-index="${index}" title="Click to edit">${escapedPattern}</code>
       <div class="url-item-buttons">
-        <button class="duplicate-edit-btn" data-index="${index}" title="Edit" aria-label="Edit exception pattern: ${escapeHtml(pattern)}">Edit</button>
-        <button class="duplicate-remove-btn" data-index="${index}" title="Remove" aria-label="Remove exception pattern: ${escapeHtml(pattern)}">Remove</button>
+        <button class="duplicate-edit-btn" data-index="${index}" title="Edit" aria-label="Edit exception pattern: ${escapedPattern}">Edit</button>
+        <button class="duplicate-remove-btn" data-index="${index}" title="Remove" aria-label="Remove exception pattern: ${escapedPattern}">Remove</button>
       </div>
     `;
     fragment.appendChild(item);
@@ -313,6 +323,10 @@ function updateGroupRuleList() {
   const fragment = document.createDocumentFragment();
 
   autoTabGroupingSettings.tabGroupRules.forEach((rule, index) => {
+    // ⚡ Bolt Performance Optimization:
+    // Cache string transformations outside the template literal to reduce CPU overhead.
+    const escapedGroupName = escapeHtml(rule.groupName);
+
     const item = document.createElement('div');
     item.className = 'group-rule-item';
     item.setAttribute('data-index', index);
@@ -324,25 +338,29 @@ function updateGroupRuleList() {
     item.innerHTML = `
       <div class="group-rule-header">
         <div class="group-rule-info">
-          <div class="group-rule-name">${escapeHtml(rule.groupName)}${colorDisplay}</div>
+          <div class="group-rule-name">${escapedGroupName}${colorDisplay}</div>
           <div class="group-rule-pattern">${patterns.length} URL pattern${patterns.length !== 1 ? 's' : ''}</div>
         </div>
         <div class="group-rule-buttons">
-          <button class="expand-btn" data-index="${index}" aria-expanded="false" aria-controls="patterns-${index}" title="Expand URLs" aria-label="Expand URLs for group: ${escapeHtml(rule.groupName)}" data-group-name="${escapeHtml(rule.groupName)}">+</button>
-          <button class="edit-btn group-rule-edit-btn" data-index="${index}" title="Edit Group" aria-label="Edit group: ${escapeHtml(rule.groupName)}">Edit</button>
-          <button class="remove-btn group-rule-remove-btn" data-index="${index}" title="Remove" aria-label="Remove group: ${escapeHtml(rule.groupName)}">Remove</button>
+          <button class="expand-btn" data-index="${index}" aria-expanded="false" aria-controls="patterns-${index}" title="Expand URLs" aria-label="Expand URLs for group: ${escapedGroupName}" data-group-name="${escapedGroupName}">+</button>
+          <button class="edit-btn group-rule-edit-btn" data-index="${index}" title="Edit Group" aria-label="Edit group: ${escapedGroupName}">Edit</button>
+          <button class="remove-btn group-rule-remove-btn" data-index="${index}" title="Remove" aria-label="Remove group: ${escapedGroupName}">Remove</button>
         </div>
       </div>
       <div class="group-rule-patterns" id="patterns-${index}" style="display: none;">
-        ${patterns.map((pattern, patternIndex) => `
+        ${patterns.map((pattern, patternIndex) => {
+          // ⚡ Bolt Performance Optimization: Cache per-pattern escapes
+          const escapedPattern = escapeHtml(pattern);
+          return `
           <div class="pattern-item">
-            <span class="pattern-text">${escapeHtml(pattern)}</span>
-            <button class="remove-btn remove-pattern-btn" data-rule-index="${index}" data-pattern-index="${patternIndex}" title="Remove" aria-label="Remove pattern: ${escapeHtml(pattern)}">×</button>
+            <span class="pattern-text">${escapedPattern}</span>
+            <button class="remove-btn remove-pattern-btn" data-rule-index="${index}" data-pattern-index="${patternIndex}" title="Remove" aria-label="Remove pattern: ${escapedPattern}">×</button>
           </div>
-        `).join('')}
+        `;
+        }).join('')}
         <div class="add-pattern-form">
-          <input type="text" class="pattern-input" placeholder="URL pattern (e.g., *github.com*)" id="pattern-input-${index}" aria-label="URL pattern for ${escapeHtml(rule.groupName)}">
-          <button class="add-pattern-btn" data-rule-index="${index}" title="Add Pattern" aria-label="Add pattern to group: ${escapeHtml(rule.groupName)}">Add</button>
+          <input type="text" class="pattern-input" placeholder="URL pattern (e.g., *github.com*)" id="pattern-input-${index}" aria-label="URL pattern for ${escapedGroupName}">
+          <button class="add-pattern-btn" data-rule-index="${index}" title="Add Pattern" aria-label="Add pattern to group: ${escapedGroupName}">Add</button>
         </div>
       </div>
     `;
