@@ -5,6 +5,22 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, function(c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]; });
 }
 
+function showButtonFeedback(btn, message, isError = false) {
+  if (!btn || btn.dataset.feedbackActive) return;
+  btn.dataset.feedbackActive = 'true';
+  const originalText = btn.innerHTML;
+  const originalColor = btn.style.color;
+  btn.innerHTML = escapeHtml(message);
+  btn.style.color = isError ? '#ef4444' : 'var(--accent)';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.innerHTML = originalText;
+    btn.style.color = originalColor;
+    btn.disabled = false;
+    delete btn.dataset.feedbackActive;
+  }, 2000);
+}
+
 // Auto-close settings management
 let autoCloseSettings = {
   autoCloseEnabled: false,
