@@ -41,3 +41,6 @@
 ## 2023-10-24 - Replace disruptive alerts with inline UI feedback
 **Learning:** Using native `alert()` dialogs in browser extension popups provides a jarring user experience and blocks the main thread.
 **Action:** Replace `alert()` calls with inline UI feedback (such as temporarily changing a button's text to "Success!" or "Failed" and its color) to apply feedback smoothly.
+## 2024-05-19 - Ensure Hidden Elements are Expanded Before Interaction in Tests
+**Learning:** When using Playwright or other UI testing tools, attempting to click on elements that are hidden inside collapsed accordions or menus will result in a timeout error because the element is not visible or interactive.
+**Action:** Always ensure the test script explicitly clicks and waits for the parent container (like an accordion header) to expand and reveal its children before attempting to interact with any nested elements.
