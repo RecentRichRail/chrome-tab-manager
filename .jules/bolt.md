@@ -77,3 +77,6 @@
 ## 2026-08-05 - Cache string transformations before template literals in hot loops
 **Learning:** Calling functions like `escapeHtml` repeatedly inside template literals within a hot loop (like rendering many tabs in the UI) causes redundant CPU overhead and slows down UI rendering.
 **Action:** Cache the results of string transformations in local variables immediately before constructing the template string to minimize CPU cycles and improve rendering performance.
+## 2024-05-19 - Escape HTML Optimization
+**Learning:** In hot loops mapping objects implicitly with `{}` causes garbage collection issues. Moving static dictionaries outside of `replace` methods removes redundant memory overhead per loop execution.
+**Action:** When a method dynamically instantiates mappings specifically inside character iterators (like in `replace`), declare and reuse the object out of scope instead to lower memory usage.
