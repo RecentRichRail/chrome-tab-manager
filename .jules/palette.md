@@ -44,3 +44,7 @@
 ## 2024-05-19 - Ensure Hidden Elements are Expanded Before Interaction in Tests
 **Learning:** When using Playwright or other UI testing tools, attempting to click on elements that are hidden inside collapsed accordions or menus will result in a timeout error because the element is not visible or interactive.
 **Action:** Always ensure the test script explicitly clicks and waits for the parent container (like an accordion header) to expand and reveal its children before attempting to interact with any nested elements.
+
+## 2024-05-18 - Missing Static Aria Expanded State
+**Learning:** For custom accordion headers constructed natively in HTML (as opposed to via JS iteration), setting `role="button"` and `aria-controls` is insufficient for screen readers if the element's initial state isn't explicitly defined. The lack of `aria-expanded="false"` means screen reader users don't get the cue that the element is an accordion button.
+**Action:** Always ensure that statically defined collapsible sections in HTML explicitly include `aria-expanded="false"` (or `"true"`) on their toggle headers.
