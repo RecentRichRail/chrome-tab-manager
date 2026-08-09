@@ -120,7 +120,7 @@ async function groupExistingTabsForRule(rule, allTabs = null) {
     // Find tabs that match this rule's patterns
     for (const tab of tabs) {
       if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
-        const lowerUrl = tab.url.toLowerCase();
+        const lowerUrl = tab.lowerUrl || tab.url.toLowerCase();
         const matches = rule.patterns.some(pattern => {
           const result = matchesPattern(tab.url, pattern, lowerUrl);
           return result;
@@ -209,6 +209,15 @@ async function groupAllExistingTabs() {
     // Passing this cached list to groupExistingTabsForRule eliminates the N+1 IPC overhead
     // caused by calling chrome.tabs.query({}) repeatedly for every single group rule.
     const allTabs = await chrome.tabs.query({});
+
+    // ⚡ Bolt Performance Optimization:
+    // Pre-calculate lowerUrl for all tabs outside the O(N*M) rules loop
+    // to avoid redundant string allocations and GC pressure.
+    for (const tab of allTabs) {
+      if (tab.url) {
+        tab.lowerUrl = tab.url.toLowerCase();
+      }
+    }
 
     for (const rule of settings.tabGroupRules) {
       await groupExistingTabsForRule(rule, allTabs);
