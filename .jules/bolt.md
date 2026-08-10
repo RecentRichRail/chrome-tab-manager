@@ -80,3 +80,6 @@
 ## 2024-05-19 - Escape HTML Optimization
 **Learning:** In hot loops mapping objects implicitly with `{}` causes garbage collection issues. Moving static dictionaries outside of `replace` methods removes redundant memory overhead per loop execution.
 **Action:** When a method dynamically instantiates mappings specifically inside character iterators (like in `replace`), declare and reuse the object out of scope instead to lower memory usage.
+## 2026-08-06 - Redundant string allocations in early exit paths
+**Learning:** Functions that accept configuration arrays (like list of patterns to match) and default to empty arrays will unnecessarily allocate memory (like `toLowerCase` and `split`) if the string operations occur before checking if the array is empty. This adds measurable overhead per iteration, especially during hot paths like tab updates.
+**Action:** Always place early returns (e.g., `if (!patterns || patterns.length === 0) return false;`) before any string manipulation or parsing logic to avoid redundant O(1) CPU/memory cost when features are disabled by default.
