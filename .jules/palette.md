@@ -48,3 +48,6 @@
 ## 2024-05-18 - Missing Static Aria Expanded State
 **Learning:** For custom accordion headers constructed natively in HTML (as opposed to via JS iteration), setting `role="button"` and `aria-controls` is insufficient for screen readers if the element's initial state isn't explicitly defined. The lack of `aria-expanded="false"` means screen reader users don't get the cue that the element is an accordion button.
 **Action:** Always ensure that statically defined collapsible sections in HTML explicitly include `aria-expanded="false"` (or `"true"`) on their toggle headers.
+## 2024-05-24 - Replace Blocking Confirm Dialogs
+**Learning:** Native `confirm()` dialogs in browser extensions block the main thread and provide a jarring UX. Replacing them with inline state changes (e.g., changing button text to "Confirm?" and requiring a second click) requires careful event handling. Using `e.target` is dangerous if the button contains nested SVGs; `e.currentTarget` must be used. Also, splitting state logic across multiple dynamically attached listeners using `stopImmediatePropagation` is error-prone.
+**Action:** When implementing inline confirmations, use `e.currentTarget` for state checks, and manage the branching logic (first click vs. confirm click) within a single, consistent event listener checking a data attribute (like `dataset.pendingImport`).

@@ -651,13 +651,37 @@ function togglePatterns(ruleIndex) {
 }
 
 // Remove group rule
-function removeGroupRule(index) {
+function removeGroupRule(index, btn = null) {
   const rule = autoTabGroupingSettings.tabGroupRules[index];
-  if (confirm(`Are you sure you want to delete the "${rule.groupName}" group rule?`)) {
-    autoTabGroupingSettings.tabGroupRules.splice(index, 1);
-    updateGroupRuleList();
-    saveAutoTabGroupingSettings();
+
+  if (btn) {
+    if (!btn.dataset.confirmState) {
+      // First click: show confirmation inline
+      const originalText = btn.innerHTML;
+      btn.dataset.confirmState = 'true';
+      btn.dataset.originalText = originalText;
+      btn.innerHTML = 'Sure?';
+      btn.style.color = '#ef4444'; // Red text for warning
+      btn.style.borderColor = '#ef4444';
+
+      // Reset after 3 seconds if not clicked again
+      btn.dataset.confirmTimeout = setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.style.color = '';
+        btn.style.borderColor = '';
+        delete btn.dataset.confirmState;
+        delete btn.dataset.originalText;
+      }, 3000);
+      return;
+    }
+
+    // Second click: proceed with deletion
+    clearTimeout(parseInt(btn.dataset.confirmTimeout));
   }
+
+  autoTabGroupingSettings.tabGroupRules.splice(index, 1);
+  updateGroupRuleList();
+  saveAutoTabGroupingSettings();
 }
 
 // Start editing group rule
@@ -1221,7 +1245,32 @@ document.addEventListener('DOMContentLoaded', () => {
   // Import settings from JSON file
   const importFileInput = document.getElementById('importFileInput');
   const importSettingsBtn = document.getElementById('importSettingsBtn');
-  importSettingsBtn.addEventListener('click', () => importFileInput.click());
+  importSettingsBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    // If we're waiting for confirmation, handle the save instead of opening file picker
+    if (importSettingsBtn.dataset.pendingImport) {
+        const pendingData = importSettingsBtn.dataset.pendingImport;
+        const origText = importSettingsBtn.dataset.origText || 'Import / Export';
+        clearTimeout(importSettingsBtn.dataset.confirmTimeout);
+
+        try {
+            await chrome.storage.sync.set(JSON.parse(pendingData));
+            importSettingsBtn.innerHTML = 'Imported Successfully!';
+            importSettingsBtn.style.color = 'var(--accent)';
+            importSettingsBtn.disabled = true;
+            delete importSettingsBtn.dataset.pendingImport;
+            setTimeout(() => { window.location.reload(); }, 1500);
+        } catch (err) {
+            importSettingsBtn.innerHTML = 'Import Failed';
+            importSettingsBtn.style.color = '#ef4444';
+            importSettingsBtn.disabled = true;
+            setTimeout(() => { importSettingsBtn.innerHTML = origText; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
+            console.error('Failed to import settings:', err);
+        }
+        return;
+    }
+    importFileInput.click();
+  });
   importFileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1299,16 +1348,22 @@ document.addEventListener('DOMContentLoaded', () => {
           .slice(0, 100);
       }
 
-      if (!confirm('Importing will overwrite your current settings in sync storage. Continue?')) {
-        importFileInput.value = '';
-        return;
-      }
-      await chrome.storage.sync.set(settingsToImport);
-      const orig = importSettingsBtn.innerHTML;
-      importSettingsBtn.innerHTML = 'Imported Successfully!';
-      importSettingsBtn.style.color = 'var(--accent)';
-      importSettingsBtn.disabled = true;
-      setTimeout(() => { window.location.reload(); }, 1500);
+      // Using inline feedback instead of alert/confirm
+      const origText = importSettingsBtn.innerHTML;
+      importSettingsBtn.dataset.origText = origText;
+      importSettingsBtn.dataset.pendingImport = JSON.stringify(settingsToImport);
+      importSettingsBtn.innerHTML = 'Confirm Overwrite?';
+      importSettingsBtn.style.color = '#ef4444'; // Red for warning
+
+      importSettingsBtn.dataset.confirmTimeout = setTimeout(() => {
+        importSettingsBtn.innerHTML = origText;
+        importSettingsBtn.style.color = '';
+        delete importSettingsBtn.dataset.pendingImport;
+        delete importSettingsBtn.dataset.origText;
+        importFileInput.value = ''; // Reset file input
+      }, 5000); // 5 seconds to confirm
+
+      return; // Return early, the click handler does the actual save
     } catch (err) {
       const orig = importSettingsBtn.innerHTML;
       importSettingsBtn.innerHTML = 'Import Failed';
@@ -1350,10 +1405,30 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  document.getElementById('regroupAllBtn').addEventListener('click', () => {
-    if (confirm('Regroup all tabs based on current tab grouping rules?')) {
-      regroupAllTabs();
+  document.getElementById('regroupAllBtn').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    if (!btn.dataset.confirmState) {
+      const originalText = btn.innerHTML;
+      btn.dataset.confirmState = 'true';
+      btn.dataset.originalText = originalText;
+      btn.innerHTML = 'Sure? Regroup all?';
+      btn.style.color = 'var(--brand)';
+
+      btn.dataset.confirmTimeout = setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.style.color = '';
+        delete btn.dataset.confirmState;
+        delete btn.dataset.originalText;
+      }, 3000);
+      return;
     }
+
+    clearTimeout(parseInt(btn.dataset.confirmTimeout));
+    delete btn.dataset.confirmState;
+    btn.innerHTML = btn.dataset.originalText;
+    btn.style.color = '';
+
+    regroupAllTabs();
   });
   // Default to Explorer view; wire settings gear and popout
   const explorerRoot = document.getElementById('explorerRoot');
@@ -2285,7 +2360,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const patternIndex = parseInt(e.target.getAttribute('data-pattern-index'));
     
     if (e.target.classList.contains('group-rule-remove-btn')) {
-      removeGroupRule(index);
+      removeGroupRule(index, e.target);
     } else if (e.target.classList.contains('group-rule-edit-btn')) {
       startEditingGroupRule(index);
     } else if (e.target.classList.contains('group-rule-save-btn')) {
