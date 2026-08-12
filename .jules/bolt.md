@@ -83,3 +83,6 @@
 ## 2026-08-06 - Redundant string allocations in early exit paths
 **Learning:** Functions that accept configuration arrays (like list of patterns to match) and default to empty arrays will unnecessarily allocate memory (like `toLowerCase` and `split`) if the string operations occur before checking if the array is empty. This adds measurable overhead per iteration, especially during hot paths like tab updates.
 **Action:** Always place early returns (e.g., `if (!patterns || patterns.length === 0) return false;`) before any string manipulation or parsing logic to avoid redundant O(1) CPU/memory cost when features are disabled by default.
+## $(date +%Y-%m-%d) - Optimize URL Normalization via String Slicing
+**Learning:** Using `String.prototype.split('#')[0]` for removing hash fragments from strings incurs unnecessary array allocation and full string traversal overhead compared to `indexOf('#')` and `slice()`. When parsing tens of thousands of URLs sequentially (e.g. during duplicate tab processing or tab grouping), this can cause blocking.
+**Action:** Prefer using `indexOf` and `slice` over `split` for simple string truncation operations in hot paths.
