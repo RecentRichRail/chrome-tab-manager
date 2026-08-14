@@ -51,3 +51,7 @@
 ## 2024-05-24 - Replace Blocking Confirm Dialogs
 **Learning:** Native `confirm()` dialogs in browser extensions block the main thread and provide a jarring UX. Replacing them with inline state changes (e.g., changing button text to "Confirm?" and requiring a second click) requires careful event handling. Using `e.target` is dangerous if the button contains nested SVGs; `e.currentTarget` must be used. Also, splitting state logic across multiple dynamically attached listeners using `stopImmediatePropagation` is error-prone.
 **Action:** When implementing inline confirmations, use `e.currentTarget` for state checks, and manage the branching logic (first click vs. confirm click) within a single, consistent event listener checking a data attribute (like `dataset.pendingImport`).
+
+## 2025-08-14 - Add Enter key support to inputs for better accessibility
+**Learning:** For users who navigate primarily using a keyboard, adding standard Enter key support for input fields that have an adjacent "Save" or "Submit" button significantly improves the form usability.
+**Action:** Always ensure that form inputs have Enter key support, especially when they are not wrapped in standard form tags where the browser would handle this automatically.

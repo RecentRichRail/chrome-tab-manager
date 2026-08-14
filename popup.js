@@ -1149,6 +1149,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  document.getElementById('windowLabelInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      document.getElementById('saveWindowLabelBtn').click();
+    }
+  });
+
 
   // Save from init view and refresh the popup
   const initSaveBtn = document.getElementById('initSaveWindowLabelBtn');
@@ -1198,6 +1204,15 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Error saving window label from init', e);
       }
     });
+
+    const initInput = document.getElementById('initWindowLabelInput');
+    if (initInput) {
+      initInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          initSaveBtn.click();
+        }
+      });
+    }
   }
 
   // Export settings as JSON
