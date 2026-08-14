@@ -86,3 +86,7 @@
 ## $(date +%Y-%m-%d) - Optimize URL Normalization via String Slicing
 **Learning:** Using `String.prototype.split('#')[0]` for removing hash fragments from strings incurs unnecessary array allocation and full string traversal overhead compared to `indexOf('#')` and `slice()`. When parsing tens of thousands of URLs sequentially (e.g. during duplicate tab processing or tab grouping), this can cause blocking.
 **Action:** Prefer using `indexOf` and `slice` over `split` for simple string truncation operations in hot paths.
+
+## 2024-08-14 - Remove redundant sanitizeUrlForLog from auto tab grouping hot path
+**Learning:** Frequent logging calls with string allocations and object creations (`new URL`) in hot paths like tab lifecycle events (`handleAutoTabGrouping`) can cause significant CPU and main thread blocking, even when not actively debugging.
+**Action:** Remove or hoist heavy `console.log` statements and `sanitizeUrlForLog` calls from hot loops/paths to improve extension responsiveness during rapid tab state changes.
