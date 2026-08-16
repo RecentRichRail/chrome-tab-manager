@@ -90,3 +90,6 @@
 ## 2024-08-14 - Remove redundant sanitizeUrlForLog from auto tab grouping hot path
 **Learning:** Frequent logging calls with string allocations and object creations (`new URL`) in hot paths like tab lifecycle events (`handleAutoTabGrouping`) can cause significant CPU and main thread blocking, even when not actively debugging.
 **Action:** Remove or hoist heavy `console.log` statements and `sanitizeUrlForLog` calls from hot loops/paths to improve extension responsiveness during rapid tab state changes.
+## 2026-08-16 - Avoid URL Parsing in Auto-Close Hot Path
+**Learning:** Calling `sanitizeUrlForLog` inside `handleAutoClose` causes massive CPU overhead because it constructs a `new URL()` and performs string manipulation on every tab status change, regardless of whether a pattern matches.
+**Action:** Remove non-essential `console.log` statements containing heavy parsing logic from tab lifecycle hot paths to dramatically reduce CPU time.
