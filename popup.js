@@ -1914,9 +1914,11 @@ document.addEventListener('DOMContentLoaded', () => {
         groupContent.style.display = 'none';
 
         for (const tab of tabs) {
-          if (!searchFilter({ title: tab.title, url: tab.url, lowerTitle: tab.lowerTitle, lowerUrl: tab.lowerUrl })) continue;
           const titleStr = String(tab.title || '(no title)');
           const urlStr = String(tab.url || '');
+          const lowerTitle = tab.lowerTitle !== undefined ? tab.lowerTitle : titleStr.toLowerCase();
+          const lowerUrl = tab.lowerUrl !== undefined ? tab.lowerUrl : urlStr.toLowerCase();
+          if (!searchFilter({ title: tab.title, url: tab.url, lowerTitle: lowerTitle, lowerUrl: lowerUrl })) continue;
           const tEl = document.createElement('div');
           tEl.className = 'url-item explorer-tab-item';
           tEl.style.margin = '6px 0';
@@ -1924,8 +1926,11 @@ document.addEventListener('DOMContentLoaded', () => {
           tEl.setAttribute('tabindex', '0');
           tEl.dataset.title = titleStr;
           tEl.dataset.url = urlStr;
-          tEl.dataset.lowertitle = tab.lowerTitle !== undefined ? tab.lowerTitle : titleStr.toLowerCase();
-          tEl.dataset.lowerurl = tab.lowerUrl !== undefined ? tab.lowerUrl : urlStr.toLowerCase();
+          // ⚡ Bolt Performance Optimization:
+          // Use pre-computed lowerTitle and lowerUrl to avoid redundant string allocation
+          // operations inside rendering hot loop, significantly improving rendering time.
+          tEl.dataset.lowertitle = lowerTitle;
+          tEl.dataset.lowerurl = lowerUrl;
           tEl.dataset.tabid = String(tab.id);
           tEl.dataset.windowid = String(w.id);
           tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
@@ -2052,6 +2057,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const searchQ = (document.getElementById('windowSearchInput')?.value || '').toLowerCase();
       const searchFilter = (tab) => {
         if (!searchQ) return true;
+        // ⚡ Bolt Performance Optimization:
+        // Use pre-computed tab.lowerTitle and tab.lowerUrl to avoid redundant string
+        // allocation operations inside search filtering loop, improving typing responsiveness.
         const lTitle = tab.lowerTitle !== undefined ? tab.lowerTitle : (tab.title || '').toLowerCase();
         const lUrl = tab.lowerUrl !== undefined ? tab.lowerUrl : (tab.url || '').toLowerCase();
         return lTitle.includes(searchQ) || lUrl.includes(searchQ);
