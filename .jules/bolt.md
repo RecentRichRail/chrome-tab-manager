@@ -93,3 +93,6 @@
 ## 2026-08-16 - Avoid URL Parsing in Auto-Close Hot Path
 **Learning:** Calling `sanitizeUrlForLog` inside `handleAutoClose` causes massive CPU overhead because it constructs a `new URL()` and performs string manipulation on every tab status change, regardless of whether a pattern matches.
 **Action:** Remove non-essential `console.log` statements containing heavy parsing logic from tab lifecycle hot paths to dramatically reduce CPU time.
+## 2026-08-17 - Avoid redundant string allocations in UI render loops
+**Learning:** Re-computing string transforms like `.toLowerCase()` inside UI rendering loops or input filter event handlers causes unnecessary memory allocations and garbage collection, severely degrading performance and causing jank during typing or when rendering large lists (like thousands of tabs).
+**Action:** Always pre-compute and store normalized string formats (like lowercase values for searching) during the initial data processing phase and reuse them directly in the render or filter loops.
