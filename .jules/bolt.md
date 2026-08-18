@@ -96,3 +96,6 @@
 ## 2026-08-17 - Avoid redundant string allocations in UI render loops
 **Learning:** Re-computing string transforms like `.toLowerCase()` inside UI rendering loops or input filter event handlers causes unnecessary memory allocations and garbage collection, severely degrading performance and causing jank during typing or when rendering large lists (like thousands of tabs).
 **Action:** Always pre-compute and store normalized string formats (like lowercase values for searching) during the initial data processing phase and reuse them directly in the render or filter loops.
+## 2026-08-18 - Avoid redundant string allocation and matching when normalized URL equals original
+**Learning:** Functions that normalize input (like stripping hash fragments) and check multiple patterns against both the original and normalized forms perform unnecessary redundant string allocation (`.toLowerCase()`) and double pattern matching if the input string is not modified by normalization.
+**Action:** In pattern-matching hot loops, check if the normalized form equals the original form, and if so, perform an early return with a single pattern check against the original form. This halves string allocations and matching overhead for standard inputs.
