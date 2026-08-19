@@ -52,3 +52,13 @@
 **Vulnerability:** A potential DOM-based Cross-Site Scripting (XSS) vulnerability was found in `background.js` where notification banners (such as the auto-close banner) were constructed using `innerHTML` combined with template literals that interpolated data (e.g., `${seconds}`).
 **Learning:** Using `innerHTML` with template literals is inherently risky for injecting UI components dynamically, even when interpolating seemingly benign numeric data or text. If future refactoring introduces unescaped string data into the template, it instantly creates an XSS vector. Furthermore, `innerHTML` violates strict Content Security Policies (CSP) common in Manifest V3 extensions.
 **Prevention:** To prevent DOM-based XSS and ensure CSP compliance when constructing dynamic UI elements, strictly avoid `innerHTML`. Instead, programmatically create elements using safe DOM APIs like `document.createElement()`, configure them using `.className` and `.id`, and set their textual content securely using `.textContent`, then combine them using `.appendChild()`.
+
+## 2026-08-04 - Fix XSS in duplicate tab banner
+**Vulnerability:** XSS via innerHTML injection
+**Learning:** Using innerHTML with template literals can introduce HTML injection and XSS vulnerabilities, even if variables seem benign.
+**Prevention:** Use safe DOM methods like document.createElement and textContent instead of innerHTML.
+
+## 2026-08-19 - DOM XSS in Popup Explorer via innerHTML
+**Vulnerability:** Multiple DOM-based XSS vulnerabilities were present in `popup.js` where tab data (titles, URLs) and import error messages were injected into the UI using `.innerHTML`.
+**Learning:** Even if data is partially escaped (e.g., using `escapeHtml`), using `.innerHTML` with template literals remains highly risky and fragile against future updates. It also violates strict Content Security Policies (CSP) typical in modern Chrome extensions (Manifest V3).
+**Prevention:** Eliminate the use of `.innerHTML` entirely for dynamic content rendering. Instead, use programmatic DOM construction via `document.createElement()`, assign properties, and use `.textContent` for safe string assignment.
