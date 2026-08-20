@@ -55,3 +55,7 @@
 ## 2025-08-14 - Add Enter key support to inputs for better accessibility
 **Learning:** For users who navigate primarily using a keyboard, adding standard Enter key support for input fields that have an adjacent "Save" or "Submit" button significantly improves the form usability.
 **Action:** Always ensure that form inputs have Enter key support, especially when they are not wrapped in standard form tags where the browser would handle this automatically.
+
+## 2024-08-19 - Avoid role="alert" on interactive buttons
+**Learning:** Native `alert()` dialogs should be avoided for UI validation feedback, but temporarily modifying button text or color for inline feedback creates an accessibility issue if it isn't properly announced to screen reader users. However, adding `role="alert"` directly to an interactive button destroys its semantic meaning, making it inaccessible for the secondary click.
+**Action:** When creating inline button feedback states, use an `aria-live` region or explicitly announce changes by changing `aria-label` or using visually hidden `role="status"` elements, to ensure screen reader users receive validation context without disruptive native dialogs.

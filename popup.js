@@ -14,12 +14,38 @@ function showButtonFeedback(btn, message, isError = false) {
   btn.dataset.feedbackActive = 'true';
   const originalText = btn.innerHTML;
   const originalColor = btn.style.color;
+  const originalAriaLabel = btn.getAttribute('aria-label') || '';
+
   btn.innerHTML = escapeHtml(message);
   btn.style.color = isError ? '#ef4444' : 'var(--accent)';
+  btn.setAttribute('aria-label', message);
+
+  // Create visually hidden aria-live status element
+  const statusEl = document.createElement('span');
+  statusEl.className = 'visually-hidden-status';
+  statusEl.setAttribute('role', 'status');
+  statusEl.setAttribute('aria-live', 'polite');
+  statusEl.style.position = 'absolute';
+  statusEl.style.width = '1px';
+  statusEl.style.height = '1px';
+  statusEl.style.padding = '0';
+  statusEl.style.margin = '-1px';
+  statusEl.style.overflow = 'hidden';
+  statusEl.style.clip = 'rect(0, 0, 0, 0)';
+  statusEl.style.whiteSpace = 'nowrap';
+  statusEl.style.border = '0';
+  statusEl.textContent = message;
+  btn.appendChild(statusEl);
+
   btn.disabled = true;
   setTimeout(() => {
     btn.innerHTML = originalText;
     btn.style.color = originalColor;
+    if (originalAriaLabel) {
+      btn.setAttribute('aria-label', originalAriaLabel);
+    } else {
+      btn.removeAttribute('aria-label');
+    }
     btn.disabled = false;
     delete btn.dataset.feedbackActive;
   }, 2000);
@@ -702,25 +728,56 @@ function removeGroupRule(index, btn = null) {
     if (!btn.dataset.confirmState) {
       // First click: show confirmation inline
       const originalText = btn.innerHTML;
+      const originalAriaLabel = btn.getAttribute('aria-label') || '';
       btn.dataset.confirmState = 'true';
       btn.dataset.originalText = originalText;
+      if (originalAriaLabel) btn.dataset.originalAriaLabel = originalAriaLabel;
       btn.innerHTML = 'Sure?';
       btn.style.color = '#ef4444'; // Red text for warning
       btn.style.borderColor = '#ef4444';
+      btn.setAttribute('aria-label', 'Confirm deletion');
+
+      const statusEl = document.createElement('span');
+      statusEl.className = 'visually-hidden-status';
+      statusEl.setAttribute('role', 'status');
+      statusEl.setAttribute('aria-live', 'polite');
+      statusEl.style.position = 'absolute';
+      statusEl.style.width = '1px';
+      statusEl.style.height = '1px';
+      statusEl.style.padding = '0';
+      statusEl.style.margin = '-1px';
+      statusEl.style.overflow = 'hidden';
+      statusEl.style.clip = 'rect(0, 0, 0, 0)';
+      statusEl.style.whiteSpace = 'nowrap';
+      statusEl.style.border = '0';
+      statusEl.textContent = 'Please confirm deletion by clicking again';
+      btn.appendChild(statusEl);
 
       // Reset after 3 seconds if not clicked again
       btn.dataset.confirmTimeout = setTimeout(() => {
         btn.innerHTML = originalText;
         btn.style.color = '';
         btn.style.borderColor = '';
+        if (btn.dataset.originalAriaLabel) {
+          btn.setAttribute('aria-label', btn.dataset.originalAriaLabel);
+        } else {
+          btn.removeAttribute('aria-label');
+        }
         delete btn.dataset.confirmState;
         delete btn.dataset.originalText;
+        delete btn.dataset.originalAriaLabel;
       }, 3000);
       return;
     }
 
     // Second click: proceed with deletion
     clearTimeout(parseInt(btn.dataset.confirmTimeout));
+    if (btn.dataset.originalAriaLabel) {
+      btn.setAttribute('aria-label', btn.dataset.originalAriaLabel);
+    } else {
+      btn.removeAttribute('aria-label');
+    }
+    delete btn.dataset.originalAriaLabel;
   }
 
   autoTabGroupingSettings.tabGroupRules.splice(index, 1);
@@ -1467,16 +1524,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = e.currentTarget;
     if (!btn.dataset.confirmState) {
       const originalText = btn.innerHTML;
+      const originalAriaLabel = btn.getAttribute('aria-label') || '';
       btn.dataset.confirmState = 'true';
       btn.dataset.originalText = originalText;
+      if (originalAriaLabel) btn.dataset.originalAriaLabel = originalAriaLabel;
       btn.innerHTML = 'Sure? Regroup all?';
       btn.style.color = 'var(--brand)';
+      btn.setAttribute('aria-label', 'Confirm regroup all tabs');
+
+      const statusEl = document.createElement('span');
+      statusEl.className = 'visually-hidden-status';
+      statusEl.setAttribute('role', 'status');
+      statusEl.setAttribute('aria-live', 'polite');
+      statusEl.style.position = 'absolute';
+      statusEl.style.width = '1px';
+      statusEl.style.height = '1px';
+      statusEl.style.padding = '0';
+      statusEl.style.margin = '-1px';
+      statusEl.style.overflow = 'hidden';
+      statusEl.style.clip = 'rect(0, 0, 0, 0)';
+      statusEl.style.whiteSpace = 'nowrap';
+      statusEl.style.border = '0';
+      statusEl.textContent = 'Please confirm regroup all by clicking again';
+      btn.appendChild(statusEl);
 
       btn.dataset.confirmTimeout = setTimeout(() => {
         btn.innerHTML = originalText;
         btn.style.color = '';
+        if (btn.dataset.originalAriaLabel) {
+          btn.setAttribute('aria-label', btn.dataset.originalAriaLabel);
+        } else {
+          btn.removeAttribute('aria-label');
+        }
         delete btn.dataset.confirmState;
         delete btn.dataset.originalText;
+        delete btn.dataset.originalAriaLabel;
       }, 3000);
       return;
     }
@@ -1485,6 +1567,12 @@ document.addEventListener('DOMContentLoaded', () => {
     delete btn.dataset.confirmState;
     btn.innerHTML = btn.dataset.originalText;
     btn.style.color = '';
+    if (btn.dataset.originalAriaLabel) {
+      btn.setAttribute('aria-label', btn.dataset.originalAriaLabel);
+    } else {
+      btn.removeAttribute('aria-label');
+    }
+    delete btn.dataset.originalAriaLabel;
 
     regroupAllTabs();
   });
