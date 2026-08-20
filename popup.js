@@ -266,13 +266,35 @@ function updateUrlList() {
 
     const item = document.createElement('div');
     item.className = 'url-item';
-    item.innerHTML = `
-      <code class="url-text" data-index="${index}" title="Click to edit">${escapedPattern}</code>
-      <div class="url-item-buttons">
-        <button class="edit-btn" data-index="${index}" title="Edit" aria-label="Edit pattern: ${escapedPattern}">Edit</button>
-        <button class="remove-btn" data-index="${index}" title="Remove" aria-label="Remove pattern: ${escapedPattern}">Remove</button>
-      </div>
-    `;
+
+    const codeEl = document.createElement('code');
+    codeEl.className = 'url-text';
+    codeEl.dataset.index = index;
+    codeEl.title = 'Click to edit';
+    codeEl.textContent = pattern;
+
+    const buttonsDiv = document.createElement('div');
+    buttonsDiv.className = 'url-item-buttons';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'edit-btn';
+    editBtn.dataset.index = index;
+    editBtn.title = 'Edit';
+    editBtn.setAttribute('aria-label', `Edit pattern: ${pattern}`);
+    editBtn.textContent = 'Edit';
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-btn';
+    removeBtn.dataset.index = index;
+    removeBtn.title = 'Remove';
+    removeBtn.setAttribute('aria-label', `Remove pattern: ${pattern}`);
+    removeBtn.textContent = 'Remove';
+
+    buttonsDiv.appendChild(editBtn);
+    buttonsDiv.appendChild(removeBtn);
+
+    item.appendChild(codeEl);
+    item.appendChild(buttonsDiv);
     fragment.appendChild(item);
   });
 
@@ -308,13 +330,35 @@ function updateDuplicateAllowList() {
 
     const item = document.createElement('div');
     item.className = 'url-item';
-    item.innerHTML = `
-      <code class="duplicate-url-text" data-index="${index}" title="Click to edit">${escapedPattern}</code>
-      <div class="url-item-buttons">
-        <button class="duplicate-edit-btn" data-index="${index}" title="Edit" aria-label="Edit exception pattern: ${escapedPattern}">Edit</button>
-        <button class="duplicate-remove-btn" data-index="${index}" title="Remove" aria-label="Remove exception pattern: ${escapedPattern}">Remove</button>
-      </div>
-    `;
+
+    const codeEl = document.createElement('code');
+    codeEl.className = 'duplicate-url-text';
+    codeEl.dataset.index = index;
+    codeEl.title = 'Click to edit';
+    codeEl.textContent = pattern;
+
+    const buttonsDiv = document.createElement('div');
+    buttonsDiv.className = 'url-item-buttons';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'duplicate-edit-btn';
+    editBtn.dataset.index = index;
+    editBtn.title = 'Edit';
+    editBtn.setAttribute('aria-label', `Edit exception pattern: ${pattern}`);
+    editBtn.textContent = 'Edit';
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'duplicate-remove-btn';
+    removeBtn.dataset.index = index;
+    removeBtn.title = 'Remove';
+    removeBtn.setAttribute('aria-label', `Remove exception pattern: ${pattern}`);
+    removeBtn.textContent = 'Remove';
+
+    buttonsDiv.appendChild(editBtn);
+    buttonsDiv.appendChild(removeBtn);
+
+    item.appendChild(codeEl);
+    item.appendChild(buttonsDiv);
     fragment.appendChild(item);
   });
 
@@ -1293,12 +1337,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🛡️ Sentinel: Enforce file size limit (1MB) to prevent OOM/DoS
     const MAX_FILE_SIZE = 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
-      const orig = importSettingsBtn.innerHTML;
-      importSettingsBtn.innerHTML = 'File too large (Max 1MB)';
+      const orig = importSettingsBtn.textContent;
+      importSettingsBtn.textContent = 'File too large (Max 1MB)';
       importSettingsBtn.style.color = '#ef4444';
       importSettingsBtn.disabled = true;
-      setTimeout(() => { importSettingsBtn.innerHTML = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
-      // clear the input so the same file can be selected again if needed after it's fixed
+      setTimeout(() => { importSettingsBtn.textContent = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
       importFileInput.value = '';
       return;
     }
@@ -1307,11 +1350,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const text = await file.text();
       const obj = JSON.parse(text);
       if (!obj) {
-        const orig = importSettingsBtn.innerHTML;
-        importSettingsBtn.innerHTML = 'Invalid file';
+        const orig = importSettingsBtn.textContent;
+        importSettingsBtn.textContent = 'Invalid file';
         importSettingsBtn.style.color = '#ef4444';
         importSettingsBtn.disabled = true;
-        setTimeout(() => { importSettingsBtn.innerHTML = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
+        setTimeout(() => { importSettingsBtn.textContent = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
         return;
       }
 
@@ -1330,11 +1373,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (!settingsToImport) {
-        const orig = importSettingsBtn.innerHTML;
-        importSettingsBtn.innerHTML = 'Invalid settings format';
+        const orig = importSettingsBtn.textContent;
+        importSettingsBtn.textContent = 'Invalid settings format';
         importSettingsBtn.style.color = '#ef4444';
         importSettingsBtn.disabled = true;
-        setTimeout(() => { importSettingsBtn.innerHTML = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
+        setTimeout(() => { importSettingsBtn.textContent = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
         return;
       }
 
@@ -1770,15 +1813,53 @@ document.addEventListener('DOMContentLoaded', () => {
             tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
             const escapedTitle = escapeHtml(baseTitle);
             const escapedUrl = escapeHtml(tab.url || '');
-            tEl.innerHTML = `
-              <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
-                <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapedTitle}">${escapedTitle}</div>
-                <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;" title="${escapedUrl}">${escapedUrl}</div>
-              </div>
-              <div style="margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;">
-                <button class="close-tab-btn" title="Close tab" aria-label="Close tab: ${escapedTitle}" data-tabid="${tab.tabId}">✕</button>
-              </div>
-            `;
+
+            const contentWrapper = document.createElement('div');
+            contentWrapper.style.flex = '1';
+            contentWrapper.style.minWidth = '0';
+            contentWrapper.style.display = 'flex';
+            contentWrapper.style.flexDirection = 'column';
+            contentWrapper.style.justifyContent = 'center';
+
+            const titleDiv = document.createElement('div');
+            titleDiv.style.fontSize = '13px';
+            titleDiv.style.fontWeight = '600';
+            titleDiv.style.color = 'var(--text-primary)';
+            titleDiv.style.whiteSpace = 'nowrap';
+            titleDiv.style.overflow = 'hidden';
+            titleDiv.style.textOverflow = 'ellipsis';
+            titleDiv.title = baseTitle;
+            titleDiv.textContent = baseTitle;
+            contentWrapper.appendChild(titleDiv);
+
+            const urlDiv = document.createElement('div');
+            urlDiv.style.fontSize = '11px';
+            urlDiv.style.color = 'var(--muted)';
+            urlDiv.style.whiteSpace = 'nowrap';
+            urlDiv.style.overflow = 'hidden';
+            urlDiv.style.textOverflow = 'ellipsis';
+            urlDiv.style.marginTop = '2px';
+            urlDiv.title = tab.url || '';
+            urlDiv.textContent = tab.url || '';
+            contentWrapper.appendChild(urlDiv);
+
+            const actionWrapper = document.createElement('div');
+            actionWrapper.style.marginLeft = '8px';
+            actionWrapper.style.flexShrink = '0';
+            actionWrapper.style.display = 'flex';
+            actionWrapper.style.alignItems = 'center';
+            actionWrapper.style.gap = '6px';
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'close-tab-btn';
+            closeBtn.title = 'Close tab';
+            closeBtn.setAttribute('aria-label', `Close tab: ${baseTitle}`);
+            closeBtn.dataset.tabid = tab.tabId;
+            closeBtn.textContent = '✕';
+            actionWrapper.appendChild(closeBtn);
+
+            tEl.appendChild(contentWrapper);
+            tEl.appendChild(actionWrapper);
             gContent.appendChild(tEl);
           }
           groupContainer.appendChild(gHeader);
@@ -1873,12 +1954,21 @@ document.addEventListener('DOMContentLoaded', () => {
       contentEl.id = contentId;
       contentEl.className = 'menu-content';
       contentEl.style.display = 'none';
-      contentEl.innerHTML = `
-          <div style="padding:8px;">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Groups & Tabs</div>
-            <div id="window-${w.id}-groups"></div>
-          </div>
-      `;
+      const wrapper = document.createElement('div');
+      wrapper.style.padding = '8px';
+
+      const titleDiv = document.createElement('div');
+      titleDiv.style.fontSize = '12px';
+      titleDiv.style.color = 'var(--muted)';
+      titleDiv.style.marginBottom = '6px';
+      titleDiv.textContent = 'Groups & Tabs';
+      wrapper.appendChild(titleDiv);
+
+      const groupsDiv = document.createElement('div');
+      groupsDiv.id = `window-${w.id}-groups`;
+      wrapper.appendChild(groupsDiv);
+
+      contentEl.appendChild(wrapper);
       winDiv.appendChild(headerEl);
       winDiv.appendChild(contentEl);
       windowFragment.appendChild(winDiv);
@@ -1936,15 +2026,53 @@ document.addEventListener('DOMContentLoaded', () => {
           tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
           const escapedTitle = escapeHtml(tab.title || '(no title)');
             const escapedUrl = escapeHtml(tab.url || '');
-            tEl.innerHTML = `
-            <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
-              <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapedTitle}">${escapedTitle}</div>
-              <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;" title="${escapedUrl}">${escapedUrl}</div>
-            </div>
-            <div style="margin-left:8px;flex-shrink:0;display:flex;align-items:center;gap:6px;">
-              <button class="close-tab-btn" title="Close tab" aria-label="Close tab: ${escapedTitle}" data-tabid="${tab.id}">✕</button>
-            </div>
-          `;
+
+            const contentWrapper = document.createElement('div');
+            contentWrapper.style.flex = '1';
+            contentWrapper.style.minWidth = '0';
+            contentWrapper.style.display = 'flex';
+            contentWrapper.style.flexDirection = 'column';
+            contentWrapper.style.justifyContent = 'center';
+
+            const titleDiv = document.createElement('div');
+            titleDiv.style.fontSize = '13px';
+            titleDiv.style.fontWeight = '600';
+            titleDiv.style.color = 'var(--text-primary)';
+            titleDiv.style.whiteSpace = 'nowrap';
+            titleDiv.style.overflow = 'hidden';
+            titleDiv.style.textOverflow = 'ellipsis';
+            titleDiv.title = tab.title || '(no title)';
+            titleDiv.textContent = tab.title || '(no title)';
+            contentWrapper.appendChild(titleDiv);
+
+            const urlDiv = document.createElement('div');
+            urlDiv.style.fontSize = '11px';
+            urlDiv.style.color = 'var(--muted)';
+            urlDiv.style.whiteSpace = 'nowrap';
+            urlDiv.style.overflow = 'hidden';
+            urlDiv.style.textOverflow = 'ellipsis';
+            urlDiv.style.marginTop = '2px';
+            urlDiv.title = tab.url || '';
+            urlDiv.textContent = tab.url || '';
+            contentWrapper.appendChild(urlDiv);
+
+            const actionWrapper = document.createElement('div');
+            actionWrapper.style.marginLeft = '8px';
+            actionWrapper.style.flexShrink = '0';
+            actionWrapper.style.display = 'flex';
+            actionWrapper.style.alignItems = 'center';
+            actionWrapper.style.gap = '6px';
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'close-tab-btn';
+            closeBtn.title = 'Close tab';
+            closeBtn.setAttribute('aria-label', `Close tab: ${tab.title || '(no title)'}`);
+            closeBtn.dataset.tabid = tab.id;
+            closeBtn.textContent = '✕';
+            actionWrapper.appendChild(closeBtn);
+
+            tEl.appendChild(contentWrapper);
+            tEl.appendChild(actionWrapper);
           groupContent.appendChild(tEl);
         }
 
