@@ -99,3 +99,6 @@
 ## 2026-08-18 - Avoid redundant string allocation and matching when normalized URL equals original
 **Learning:** Functions that normalize input (like stripping hash fragments) and check multiple patterns against both the original and normalized forms perform unnecessary redundant string allocation (`.toLowerCase()`) and double pattern matching if the input string is not modified by normalization.
 **Action:** In pattern-matching hot loops, check if the normalized form equals the original form, and if so, perform an early return with a single pattern check against the original form. This halves string allocations and matching overhead for standard inputs.
+## 2024-08-21 - URL Parsing in Hot Loops
+**Learning:** Using new URL() inside hot loops or logging functions (like sanitizeUrlForLog) causes massive CPU overhead and garbage collection pressure, even if the result isn't always utilized.
+**Action:** Replace URL parsing with basic string manipulation (e.g. indexOf, substring) when only simple sanitization or origin/pathname extraction is needed.
