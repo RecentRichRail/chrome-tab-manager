@@ -1836,7 +1836,11 @@ document.addEventListener('DOMContentLoaded', () => {
       headerEl.setAttribute('aria-controls', contentId);
       let totalCount = 0;
       for (const m of winMap.values()) { for (const tabs of m.values()) totalCount += tabs.length; }
-      headerEl.innerHTML = `<span>${escapeHtml(title)}</span><span class="count-badge">${totalCount}</span><span class="menu-arrow">▶</span>`;
+      headerEl.innerHTML = '';
+      const tSpan = document.createElement('span'); tSpan.textContent = title;
+      const cSpan = document.createElement('span'); cSpan.className = 'count-badge'; cSpan.textContent = totalCount;
+      const aSpan = document.createElement('span'); aSpan.className = 'menu-arrow'; aSpan.textContent = '▶';
+      headerEl.append(tSpan, cSpan, aSpan);
       const contentEl = document.createElement('div');
       contentEl.id = contentId;
       contentEl.className = 'menu-content';
@@ -1853,7 +1857,10 @@ document.addEventListener('DOMContentLoaded', () => {
         wHeader.setAttribute('role', 'button');
         wHeader.setAttribute('tabindex', '0');
         wHeader.setAttribute('aria-controls', wContentId);
-        wHeader.innerHTML = `<span>${escapeHtml(headerTitle)}</span><span class="menu-arrow">▶</span>`;
+        wHeader.innerHTML = '';
+        const wTitleSpan = document.createElement('span'); wTitleSpan.textContent = headerTitle;
+        const wArrowSpan = document.createElement('span'); wArrowSpan.className = 'menu-arrow'; wArrowSpan.textContent = '▶';
+        wHeader.append(wTitleSpan, wArrowSpan);
         const wContent = document.createElement('div');
         wContent.id = wContentId;
         wContent.className = 'menu-content';
@@ -1879,7 +1886,10 @@ document.addEventListener('DOMContentLoaded', () => {
           gHeader.setAttribute('role', 'button');
           gHeader.setAttribute('tabindex', '0');
           gHeader.setAttribute('aria-controls', gContentId);
-          gHeader.innerHTML = `<div class="group-rule-name">${escapeHtml(groupTitle)}</div><span class="menu-arrow">▶</span>`;
+          gHeader.innerHTML = '';
+          const gNameDiv = document.createElement('div'); gNameDiv.className = 'group-rule-name'; gNameDiv.textContent = groupTitle;
+          const gArrowSpan = document.createElement('span'); gArrowSpan.className = 'menu-arrow'; gArrowSpan.textContent = '▶';
+          gHeader.append(gNameDiv, gArrowSpan);
           const gContent = document.createElement('div');
           gContent.id = gContentId;
           gContent.className = 'explorer-group-content';
@@ -2037,7 +2047,10 @@ document.addEventListener('DOMContentLoaded', () => {
       headerEl.setAttribute('role', 'button');
       headerEl.setAttribute('tabindex', '0');
       headerEl.setAttribute('aria-controls', contentId);
-      headerEl.innerHTML = `<span>${escapeHtml(headerTitle)}</span><span class="menu-arrow">▶</span>`;
+      headerEl.innerHTML = '';
+      const hTitleSpan = document.createElement('span'); hTitleSpan.textContent = headerTitle;
+      const hArrowSpan = document.createElement('span'); hArrowSpan.className = 'menu-arrow'; hArrowSpan.textContent = '▶';
+      headerEl.append(hTitleSpan, hArrowSpan);
       const contentEl = document.createElement('div');
       contentEl.id = contentId;
       contentEl.className = 'menu-content';
@@ -2085,7 +2098,10 @@ document.addEventListener('DOMContentLoaded', () => {
         groupHeader.setAttribute('role', 'button');
         groupHeader.setAttribute('tabindex', '0');
         groupHeader.setAttribute('aria-controls', groupContentId);
-        groupHeader.innerHTML = `<div class="group-rule-name">${escapeHtml(groupTitle)}</div><span class="menu-arrow">▶</span>`;
+        groupHeader.innerHTML = '';
+        const ghNameDiv = document.createElement('div'); ghNameDiv.className = 'group-rule-name'; ghNameDiv.textContent = groupTitle;
+        const ghArrowSpan = document.createElement('span'); ghArrowSpan.className = 'menu-arrow'; ghArrowSpan.textContent = '▶';
+        groupHeader.append(ghNameDiv, ghArrowSpan);
         const groupContent = document.createElement('div');
         groupContent.id = groupContentId;
         groupContent.className = 'explorer-group-content';
