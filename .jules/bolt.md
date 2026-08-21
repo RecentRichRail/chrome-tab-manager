@@ -99,3 +99,6 @@
 ## 2026-08-18 - Avoid redundant string allocation and matching when normalized URL equals original
 **Learning:** Functions that normalize input (like stripping hash fragments) and check multiple patterns against both the original and normalized forms perform unnecessary redundant string allocation (`.toLowerCase()`) and double pattern matching if the input string is not modified by normalization.
 **Action:** In pattern-matching hot loops, check if the normalized form equals the original form, and if so, perform an early return with a single pattern check against the original form. This halves string allocations and matching overhead for standard inputs.
+## 2024-08-20 - Cache parsed patterns in UI hot paths
+**Learning:** Frequent UI interactions (like search filtering on keystrokes) that rely on complex URL pattern matching can trigger redundant array allocations and string splitting (e.g., `pattern.split('*')`). Caching the parsed objects prevents O(N) allocations in these tight render loops.
+**Action:** When filtering lists against patterns, cache the compiled/parsed pattern objects globally or per-session instead of parsing them from scratch on every filter pass.
