@@ -102,3 +102,10 @@
 ## 2024-08-20 - Cache parsed patterns in UI hot paths
 **Learning:** Frequent UI interactions (like search filtering on keystrokes) that rely on complex URL pattern matching can trigger redundant array allocations and string splitting (e.g., `pattern.split('*')`). Caching the parsed objects prevents O(N) allocations in these tight render loops.
 **Action:** When filtering lists against patterns, cache the compiled/parsed pattern objects globally or per-session instead of parsing them from scratch on every filter pass.
+## 2024-08-22 - Avoid Custom URL Parsing Micro-optimizations
+**Learning:** Replacing native `new URL()` instantiation with manual string manipulation for performance gains on URL strings often introduces critical functional regressions. Manual parsing usually fails to handle path normalization, edge-case protocols (`about:`, `data:`), and correct trailing slash rules, violating the principle of "speed without correctness is useless."
+**Action:** Retain standard browser or Node APIs for complex specifications like URL parsing unless you have an exhaustive, tested, specification-compliant custom parser. If URL parsing is a bottleneck, focus on caching the parsed results or short-circuiting the hot loop *before* parsing is required, rather than rewriting the parser itself.
+
+## 2024-08-22 - Lazy String Allocation in Hot Paths
+**Learning:** When performing repeated matching in a loop (like `Array.some`), eagerly pre-computing normalized or lowercased strings for both sides of a comparison wastes CPU and GC time if an earlier fast-path comparison succeeds.
+**Action:** Use lazy evaluation pattern (e.g., initializing a variable to `null` and only assigning it `string.toLowerCase()` when the first condition fails) to defer expensive string allocations in hot paths.
