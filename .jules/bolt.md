@@ -102,3 +102,6 @@
 ## 2024-08-20 - Cache parsed patterns in UI hot paths
 **Learning:** Frequent UI interactions (like search filtering on keystrokes) that rely on complex URL pattern matching can trigger redundant array allocations and string splitting (e.g., `pattern.split('*')`). Caching the parsed objects prevents O(N) allocations in these tight render loops.
 **Action:** When filtering lists against patterns, cache the compiled/parsed pattern objects globally or per-session instead of parsing them from scratch on every filter pass.
+## 2024-05-18 - Lazy Evaluation for URL Pattern Matching
+**Learning:** In hot paths checking multiple wildcard patterns against URLs with hashes, eagerly allocating `.toLowerCase()` strings for both the original and normalized URLs caused significant GC pressure and CPU overhead. A simple logical OR short-circuit evaluating the original string match first wasn't optimal due to edge cases (exact matches on normalized URLs). The optimal solution was to check the normalized string *first* (most likely match) and lazily allocate the original lowercased string only as a fallback.
+**Action:** Always prefer lazy evaluation for string allocations inside tight loops, and order logical checks so that the most frequent successful condition evaluates first to short-circuit expensive operations.
