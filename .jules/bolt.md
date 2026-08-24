@@ -102,3 +102,6 @@
 ## 2024-08-20 - Cache parsed patterns in UI hot paths
 **Learning:** Frequent UI interactions (like search filtering on keystrokes) that rely on complex URL pattern matching can trigger redundant array allocations and string splitting (e.g., `pattern.split('*')`). Caching the parsed objects prevents O(N) allocations in these tight render loops.
 **Action:** When filtering lists against patterns, cache the compiled/parsed pattern objects globally or per-session instead of parsing them from scratch on every filter pass.
+## 2026-08-20 - Avoid split allocation and hoist checks
+**Learning:** Checking string components sequentially (like trailing suffix `endsWith`) before middle segments can avoid evaluating expensive inner loops in negative match paths. Additionally, allocating arrays on every non-wildcard string parsing pass adds measurable GC pressure.
+**Action:** Always check `indexOf('*') === -1` to short-circuit string array allocations when handling wildcards. And hoist trailing checks before O(N) iterative loops when performing regex-like string matching.
