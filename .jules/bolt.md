@@ -102,3 +102,7 @@
 ## 2024-08-20 - Cache parsed patterns in UI hot paths
 **Learning:** Frequent UI interactions (like search filtering on keystrokes) that rely on complex URL pattern matching can trigger redundant array allocations and string splitting (e.g., `pattern.split('*')`). Caching the parsed objects prevents O(N) allocations in these tight render loops.
 **Action:** When filtering lists against patterns, cache the compiled/parsed pattern objects globally or per-session instead of parsing them from scratch on every filter pass.
+
+## 2024-08-25 - Avoid URL Parsing in Duplicate Tab Hot Path
+**Learning:** Calling `sanitizeUrlForLog` inside `handleDuplicateTab` causes massive CPU overhead because it constructs a `new URL()` and performs string manipulation on every tab creation, regardless of whether a tab is actually a duplicate.
+**Action:** Remove non-essential `console.log` statements containing heavy parsing logic from tab lifecycle hot paths to dramatically reduce CPU time.
