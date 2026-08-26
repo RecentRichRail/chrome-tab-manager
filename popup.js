@@ -1913,8 +1913,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const tEl = document.createElement('div');
             tEl.className = 'url-item explorer-tab-item';
             tEl.style.margin = '6px 0';
-            tEl.setAttribute('role', 'button');
-            tEl.setAttribute('tabindex', '0');
             tEl.dataset.title = String(tab.title || '(no title)');
             tEl.dataset.url = String(tab.url || '');
             tEl.dataset.lowertitle = tab.lowerTitle;
@@ -1926,6 +1924,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const escapedUrl = escapeHtml(tab.url || '');
 
             const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'explorer-tab-content';
+            contentWrapper.setAttribute('role', 'button');
+            contentWrapper.setAttribute('tabindex', '0');
+            contentWrapper.setAttribute('aria-label', `Switch to tab: ${baseTitle}`);
             contentWrapper.style.flex = '1';
             contentWrapper.style.minWidth = '0';
             contentWrapper.style.display = 'flex';
@@ -2129,8 +2131,6 @@ document.addEventListener('DOMContentLoaded', () => {
           const tEl = document.createElement('div');
           tEl.className = 'url-item explorer-tab-item';
           tEl.style.margin = '6px 0';
-          tEl.setAttribute('role', 'button');
-          tEl.setAttribute('tabindex', '0');
           tEl.dataset.title = titleStr;
           tEl.dataset.url = urlStr;
           // ⚡ Bolt Performance Optimization:
@@ -2145,6 +2145,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const escapedUrl = escapeHtml(tab.url || '');
 
             const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'explorer-tab-content';
+            contentWrapper.setAttribute('role', 'button');
+            contentWrapper.setAttribute('tabindex', '0');
+            contentWrapper.setAttribute('aria-label', `Switch to tab: ${titleStr}`);
             contentWrapper.style.flex = '1';
             contentWrapper.style.minWidth = '0';
             contentWrapper.style.display = 'flex';
@@ -2239,12 +2243,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function attachExplorerEventHandlers(container) {
-    container.querySelectorAll('.explorer-tab-item').forEach(item => {
+    container.querySelectorAll('.explorer-tab-content').forEach(item => {
+      // Find the parent item that has the dataset values
+      const parentItem = item.closest('.explorer-tab-item');
       const activateTab = async (e) => {
         if (e.target && e.target.classList.contains('close-tab-btn')) return;
-        const tabId = Number(item.dataset.tabid);
-        const windowId = Number(item.dataset.windowid);
-        const groupId = Number(item.dataset.groupid);
+        const tabId = Number(parentItem.dataset.tabid);
+        const windowId = Number(parentItem.dataset.windowid);
+        const groupId = Number(parentItem.dataset.groupid);
         try {
           chrome.runtime.sendMessage({ type: 'activateTab', tabId, windowId, groupId }, () => {});
           window.close();

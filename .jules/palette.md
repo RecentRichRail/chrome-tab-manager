@@ -59,3 +59,7 @@
 ## 2024-08-19 - Avoid role="alert" on interactive buttons
 **Learning:** Native `alert()` dialogs should be avoided for UI validation feedback, but temporarily modifying button text or color for inline feedback creates an accessibility issue if it isn't properly announced to screen reader users. However, adding `role="alert"` directly to an interactive button destroys its semantic meaning, making it inaccessible for the secondary click.
 **Action:** When creating inline button feedback states, use an `aria-live` region or explicitly announce changes by changing `aria-label` or using visually hidden `role="status"` elements, to ensure screen reader users receive validation context without disruptive native dialogs.
+
+## 2026-08-05 - Avoid role="button" on container with interactive children
+**Learning:** Placing `role="button"` on a container element that includes a nested interactive button (like a "close" button) creates a nested interactive control issue for screen readers.
+**Action:** Apply `role="button"` only to the specific inner wrapper that handles the primary click action, leaving secondary buttons as siblings within the overall item container.
