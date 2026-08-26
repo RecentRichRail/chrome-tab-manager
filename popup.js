@@ -1335,22 +1335,22 @@ document.addEventListener('DOMContentLoaded', () => {
       a.click();
       URL.revokeObjectURL(url);
 
-      const originalHTML = exportSettingsBtn.innerHTML;
-      exportSettingsBtn.innerHTML = 'Exported!';
+      const originalText = exportSettingsBtn.textContent;
+      exportSettingsBtn.textContent = 'Exported!';
       exportSettingsBtn.style.color = 'var(--accent)';
       exportSettingsBtn.disabled = true;
       setTimeout(() => {
-        exportSettingsBtn.innerHTML = originalHTML;
+        exportSettingsBtn.textContent = originalText;
         exportSettingsBtn.style.color = '';
         exportSettingsBtn.disabled = false;
       }, 2000);
     } catch (e) {
-      const originalHTML = exportSettingsBtn.innerHTML;
-      exportSettingsBtn.innerHTML = 'Export Failed';
+      const originalText = exportSettingsBtn.textContent;
+      exportSettingsBtn.textContent = 'Export Failed';
       exportSettingsBtn.style.color = '#ef4444';
       exportSettingsBtn.disabled = true;
       setTimeout(() => {
-        exportSettingsBtn.innerHTML = originalHTML;
+        exportSettingsBtn.textContent = originalText;
         exportSettingsBtn.style.color = '';
         exportSettingsBtn.disabled = false;
       }, 3000);
@@ -1371,16 +1371,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             await chrome.storage.sync.set(JSON.parse(pendingData));
-            importSettingsBtn.innerHTML = 'Imported Successfully!';
+            importSettingsBtn.textContent = 'Imported Successfully!';
             importSettingsBtn.style.color = 'var(--accent)';
             importSettingsBtn.disabled = true;
             delete importSettingsBtn.dataset.pendingImport;
             setTimeout(() => { window.location.reload(); }, 1500);
         } catch (err) {
-            importSettingsBtn.innerHTML = 'Import Failed';
+            importSettingsBtn.textContent = 'Import Failed';
             importSettingsBtn.style.color = '#ef4444';
             importSettingsBtn.disabled = true;
-            setTimeout(() => { importSettingsBtn.innerHTML = origText; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
+            setTimeout(() => { importSettingsBtn.textContent = origText; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
             console.error('Failed to import settings:', err);
         }
         return;
@@ -1464,14 +1464,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Using inline feedback instead of alert/confirm
-      const origText = importSettingsBtn.innerHTML;
+      const origText = importSettingsBtn.textContent;
       importSettingsBtn.dataset.origText = origText;
       importSettingsBtn.dataset.pendingImport = JSON.stringify(settingsToImport);
-      importSettingsBtn.innerHTML = 'Confirm Overwrite?';
+      importSettingsBtn.textContent = 'Confirm Overwrite?';
       importSettingsBtn.style.color = '#ef4444'; // Red for warning
 
       importSettingsBtn.dataset.confirmTimeout = setTimeout(() => {
-        importSettingsBtn.innerHTML = origText;
+        importSettingsBtn.textContent = origText;
         importSettingsBtn.style.color = '';
         delete importSettingsBtn.dataset.pendingImport;
         delete importSettingsBtn.dataset.origText;
@@ -1480,11 +1480,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       return; // Return early, the click handler does the actual save
     } catch (err) {
-      const orig = importSettingsBtn.innerHTML;
-      importSettingsBtn.innerHTML = 'Import Failed';
+      const orig = importSettingsBtn.textContent;
+      importSettingsBtn.textContent = 'Import Failed';
       importSettingsBtn.style.color = '#ef4444';
       importSettingsBtn.disabled = true;
-      setTimeout(() => { importSettingsBtn.innerHTML = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
+      setTimeout(() => { importSettingsBtn.textContent = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
       console.error('Failed to import settings:', err);
     }
   });
