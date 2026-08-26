@@ -102,3 +102,6 @@
 ## 2024-08-20 - Cache parsed patterns in UI hot paths
 **Learning:** Frequent UI interactions (like search filtering on keystrokes) that rely on complex URL pattern matching can trigger redundant array allocations and string splitting (e.g., `pattern.split('*')`). Caching the parsed objects prevents O(N) allocations in these tight render loops.
 **Action:** When filtering lists against patterns, cache the compiled/parsed pattern objects globally or per-session instead of parsing them from scratch on every filter pass.
+## 2026-08-26 - Optimize URL pattern matching for Exact Matches and Fast Rejects
+**Learning:** Using `indexOf('*') === -1` allows short-circuiting expensive array allocations (`.split('*')`) for exact matches in hot loops. Hoisting the trailing sequence check (`endsWith`) avoids the O(N) internal loop entirely for negative matches.
+**Action:** When performing regex-like string matching with wildcards in JavaScript hot loops, use `indexOf('*') === -1` to short-circuit expensive array allocations for exact matches, and hoist trailing sequence checks before O(N) iterative loops to early-return on negative paths.
