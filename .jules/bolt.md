@@ -105,3 +105,6 @@
 ## 2026-08-26 - Optimize URL pattern matching for Exact Matches and Fast Rejects
 **Learning:** Using `indexOf('*') === -1` allows short-circuiting expensive array allocations (`.split('*')`) for exact matches in hot loops. Hoisting the trailing sequence check (`endsWith`) avoids the O(N) internal loop entirely for negative matches.
 **Action:** When performing regex-like string matching with wildcards in JavaScript hot loops, use `indexOf('*') === -1` to short-circuit expensive array allocations for exact matches, and hoist trailing sequence checks before O(N) iterative loops to early-return on negative paths.
+## $(date +%Y-%m-%d) - Lazy String Allocation in O(N) Loops
+**Learning:** Functions that perform input normalization and check against multiple patterns often allocate memory for the normalized version unconditionally. If an earlier check passes, this allocation is redundant and degrades performance in hot paths (like tab status updates).
+**Action:** When validating multiple states (e.g. original string and normalized string) inside iterative loops, defer expensive allocations (like `.toLowerCase()`) using lazy evaluation so they only occur if the first short-circuit check fails.
