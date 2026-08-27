@@ -270,7 +270,7 @@ function updateUrlList() {
   
   if (!autoCloseSettings.urlPatterns || autoCloseSettings.urlPatterns.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;">
+      <div style="text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;" role="status" aria-live="polite">
         <svg viewBox="0 0 24 24" style="width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
         <div style="font-size:14px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No URL patterns</div>
         <div style="font-size:12px; margin-bottom: 12px;">Add one above to start automatically closing matching tabs.</div>
@@ -334,7 +334,7 @@ function updateDuplicateAllowList() {
   
   if (!duplicatePreventionSettings.allowedDuplicatePatterns || duplicatePreventionSettings.allowedDuplicatePatterns.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;">
+      <div style="text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;" role="status" aria-live="polite">
         <svg viewBox="0 0 24 24" style="width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         <div style="font-size:14px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No exceptions</div>
         <div style="font-size:12px; margin-bottom: 12px;">All URLs will be checked for duplicates.</div>
@@ -398,7 +398,7 @@ function updateGroupRuleList() {
   
   if (!autoTabGroupingSettings.tabGroupRules || autoTabGroupingSettings.tabGroupRules.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;">
+      <div style="text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;" role="status" aria-live="polite">
         <svg viewBox="0 0 24 24" style="width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         <div style="font-size:14px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No tab group rules</div>
         <div style="font-size:12px; margin-bottom: 12px;">Create one above to start organizing tabs automatically.</div>
@@ -1778,7 +1778,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderExplorerEmptyState(container) {
     container.innerHTML = `
-      <div style="text-align:center; padding: 40px 20px; color: var(--muted);">
+      <div style="text-align:center; padding: 40px 20px; color: var(--muted);" role="status" aria-live="polite">
         <svg viewBox="0 0 24 24" style="width:48px;height:48px;margin:0 auto 12px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -2403,7 +2403,7 @@ document.addEventListener('DOMContentLoaded', () => {
         emptyStateEl = document.createElement('div');
         emptyStateEl.className = 'empty-search-state';
         emptyStateEl.innerHTML = `
-          <div style="text-align:center; padding: 40px 20px; color: var(--muted);">
+          <div style="text-align:center; padding: 40px 20px; color: var(--muted);" role="status" aria-live="polite">
             <svg viewBox="0 0 24 24" style="width:48px;height:48px;margin:0 auto 12px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>

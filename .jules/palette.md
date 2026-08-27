@@ -63,3 +63,6 @@
 ## 2026-08-05 - Avoid role="button" on container with interactive children
 **Learning:** Placing `role="button"` on a container element that includes a nested interactive button (like a "close" button) creates a nested interactive control issue for screen readers.
 **Action:** Apply `role="button"` only to the specific inner wrapper that handles the primary click action, leaving secondary buttons as siblings within the overall item container.
+## 2025-05-23 - Add aria-live regions to empty states
+**Learning:** Dynamically rendered empty states (like "No tabs found") were not announced by screen readers because their parent containers lacked `role="status"` and `aria-live="polite"`.
+**Action:** When creating empty states that replace existing content asynchronously, ensure they are wrapped in an `aria-live` region so screen reader users are notified of the state change.
