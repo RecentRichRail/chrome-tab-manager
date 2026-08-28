@@ -62,3 +62,7 @@
 **Vulnerability:** Multiple DOM-based XSS vulnerabilities were present in `popup.js` where tab data (titles, URLs) and import error messages were injected into the UI using `.innerHTML`.
 **Learning:** Even if data is partially escaped (e.g., using `escapeHtml`), using `.innerHTML` with template literals remains highly risky and fragile against future updates. It also violates strict Content Security Policies (CSP) typical in modern Chrome extensions (Manifest V3).
 **Prevention:** Eliminate the use of `.innerHTML` entirely for dynamic content rendering. Instead, use programmatic DOM construction via `document.createElement()`, assign properties, and use `.textContent` for safe string assignment.
+## 2026-08-20 - Fix XSS in popup.js via innerHTML
+**Vulnerability:** XSS via innerHTML injection in group rules editing form and url inputs.
+**Learning:** Using innerHTML with template literals can introduce HTML injection and XSS vulnerabilities, even if variables seem benign.
+**Prevention:** Use safe DOM methods like document.createElement and textContent instead of innerHTML for creating inputs and forms dynamically.
