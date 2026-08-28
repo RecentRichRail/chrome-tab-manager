@@ -423,37 +423,106 @@ function updateGroupRuleList() {
     
     // Display patterns count
     const patterns = rule.patterns || [];
-    const colorDisplay = rule.groupColor ? ` (${escapeHtml(rule.groupColor)})` : ' (random)';
     
-    item.innerHTML = `
-      <div class="group-rule-header">
-        <div class="group-rule-info">
-          <div class="group-rule-name">${escapedGroupName}${colorDisplay}</div>
-          <div class="group-rule-pattern">${patterns.length} URL pattern${patterns.length !== 1 ? 's' : ''}</div>
-        </div>
-        <div class="group-rule-buttons">
-          <button class="expand-btn" data-index="${index}" aria-expanded="false" aria-controls="patterns-${index}" title="Expand URLs" aria-label="Expand URLs for group: ${escapedGroupName}" data-group-name="${escapedGroupName}">+</button>
-          <button class="edit-btn group-rule-edit-btn" data-index="${index}" title="Edit Group" aria-label="Edit group: ${escapedGroupName}">Edit</button>
-          <button class="remove-btn group-rule-remove-btn" data-index="${index}" title="Remove" aria-label="Remove group: ${escapedGroupName}">Remove</button>
-        </div>
-      </div>
-      <div class="group-rule-patterns" id="patterns-${index}" style="display: none;">
-        ${patterns.map((pattern, patternIndex) => {
-          // ⚡ Bolt Performance Optimization: Cache per-pattern escapes
-          const escapedPattern = escapeHtml(pattern);
-          return `
-          <div class="pattern-item">
-            <span class="pattern-text">${escapedPattern}</span>
-            <button class="remove-btn remove-pattern-btn" data-rule-index="${index}" data-pattern-index="${patternIndex}" title="Remove" aria-label="Remove pattern: ${escapedPattern}">×</button>
-          </div>
-        `;
-        }).join('')}
-        <div class="add-pattern-form">
-          <input type="text" class="pattern-input" placeholder="URL pattern (e.g., *github.com*)" id="pattern-input-${index}" aria-label="URL pattern for ${escapedGroupName}">
-          <button class="add-pattern-btn" data-rule-index="${index}" title="Add Pattern" aria-label="Add pattern to group: ${escapedGroupName}">Add</button>
-        </div>
-      </div>
-    `;
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'group-rule-header';
+
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'group-rule-info';
+
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'group-rule-name';
+    nameDiv.textContent = rule.groupName + (rule.groupColor ? ' (' + rule.groupColor + ')' : ' (random)');
+    infoDiv.appendChild(nameDiv);
+
+    const patternDiv = document.createElement('div');
+    patternDiv.className = 'group-rule-pattern';
+    patternDiv.textContent = patterns.length + ' URL pattern' + (patterns.length !== 1 ? 's' : '');
+    infoDiv.appendChild(patternDiv);
+
+    headerDiv.appendChild(infoDiv);
+
+    const buttonsDiv = document.createElement('div');
+    buttonsDiv.className = 'group-rule-buttons';
+
+    const expandBtn = document.createElement('button');
+    expandBtn.className = 'expand-btn';
+    expandBtn.dataset.index = index;
+    expandBtn.setAttribute('aria-expanded', 'false');
+    expandBtn.setAttribute('aria-controls', 'patterns-' + index);
+    expandBtn.title = 'Expand URLs';
+    expandBtn.setAttribute('aria-label', 'Expand URLs for group: ' + rule.groupName);
+    expandBtn.dataset.groupName = rule.groupName;
+    expandBtn.textContent = '+';
+    buttonsDiv.appendChild(expandBtn);
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'edit-btn group-rule-edit-btn';
+    editBtn.dataset.index = index;
+    editBtn.title = 'Edit Group';
+    editBtn.setAttribute('aria-label', 'Edit group: ' + rule.groupName);
+    editBtn.textContent = 'Edit';
+    buttonsDiv.appendChild(editBtn);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-btn group-rule-remove-btn';
+    removeBtn.dataset.index = index;
+    removeBtn.title = 'Remove';
+    removeBtn.setAttribute('aria-label', 'Remove group: ' + rule.groupName);
+    removeBtn.textContent = 'Remove';
+    buttonsDiv.appendChild(removeBtn);
+
+    headerDiv.appendChild(buttonsDiv);
+    item.appendChild(headerDiv);
+
+    const patternsDiv = document.createElement('div');
+    patternsDiv.className = 'group-rule-patterns';
+    patternsDiv.id = 'patterns-' + index;
+    patternsDiv.style.display = 'none';
+
+    patterns.forEach((pattern, patternIndex) => {
+      const pItem = document.createElement('div');
+      pItem.className = 'pattern-item';
+
+      const pText = document.createElement('span');
+      pText.className = 'pattern-text';
+      pText.textContent = pattern;
+      pItem.appendChild(pText);
+
+      const pRemove = document.createElement('button');
+      pRemove.className = 'remove-btn remove-pattern-btn';
+      pRemove.dataset.ruleIndex = index;
+      pRemove.dataset.patternIndex = patternIndex;
+      pRemove.title = 'Remove';
+      pRemove.setAttribute('aria-label', 'Remove pattern: ' + pattern);
+      pRemove.textContent = '×';
+      pItem.appendChild(pRemove);
+
+      patternsDiv.appendChild(pItem);
+    });
+
+    const addForm = document.createElement('div');
+    addForm.className = 'add-pattern-form';
+
+    const pInput = document.createElement('input');
+    pInput.type = 'text';
+    pInput.className = 'pattern-input';
+    pInput.placeholder = 'URL pattern (e.g., *github.com*)';
+    pInput.id = 'pattern-input-' + index;
+    pInput.setAttribute('aria-label', 'URL pattern for ' + rule.groupName);
+    addForm.appendChild(pInput);
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-pattern-btn';
+    addBtn.dataset.ruleIndex = index;
+    addBtn.title = 'Add Pattern';
+    addBtn.setAttribute('aria-label', 'Add pattern to group: ' + rule.groupName);
+    addBtn.textContent = 'Add';
+    addForm.appendChild(addBtn);
+
+    patternsDiv.appendChild(addForm);
+    item.appendChild(patternsDiv);
+
     fragment.appendChild(item);
   });
 
@@ -471,13 +540,35 @@ function startEditingUrl(index) {
   const currentPattern = autoCloseSettings.urlPatterns[index];
   item.classList.add('editing');
   
-  item.innerHTML = `
-    <input type="text" class="url-edit-input" value="${escapeHtml(currentPattern)}" data-index="${index}" aria-label="Edit URL: ${escapeHtml(currentPattern)}">
-    <div class="url-item-buttons">
-      <button class="save-btn" data-index="${index}" title="Save" aria-label="Save URL: ${escapeHtml(currentPattern)}">Save</button>
-      <button class="cancel-btn" data-index="${index}" title="Cancel" aria-label="Cancel edit URL: ${escapeHtml(currentPattern)}">Cancel</button>
-    </div>
-  `;
+  item.innerHTML = '';
+  const urlInput = document.createElement('input');
+  urlInput.type = 'text';
+  urlInput.className = 'url-edit-input';
+  urlInput.value = currentPattern || '';
+  urlInput.dataset.index = index;
+  urlInput.setAttribute('aria-label', 'Edit URL: ' + currentPattern);
+  item.appendChild(urlInput);
+
+  const btnsDiv = document.createElement('div');
+  btnsDiv.className = 'url-item-buttons';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'save-btn';
+  saveBtn.dataset.index = index;
+  saveBtn.title = 'Save';
+  saveBtn.setAttribute('aria-label', 'Save URL: ' + currentPattern);
+  saveBtn.textContent = 'Save';
+  btnsDiv.appendChild(saveBtn);
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'cancel-btn';
+  cancelBtn.dataset.index = index;
+  cancelBtn.title = 'Cancel';
+  cancelBtn.setAttribute('aria-label', 'Cancel edit URL: ' + currentPattern);
+  cancelBtn.textContent = 'Cancel';
+  btnsDiv.appendChild(cancelBtn);
+
+  item.appendChild(btnsDiv);
   
   // Focus and select the input
   const input = item.querySelector('.url-edit-input');
@@ -534,13 +625,35 @@ function startEditingDuplicateAllowUrl(index) {
   const currentPattern = duplicatePreventionSettings.allowedDuplicatePatterns[index];
   item.classList.add('editing');
   
-  item.innerHTML = `
-    <input type="text" class="duplicate-url-edit-input" value="${escapeHtml(currentPattern)}" data-index="${index}" aria-label="Edit duplicate URL: ${escapeHtml(currentPattern)}">
-    <div class="url-item-buttons">
-      <button class="duplicate-save-btn" data-index="${index}" title="Save" aria-label="Save duplicate URL: ${escapeHtml(currentPattern)}">Save</button>
-      <button class="duplicate-cancel-btn" data-index="${index}" title="Cancel" aria-label="Cancel edit duplicate URL: ${escapeHtml(currentPattern)}">Cancel</button>
-    </div>
-  `;
+  item.innerHTML = '';
+  const dupInput = document.createElement('input');
+  dupInput.type = 'text';
+  dupInput.className = 'duplicate-url-edit-input';
+  dupInput.value = currentPattern || '';
+  dupInput.dataset.index = index;
+  dupInput.setAttribute('aria-label', 'Edit duplicate URL: ' + currentPattern);
+  item.appendChild(dupInput);
+
+  const btnsDiv2 = document.createElement('div');
+  btnsDiv2.className = 'url-item-buttons';
+
+  const saveBtn2 = document.createElement('button');
+  saveBtn2.className = 'duplicate-save-btn';
+  saveBtn2.dataset.index = index;
+  saveBtn2.title = 'Save';
+  saveBtn2.setAttribute('aria-label', 'Save duplicate URL: ' + currentPattern);
+  saveBtn2.textContent = 'Save';
+  btnsDiv2.appendChild(saveBtn2);
+
+  const cancelBtn2 = document.createElement('button');
+  cancelBtn2.className = 'duplicate-cancel-btn';
+  cancelBtn2.dataset.index = index;
+  cancelBtn2.title = 'Cancel';
+  cancelBtn2.setAttribute('aria-label', 'Cancel edit duplicate URL: ' + currentPattern);
+  cancelBtn2.textContent = 'Cancel';
+  btnsDiv2.appendChild(cancelBtn2);
+
+  item.appendChild(btnsDiv2);
   
   // Focus and select the input
   const input = item.querySelector('.duplicate-url-edit-input');
@@ -796,33 +909,68 @@ function startEditingGroupRule(index) {
   const rule = autoTabGroupingSettings.tabGroupRules[index];
   item.classList.add('editing');
   
-  item.innerHTML = `
-    <div class="group-rule-edit-form">
-      <div class="form-row">
-        <span class="form-label">Name:</span>
-        <input type="text" class="form-input group-rule-name-edit" value="${escapeHtml(rule.groupName)}" data-index="${index}" aria-label="Group rule name">
-      </div>
-      <div class="form-row">
-        <span class="form-label">Color:</span>
-        <select class="color-select group-rule-color-edit" data-index="${index}" aria-label="Group rule color">
-          <option value="">Random</option>
-          <option value="grey" ${rule.groupColor === 'grey' ? 'selected' : ''}>Grey</option>
-          <option value="blue" ${rule.groupColor === 'blue' ? 'selected' : ''}>Blue</option>
-          <option value="red" ${rule.groupColor === 'red' ? 'selected' : ''}>Red</option>
-          <option value="yellow" ${rule.groupColor === 'yellow' ? 'selected' : ''}>Yellow</option>
-          <option value="green" ${rule.groupColor === 'green' ? 'selected' : ''}>Green</option>
-          <option value="pink" ${rule.groupColor === 'pink' ? 'selected' : ''}>Pink</option>
-          <option value="purple" ${rule.groupColor === 'purple' ? 'selected' : ''}>Purple</option>
-          <option value="cyan" ${rule.groupColor === 'cyan' ? 'selected' : ''}>Cyan</option>
-          <option value="orange" ${rule.groupColor === 'orange' ? 'selected' : ''}>Orange</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <button class="save-btn group-rule-save-btn" data-index="${index}" title="Save" aria-label="Save group rule: ${escapeHtml(rule.groupName)}">Save</button>
-        <button class="cancel-btn group-rule-cancel-btn" data-index="${index}" title="Cancel" aria-label="Cancel edit group rule: ${escapeHtml(rule.groupName)}">Cancel</button>
-      </div>
-    </div>
-  `;
+  const formDiv = document.createElement('div');
+  formDiv.className = 'group-rule-edit-form';
+
+  const row1 = document.createElement('div');
+  row1.className = 'form-row';
+  const label1 = document.createElement('span');
+  label1.className = 'form-label';
+  label1.textContent = 'Name:';
+  const input1 = document.createElement('input');
+  input1.type = 'text';
+  input1.className = 'form-input group-rule-name-edit';
+  input1.value = rule.groupName || '';
+  input1.dataset.index = index;
+  input1.setAttribute('aria-label', 'Group rule name');
+  row1.appendChild(label1);
+  row1.appendChild(input1);
+  formDiv.appendChild(row1);
+
+  const row2 = document.createElement('div');
+  row2.className = 'form-row';
+  const label2 = document.createElement('span');
+  label2.className = 'form-label';
+  label2.textContent = 'Color:';
+  const select2 = document.createElement('select');
+  select2.className = 'color-select group-rule-color-edit';
+  select2.dataset.index = index;
+  select2.setAttribute('aria-label', 'Group rule color');
+
+  const colors = ['', 'grey', 'blue', 'red', 'yellow', 'green', 'pink', 'purple', 'cyan', 'orange'];
+  const colorNames = ['Random', 'Grey', 'Blue', 'Red', 'Yellow', 'Green', 'Pink', 'Purple', 'Cyan', 'Orange'];
+
+  colors.forEach((c, i) => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = colorNames[i];
+    if (rule.groupColor === c) opt.selected = true;
+    select2.appendChild(opt);
+  });
+  row2.appendChild(label2);
+  row2.appendChild(select2);
+  formDiv.appendChild(row2);
+
+  const row3 = document.createElement('div');
+  row3.className = 'form-row';
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'save-btn group-rule-save-btn';
+  saveBtn.dataset.index = index;
+  saveBtn.title = 'Save';
+  saveBtn.setAttribute('aria-label', 'Save group rule: ' + rule.groupName);
+  saveBtn.textContent = 'Save';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'cancel-btn group-rule-cancel-btn';
+  cancelBtn.dataset.index = index;
+  cancelBtn.title = 'Cancel';
+  cancelBtn.setAttribute('aria-label', 'Cancel edit group rule: ' + rule.groupName);
+  cancelBtn.textContent = 'Cancel';
+  row3.appendChild(saveBtn);
+  row3.appendChild(cancelBtn);
+  formDiv.appendChild(row3);
+
+  item.innerHTML = '';
+  item.appendChild(formDiv);
   
   // Focus the name input
   const nameInput = item.querySelector('.group-rule-name-edit');
