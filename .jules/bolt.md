@@ -108,3 +108,6 @@
 ## $(date +%Y-%m-%d) - Lazy String Allocation in O(N) Loops
 **Learning:** Functions that perform input normalization and check against multiple patterns often allocate memory for the normalized version unconditionally. If an earlier check passes, this allocation is redundant and degrades performance in hot paths (like tab status updates).
 **Action:** When validating multiple states (e.g. original string and normalized string) inside iterative loops, defer expensive allocations (like `.toLowerCase()`) using lazy evaluation so they only occur if the first short-circuit check fails.
+## 2026-08-28 - Avoid unused string allocations in rendering loops
+**Learning:** Performing unused, expensive string manipulations (like `escapeHtml`) inside UI rendering loops severely impacts rendering time and adds unnecessary GC overhead. This is often a leftover from refactoring when values are later safely assigned to native properties like `textContent` and `title`.
+**Action:** When assigning data to native DOM node properties, verify that any pre-escaped or formatted versions of those strings are actually still being used, and remove them if they are entirely redundant.

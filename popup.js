@@ -1920,9 +1920,11 @@ document.addEventListener('DOMContentLoaded', () => {
             tEl.dataset.tabid = String(tab.tabId);
             tEl.dataset.windowid = String(tab.windowId);
             tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
-            const escapedTitle = escapeHtml(baseTitle);
-            const escapedUrl = escapeHtml(tab.url || '');
 
+            // ⚡ Bolt Performance Optimization:
+            // Removed redundant unused escapeHtml allocations for title and url
+            // during the UI rendering hot loop, significantly reducing CPU overhead
+            // and GC pressure.
             const contentWrapper = document.createElement('div');
             contentWrapper.className = 'explorer-tab-content';
             contentWrapper.setAttribute('role', 'button');
@@ -2141,9 +2143,11 @@ document.addEventListener('DOMContentLoaded', () => {
           tEl.dataset.tabid = String(tab.id);
           tEl.dataset.windowid = String(w.id);
           tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
-          const escapedTitle = escapeHtml(tab.title || '(no title)');
-            const escapedUrl = escapeHtml(tab.url || '');
 
+            // ⚡ Bolt Performance Optimization:
+            // Removed redundant unused escapeHtml allocations for title and url
+            // during the UI rendering hot loop, significantly reducing CPU overhead
+            // and GC pressure.
             const contentWrapper = document.createElement('div');
             contentWrapper.className = 'explorer-tab-content';
             contentWrapper.setAttribute('role', 'button');
