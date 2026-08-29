@@ -507,6 +507,7 @@ function updateGroupRuleList() {
     const pInput = document.createElement('input');
     pInput.type = 'text';
     pInput.className = 'pattern-input';
+    pInput.maxLength = 200;
     pInput.placeholder = 'URL pattern (e.g., *github.com*)';
     pInput.id = 'pattern-input-' + index;
     pInput.setAttribute('aria-label', 'URL pattern for ' + rule.groupName);
@@ -544,6 +545,7 @@ function startEditingUrl(index) {
   const urlInput = document.createElement('input');
   urlInput.type = 'text';
   urlInput.className = 'url-edit-input';
+  urlInput.maxLength = 200;
   urlInput.value = currentPattern || '';
   urlInput.dataset.index = index;
   urlInput.setAttribute('aria-label', 'Edit URL: ' + currentPattern);
@@ -629,6 +631,7 @@ function startEditingDuplicateAllowUrl(index) {
   const dupInput = document.createElement('input');
   dupInput.type = 'text';
   dupInput.className = 'duplicate-url-edit-input';
+  dupInput.maxLength = 200;
   dupInput.value = currentPattern || '';
   dupInput.dataset.index = index;
   dupInput.setAttribute('aria-label', 'Edit duplicate URL: ' + currentPattern);
@@ -920,6 +923,7 @@ function startEditingGroupRule(index) {
   const input1 = document.createElement('input');
   input1.type = 'text';
   input1.className = 'form-input group-rule-name-edit';
+  input1.maxLength = 50;
   input1.value = rule.groupName || '';
   input1.dataset.index = index;
   input1.setAttribute('aria-label', 'Group rule name');
