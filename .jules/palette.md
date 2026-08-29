@@ -66,3 +66,6 @@
 ## 2025-05-23 - Add aria-live regions to empty states
 **Learning:** Dynamically rendered empty states (like "No tabs found") were not announced by screen readers because their parent containers lacked `role="status"` and `aria-live="polite"`.
 **Action:** When creating empty states that replace existing content asynchronously, ensure they are wrapped in an `aria-live` region so screen reader users are notified of the state change.
+## 2024-05-20 - Prevent invalid inputs before JS validation
+**Learning:** Using JS validation and inline feedback (e.g. `Max 50 chars`) is necessary for complex validation, but simple character limits on text inputs should first be enforced by native HTML `maxlength` attributes to provide immediate, native constraint and prevent the user from typing invalid lengths entirely.
+**Action:** Always add native HTML constraints like `maxlength` to input fields that have a hard character limit, serving as the first line of defense before any JavaScript validation logic triggers.

@@ -182,7 +182,7 @@
       <div class="menu-header" id="windowNameHeader" role="button" tabindex="0" aria-controls="windowNameContent" aria-expanded="false"><span>Window Name</span><span class="menu-arrow">▶</span></div>
       <div class="menu-content" id="windowNameContent">
         <div style="display:flex;gap:8px;align-items:center;">
-          <input id="windowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)" aria-label="Give this window a name" aria-describedby="windowLabelHelp" />
+          <input id="windowLabelInput" type="text" class="form-input" maxlength="50" placeholder="Give this window a name (e.g., Work, Research)" aria-label="Give this window a name" aria-describedby="windowLabelHelp" />
           <button id="saveWindowLabelBtn" class="btn-glass">Save</button>
         </div>
         <div id="windowLabelHelp" class="help-text" style="margin-top:8px;">This prefix will be added to the title of each tab in this window so the OS window title shows it when that tab is active.</div>
@@ -230,7 +230,7 @@
           </label>
         </div>
         <div class="url-list">
-          <input type="text" id="urlInput" class="form-input" placeholder="Enter URL pattern (e.g., *login*, https://example.com/auth*)" aria-label="Enter URL pattern">
+          <input type="text" id="urlInput" class="form-input" maxlength="200" placeholder="Enter URL pattern (e.g., *login*, https://example.com/auth*)" aria-label="Enter URL pattern">
           <button id="addUrlBtn" class="btn-glass">Add URL Pattern</button>
           <div id="urlListContainer"></div>
         </div>
@@ -276,7 +276,7 @@
         </div>
         <div class="url-list">
           <div style="display:flex; gap:8px;">
-            <input type="text" id="groupRuleNameInput" class="form-input" placeholder="Group name (e.g., Development)" aria-label="Group name">
+            <input type="text" id="groupRuleNameInput" class="form-input" maxlength="50" placeholder="Group name (e.g., Development)" aria-label="Group name">
             <select id="groupRuleColorSelect" class="dropdown-select" style="width:140px;" aria-label="Group rule color">
               <option value="">Random</option>
               <option value="grey">Grey</option>
@@ -321,7 +321,7 @@
         </div>
         <div class="actions"><label class="setting-label" for="duplicateBannerDelayInput">Banner timer (seconds)</label><input type="number" id="duplicateBannerDelayInput" class="form-input" value="5" min="1" max="300" style="width:100px;" aria-label="Duplicate banner timer in seconds"></div>
         <div class="url-list">
-          <input type="text" id="duplicateAllowInput" class="form-input" placeholder="URLs allowed to have duplicates (e.g., *github.com*, https://docs.google.com*)" aria-label="URLs allowed to have duplicates">
+          <input type="text" id="duplicateAllowInput" class="form-input" maxlength="200" placeholder="URLs allowed to have duplicates (e.g., *github.com*, https://docs.google.com*)" aria-label="URLs allowed to have duplicates">
           <button id="addDuplicateAllowBtn" class="btn-glass">Add Exception Pattern</button>
           <div id="duplicateAllowListContainer"></div>
         </div>
@@ -350,7 +350,7 @@
       <div class="menu-header"><span>Name this window</span></div>
       <div class="menu-content expanded" style="display:block;">
         <div style="display:flex;gap:8px;align-items:center;">
-          <input id="initWindowLabelInput" type="text" class="form-input" placeholder="Give this window a name (e.g., Work, Research)" aria-label="Give this window a name" aria-describedby="initWindowLabelHelp">
+          <input id="initWindowLabelInput" type="text" class="form-input" maxlength="50" placeholder="Give this window a name (e.g., Work, Research)" aria-label="Give this window a name" aria-describedby="initWindowLabelHelp">
           <button id="initSaveWindowLabelBtn" class="btn-glass">Save</button>
         </div>
         <div style="margin-top:6px;">
