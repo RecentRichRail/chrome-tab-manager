@@ -286,10 +286,8 @@ function updateUrlList() {
 
   autoCloseSettings.urlPatterns.forEach((pattern, index) => {
     // ⚡ Bolt Performance Optimization:
-    // Cache the output of escapeHtml to avoid redundant function calls and string allocations
-    // inside the template literal. This reduces CPU overhead during list rendering.
-    const escapedPattern = escapeHtml(pattern);
-
+    // Removed unused escapeHtml allocation for pattern during list rendering.
+    // This eliminates redundant CPU overhead and GC pressure.
     const item = document.createElement('div');
     item.className = 'url-item';
 
@@ -350,10 +348,8 @@ function updateDuplicateAllowList() {
 
   duplicatePreventionSettings.allowedDuplicatePatterns.forEach((pattern, index) => {
     // ⚡ Bolt Performance Optimization:
-    // Cache the output of escapeHtml to avoid redundant function calls and string allocations
-    // inside the template literal. This reduces CPU overhead during list rendering.
-    const escapedPattern = escapeHtml(pattern);
-
+    // Removed unused escapeHtml allocation for pattern during list rendering.
+    // This eliminates redundant CPU overhead and GC pressure.
     const item = document.createElement('div');
     item.className = 'url-item';
 
@@ -414,9 +410,8 @@ function updateGroupRuleList() {
 
   autoTabGroupingSettings.tabGroupRules.forEach((rule, index) => {
     // ⚡ Bolt Performance Optimization:
-    // Cache string transformations outside the template literal to reduce CPU overhead.
-    const escapedGroupName = escapeHtml(rule.groupName);
-
+    // Removed unused escapeHtml allocation for groupName during list rendering.
+    // This eliminates redundant CPU overhead and GC pressure.
     const item = document.createElement('div');
     item.className = 'group-rule-item';
     item.setAttribute('data-index', index);
