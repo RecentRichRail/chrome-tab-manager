@@ -1487,25 +1487,9 @@ document.addEventListener('DOMContentLoaded', () => {
       a.click();
       URL.revokeObjectURL(url);
 
-      const originalText = exportSettingsBtn.textContent;
-      exportSettingsBtn.textContent = 'Exported!';
-      exportSettingsBtn.style.color = 'var(--accent)';
-      exportSettingsBtn.disabled = true;
-      setTimeout(() => {
-        exportSettingsBtn.textContent = originalText;
-        exportSettingsBtn.style.color = '';
-        exportSettingsBtn.disabled = false;
-      }, 2000);
+      showButtonFeedback(exportSettingsBtn, 'Exported!');
     } catch (e) {
-      const originalText = exportSettingsBtn.textContent;
-      exportSettingsBtn.textContent = 'Export Failed';
-      exportSettingsBtn.style.color = '#ef4444';
-      exportSettingsBtn.disabled = true;
-      setTimeout(() => {
-        exportSettingsBtn.textContent = originalText;
-        exportSettingsBtn.style.color = '';
-        exportSettingsBtn.disabled = false;
-      }, 3000);
+      showButtonFeedback(exportSettingsBtn, 'Export Failed', true);
       console.error('Failed to export settings:', e);
     }
   });
@@ -1518,21 +1502,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // If we're waiting for confirmation, handle the save instead of opening file picker
     if (importSettingsBtn.dataset.pendingImport) {
         const pendingData = importSettingsBtn.dataset.pendingImport;
-        const origText = importSettingsBtn.dataset.origText || 'Import / Export';
         clearTimeout(importSettingsBtn.dataset.confirmTimeout);
+
+        // Restore original state before showing feedback
+        if (importSettingsBtn.dataset.origAriaLabel) {
+          importSettingsBtn.setAttribute('aria-label', importSettingsBtn.dataset.origAriaLabel);
+        } else {
+          importSettingsBtn.removeAttribute('aria-label');
+        }
+        if (importSettingsBtn.dataset.origText) {
+          importSettingsBtn.textContent = importSettingsBtn.dataset.origText;
+        }
+        importSettingsBtn.style.color = '';
+        delete importSettingsBtn.dataset.origText;
+        delete importSettingsBtn.dataset.origAriaLabel;
+        delete importSettingsBtn.dataset.pendingImport;
 
         try {
             await chrome.storage.sync.set(JSON.parse(pendingData));
-            importSettingsBtn.textContent = 'Imported Successfully!';
-            importSettingsBtn.style.color = 'var(--accent)';
-            importSettingsBtn.disabled = true;
-            delete importSettingsBtn.dataset.pendingImport;
+            showButtonFeedback(importSettingsBtn, 'Imported Successfully!');
             setTimeout(() => { window.location.reload(); }, 1500);
         } catch (err) {
-            importSettingsBtn.textContent = 'Import Failed';
-            importSettingsBtn.style.color = '#ef4444';
-            importSettingsBtn.disabled = true;
-            setTimeout(() => { importSettingsBtn.textContent = origText; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
+            showButtonFeedback(importSettingsBtn, 'Import Failed', true);
             console.error('Failed to import settings:', err);
         }
         return;
@@ -1546,11 +1537,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🛡️ Sentinel: Enforce file size limit (1MB) to prevent OOM/DoS
     const MAX_FILE_SIZE = 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
-      const orig = importSettingsBtn.textContent;
-      importSettingsBtn.textContent = 'File too large (Max 1MB)';
-      importSettingsBtn.style.color = '#ef4444';
-      importSettingsBtn.disabled = true;
-      setTimeout(() => { importSettingsBtn.textContent = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
+      showButtonFeedback(importSettingsBtn, 'File too large (Max 1MB)', true);
       importFileInput.value = '';
       return;
     }
@@ -1559,11 +1546,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const text = await file.text();
       const obj = JSON.parse(text);
       if (!obj) {
-        const orig = importSettingsBtn.textContent;
-        importSettingsBtn.textContent = 'Invalid file';
-        importSettingsBtn.style.color = '#ef4444';
-        importSettingsBtn.disabled = true;
-        setTimeout(() => { importSettingsBtn.textContent = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
+        showButtonFeedback(importSettingsBtn, 'Invalid file', true);
         return;
       }
 
@@ -1582,11 +1565,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (!settingsToImport) {
-        const orig = importSettingsBtn.textContent;
-        importSettingsBtn.textContent = 'Invalid settings format';
-        importSettingsBtn.style.color = '#ef4444';
-        importSettingsBtn.disabled = true;
-        setTimeout(() => { importSettingsBtn.textContent = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
+        showButtonFeedback(importSettingsBtn, 'Invalid settings format', true);
         return;
       }
 
@@ -1617,26 +1596,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Using inline feedback instead of alert/confirm
       const origText = importSettingsBtn.textContent;
+      const origAriaLabel = importSettingsBtn.getAttribute('aria-label') || '';
       importSettingsBtn.dataset.origText = origText;
+      if (origAriaLabel) importSettingsBtn.dataset.origAriaLabel = origAriaLabel;
       importSettingsBtn.dataset.pendingImport = JSON.stringify(settingsToImport);
-      importSettingsBtn.textContent = 'Confirm Overwrite?';
+
+      importSettingsBtn.innerHTML = 'Confirm Overwrite?';
       importSettingsBtn.style.color = '#ef4444'; // Red for warning
+      importSettingsBtn.setAttribute('aria-label', 'Confirm settings overwrite');
+
+      const statusEl = document.createElement('span');
+      statusEl.className = 'visually-hidden-status';
+      statusEl.setAttribute('role', 'status');
+      statusEl.setAttribute('aria-live', 'polite');
+      statusEl.style.position = 'absolute';
+      statusEl.style.width = '1px';
+      statusEl.style.height = '1px';
+      statusEl.style.padding = '0';
+      statusEl.style.margin = '-1px';
+      statusEl.style.overflow = 'hidden';
+      statusEl.style.clip = 'rect(0, 0, 0, 0)';
+      statusEl.style.whiteSpace = 'nowrap';
+      statusEl.style.border = '0';
+      statusEl.textContent = 'Please confirm overwriting settings by clicking again';
+      importSettingsBtn.appendChild(statusEl);
 
       importSettingsBtn.dataset.confirmTimeout = setTimeout(() => {
-        importSettingsBtn.textContent = origText;
+        importSettingsBtn.innerHTML = origText;
         importSettingsBtn.style.color = '';
+        if (importSettingsBtn.dataset.origAriaLabel) {
+          importSettingsBtn.setAttribute('aria-label', importSettingsBtn.dataset.origAriaLabel);
+        } else {
+          importSettingsBtn.removeAttribute('aria-label');
+        }
         delete importSettingsBtn.dataset.pendingImport;
         delete importSettingsBtn.dataset.origText;
+        delete importSettingsBtn.dataset.origAriaLabel;
         importFileInput.value = ''; // Reset file input
       }, 5000); // 5 seconds to confirm
 
       return; // Return early, the click handler does the actual save
     } catch (err) {
-      const orig = importSettingsBtn.textContent;
-      importSettingsBtn.textContent = 'Import Failed';
-      importSettingsBtn.style.color = '#ef4444';
-      importSettingsBtn.disabled = true;
-      setTimeout(() => { importSettingsBtn.textContent = orig; importSettingsBtn.style.color = ''; importSettingsBtn.disabled = false; }, 3000);
+      showButtonFeedback(importSettingsBtn, 'Import Failed', true);
       console.error('Failed to import settings:', err);
     }
   });

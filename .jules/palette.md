@@ -69,3 +69,6 @@
 ## 2024-05-20 - Prevent invalid inputs before JS validation
 **Learning:** Using JS validation and inline feedback (e.g. `Max 50 chars`) is necessary for complex validation, but simple character limits on text inputs should first be enforced by native HTML `maxlength` attributes to provide immediate, native constraint and prevent the user from typing invalid lengths entirely.
 **Action:** Always add native HTML constraints like `maxlength` to input fields that have a hard character limit, serving as the first line of defense before any JavaScript validation logic triggers.
+## 2024-10-15 - Async Action Accessibility Feedback
+**Learning:** Changing button text visually during async operations (e.g., "Expanding..." -> "Expanded!") is not announced to screen readers by default. If focus remains on the button, the user receives no audio feedback that the action completed.
+**Action:** Always inject a visually hidden `role="status"` element with `aria-live="polite"` inside the button during async operations, updating its text alongside the visual text to ensure screen reader users receive the same state communication.
