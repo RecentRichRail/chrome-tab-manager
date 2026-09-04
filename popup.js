@@ -1896,12 +1896,29 @@ document.addEventListener('DOMContentLoaded', () => {
         return parsed;
       }).filter(Boolean);
 
-      const matchesParsedPattern = (url, lowerUrl, parsed) => {
+      const matchesParsedPattern = (url, lazyLowerUrl, parsed) => {
         if (!url || url.length > 2000) return false;
-        if (parsed.exact) return lowerUrl === parsed.lowerPattern;
 
+        // ⚡ Bolt Performance Optimization:
+        // Defer lowerUrl materialization for exact matches to avoid GC overhead
+        // if lengths don't match, significantly improving matching performance in O(N) loops.
+        if (parsed.exact) {
+          if (url.length !== parsed.lowerPattern.length) return false;
+          let lowerUrl = typeof lazyLowerUrl === 'function' ? lazyLowerUrl() : (lazyLowerUrl || url.toLowerCase());
+          return lowerUrl === parsed.lowerPattern;
+        }
+
+        let lowerUrl = typeof lazyLowerUrl === 'function' ? lazyLowerUrl() : (lazyLowerUrl || url.toLowerCase());
         const lowerParts = parsed.lowerParts;
-        if (!lowerUrl.startsWith(lowerParts[0])) return false;
+        if (lowerParts[0] !== '' && !lowerUrl.startsWith(lowerParts[0])) return false;
+
+        // ⚡ Bolt Performance Optimization:
+        // Hoist trailing sequence checks (e.g., endsWith) before O(N) iterative loops
+        // to early-return on negative paths.
+        const lastPart = lowerParts[lowerParts.length - 1];
+        if (lastPart !== '' && !lowerUrl.endsWith(lastPart)) {
+          return false;
+        }
 
         let currentIndex = lowerParts[0].length;
         for (let i = 1; i < lowerParts.length - 1; i++) {
@@ -1912,9 +1929,7 @@ document.addEventListener('DOMContentLoaded', () => {
           currentIndex = foundIndex + part.length;
         }
 
-        const lastPart = lowerParts[lowerParts.length - 1];
         if (lastPart !== '') {
-          if (!lowerUrl.endsWith(lastPart)) return false;
           if (lowerUrl.length - lastPart.length < currentIndex) return false;
         }
         return true;
@@ -1922,7 +1937,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       filteredTabs = allTabs.filter(t => {
         if (!t.url || t.url.length > 2000) return false;
-        return parsedPatterns.some(parsed => matchesParsedPattern(t.url, t.lowerUrl, parsed));
+        return parsedPatterns.some(parsed => matchesParsedPattern(t.url, () => (t.lowerUrl !== undefined ? t.lowerUrl : t.url.toLowerCase()), parsed));
       });
     }
     return filteredTabs;
