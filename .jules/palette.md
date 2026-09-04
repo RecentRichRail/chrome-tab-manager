@@ -72,3 +72,6 @@
 ## 2024-10-15 - Async Action Accessibility Feedback
 **Learning:** Changing button text visually during async operations (e.g., "Expanding..." -> "Expanded!") is not announced to screen readers by default. If focus remains on the button, the user receives no audio feedback that the action completed.
 **Action:** Always inject a visually hidden `role="status"` element with `aria-live="polite"` inside the button during async operations, updating its text alongside the visual text to ensure screen reader users receive the same state communication.
+## 2024-05-24 - Prevent Race Conditions in Inline UI Feedback
+**Learning:** When temporarily modifying button text for inline validation feedback (e.g., changing "Save" to "Error"), reading the `originalText` dynamically inside the handler can create a race condition if the user triggers the action multiple times quickly. The second trigger will save the "Error" state as the original state, permanently corrupting the button text after the timeout.
+**Action:** Always include a guard clause (e.g., `if (button.textContent === message) return;`) or hardcode the restored state to prevent capturing intermediate feedback states as the baseline.

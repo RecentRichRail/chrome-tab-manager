@@ -23,10 +23,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   // focus input
   labelInput.focus();
 
+  function showFeedback(message) {
+    if (saveBtn.textContent === message) return; // Prevent state corruption if spammed
+    const originalText = saveBtn.textContent;
+    const originalBg = saveBtn.style.background;
+    saveBtn.textContent = message;
+    saveBtn.style.background = '#ef4444';
+
+    let srFeedback = document.getElementById('sr-feedback');
+    if (!srFeedback) {
+      srFeedback = document.createElement('div');
+      srFeedback.id = 'sr-feedback';
+      srFeedback.setAttribute('role', 'status');
+      srFeedback.style.position = 'absolute';
+      srFeedback.style.width = '1px';
+      srFeedback.style.height = '1px';
+      srFeedback.style.overflow = 'hidden';
+      srFeedback.style.clip = 'rect(0,0,0,0)';
+      document.body.appendChild(srFeedback);
+    }
+    srFeedback.textContent = message;
+
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.style.background = originalBg;
+      srFeedback.textContent = '';
+    }, 2000);
+  }
+
   saveBtn.addEventListener('click', async () => {
     const label = labelInput.value.trim();
     if (label.length > 50) {
-      alert('Window label cannot exceed 50 characters.');
+      showFeedback('Max 50 chars');
       return;
     }
     try {
@@ -50,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.key === 'Enter') {
       const label = labelInput.value.trim();
       if (label.length > 50) {
-        alert('Window label cannot exceed 50 characters.');
+        showFeedback('Max 50 chars');
         return;
       }
       try {
