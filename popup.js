@@ -51,6 +51,41 @@ function showButtonFeedback(btn, message, isError = false) {
   }, 2000);
 }
 
+
+
+// 🎨 Palette: Global announcer for screen readers
+function announceToScreenReader(text) {
+  let announcer = document.getElementById('global-a11y-announcer');
+  if (!announcer) {
+    announcer = document.createElement('div');
+    announcer.id = 'global-a11y-announcer';
+    announcer.setAttribute('role', 'status');
+    announcer.setAttribute('aria-live', 'polite');
+    announcer.style.position = 'absolute';
+    announcer.style.width = '1px';
+    announcer.style.height = '1px';
+    announcer.style.padding = '0';
+    announcer.style.margin = '-1px';
+    announcer.style.overflow = 'hidden';
+    announcer.style.clip = 'rect(0, 0, 0, 0)';
+    announcer.style.whiteSpace = 'nowrap';
+    announcer.style.border = '0';
+    document.body.appendChild(announcer);
+  }
+  // Force a tiny delay so sequential identical messages re-announce
+  setTimeout(() => {
+    announcer.textContent = text;
+  }, 50);
+}
+
+// 🎨 Palette: Helper function to securely update button text and announce state
+function setAsyncButtonState(btn, text) {
+  if (!btn) return;
+  btn.textContent = text;
+  announceToScreenReader(text);
+}
+
+
 // Auto-close settings management
 let autoCloseSettings = {
   autoCloseEnabled: false,
@@ -1169,7 +1204,7 @@ async function expandAllGroups() {
   const btn = document.getElementById('expandAllBtn');
   if (btn) {
     btn.disabled = true;
-    btn.textContent = 'Expanding...';
+    setAsyncButtonState(btn, 'Expanding...');
   }
   try {
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -1188,14 +1223,14 @@ async function expandAllGroups() {
 
     console.log(`Expanded ${tabGroups.length} tab groups`);
     updateTabCount();
-    if (btn) btn.textContent = 'Expanded!';
+    if (btn) setAsyncButtonState(btn, 'Expanded!');
   } catch (error) {
     console.error('Error expanding groups:', error);
-    if (btn) btn.textContent = 'Error';
+    if (btn) setAsyncButtonState(btn, 'Error');
   } finally {
     if (btn) {
       setTimeout(() => {
-        btn.textContent = 'Expand All Groups';
+        setAsyncButtonState(btn, 'Expand All Groups');
         btn.disabled = false;
       }, 1500);
     }
@@ -1207,7 +1242,7 @@ async function collapseAllGroups() {
   const btn = document.getElementById('collapseAllBtn');
   if (btn) {
     btn.disabled = true;
-    btn.textContent = 'Collapsing...';
+    setAsyncButtonState(btn, 'Collapsing...');
   }
   try {
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -1228,14 +1263,14 @@ async function collapseAllGroups() {
 
     console.log('Collapsed all inactive tab groups');
     updateTabCount();
-    if (btn) btn.textContent = 'Collapsed!';
+    if (btn) setAsyncButtonState(btn, 'Collapsed!');
   } catch (error) {
     console.error('Error collapsing groups:', error);
-    if (btn) btn.textContent = 'Error';
+    if (btn) setAsyncButtonState(btn, 'Error');
   } finally {
     if (btn) {
       setTimeout(() => {
-        btn.textContent = 'Collapse All Groups';
+        setAsyncButtonState(btn, 'Collapse All Groups');
         btn.disabled = false;
       }, 1500);
     }
@@ -1247,7 +1282,7 @@ async function regroupAllTabs() {
   const btn = document.getElementById('regroupAllBtn');
   if (btn) {
     btn.disabled = true;
-    btn.textContent = 'Regrouping...';
+    setAsyncButtonState(btn, 'Regrouping...');
   }
   try {
     console.log('Regrouping all tabs based on current rules...');
@@ -1259,18 +1294,18 @@ async function regroupAllTabs() {
       console.log('Successfully regrouped all tabs');
       // Update the tab count and group info
       setTimeout(updateTabCount, 500);
-      if (btn) btn.textContent = 'Regrouped!';
+      if (btn) setAsyncButtonState(btn, 'Regrouped!');
     } else {
       console.error('Failed to regroup tabs:', response?.error);
-      if (btn) btn.textContent = 'Error';
+      if (btn) setAsyncButtonState(btn, 'Error');
     }
   } catch (error) {
     console.error('Error regrouping tabs:', error);
-    if (btn) btn.textContent = 'Error';
+    if (btn) setAsyncButtonState(btn, 'Error');
   } finally {
     if (btn) {
       setTimeout(() => {
-        btn.textContent = 'Regroup All Tabs';
+        setAsyncButtonState(btn, 'Regroup All Tabs');
         btn.disabled = false;
       }, 1500);
     }
