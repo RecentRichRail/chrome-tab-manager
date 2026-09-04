@@ -229,7 +229,11 @@ async function groupAllExistingTabs() {
 
 // Helper function to find a matching rule for a given URL
 function findMatchingTabGroupRule(rules, url) {
-  const lowerUrl = url.toLowerCase();
+  let lowerUrl = null;
+  const getLowerUrl = () => {
+    if (lowerUrl === null) lowerUrl = url.toLowerCase();
+    return lowerUrl;
+  };
 
   return rules.find(rule => {
     if (!rule.patterns || rule.patterns.length === 0) {
@@ -237,7 +241,7 @@ function findMatchingTabGroupRule(rules, url) {
     }
 
     const matches = rule.patterns.some(pattern => {
-      const result = matchesPattern(url, pattern, lowerUrl);
+      const result = matchesPattern(url, pattern, getLowerUrl);
       return result;
     });
 
@@ -768,11 +772,23 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
     // When doing an exact match without wildcards, if cachedLowerUrl isn't provided,
     // explicitly check string lengths first to avoid O(N) string allocation (toLowerCase).
     const exact = parsedPattern.exact;
-    if (exact && !cachedLowerUrl) {
+
+    // ⚡ Bolt Performance Optimization:
+    // When doing an exact match without wildcards, explicitly check string lengths
+    // first to avoid O(N) string allocation (toLowerCase). We also defer the lowerUrl
+    // creation until after this check if cachedLowerUrl was not provided.
+    if (exact && !cachedLowerUrl && typeof cachedLowerUrl !== 'function') {
       if (url.length !== parsedPattern.lowerPattern.length) return false;
     }
 
-    const lowerUrl = cachedLowerUrl || url.toLowerCase();
+    // Support passing a getter function for lazy evaluation of lowerUrl
+    let lowerUrl = null;
+    if (typeof cachedLowerUrl === 'function') {
+      if (exact && url.length !== parsedPattern.lowerPattern.length) return false; // Early return before calling getter
+      lowerUrl = cachedLowerUrl();
+    } else {
+      lowerUrl = cachedLowerUrl || url.toLowerCase();
+    }
 
     if (exact) {
       return lowerUrl === parsedPattern.lowerPattern;
@@ -862,9 +878,14 @@ async function handleAutoClose(tabId, url) {
     // This optimization avoids URL parsing overhead during rapid tab lifecycles, reducing execution time by ~99% for non-matching cases.
     
     // Check if URL matches any pattern
-    const lowerUrl = url.toLowerCase();
+    let lowerUrl = null;
+    const getLowerUrl = () => {
+      if (lowerUrl === null) lowerUrl = url.toLowerCase();
+      return lowerUrl;
+    };
+
     const shouldClose = settings.urlPatterns.some(pattern => {
-      const matches = matchesPattern(url, pattern, lowerUrl);
+      const matches = matchesPattern(url, pattern, getLowerUrl);
 
       return matches;
     });
@@ -920,8 +941,12 @@ function scheduleAutoCloseTimeout(tabId, settings) {
       console.log(`Auto-close timeout triggered for tab ${tabId}`);
       const tab = await chrome.tabs.get(tabId);
       if (tab && tab.url) {
-        const lowerUrl = tab.url.toLowerCase();
-        if (settings.urlPatterns.some(pattern => matchesPattern(tab.url, pattern, lowerUrl))) {
+        let lowerUrl = null;
+        const getLowerUrl = () => {
+          if (lowerUrl === null) lowerUrl = tab.url.toLowerCase();
+          return lowerUrl;
+        };
+        if (settings.urlPatterns.some(pattern => matchesPattern(tab.url, pattern, getLowerUrl))) {
           await chrome.tabs.remove(tabId);
           console.log(`Auto-closed tab: ${sanitizeUrlForLog(tab.url)}`);
         } else {
@@ -1084,8 +1109,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const settings = await getAutoCloseSettings();
           const tab = await chrome.tabs.get(ctx.tabId);
           if (tab && tab.url) {
-            const lowerUrl = tab.url.toLowerCase();
-            if (settings.urlPatterns.some(pattern => matchesPattern(tab.url, pattern, lowerUrl))) {
+            let lowerUrl = null;
+            const getLowerUrl = () => {
+              if (lowerUrl === null) lowerUrl = tab.url.toLowerCase();
+              return lowerUrl;
+            };
+            if (settings.urlPatterns.some(pattern => matchesPattern(tab.url, pattern, getLowerUrl))) {
               await chrome.tabs.remove(ctx.tabId);
               console.log(`Auto-closed tab via banner: ${sanitizeUrlForLog(tab.url)}`);
             }

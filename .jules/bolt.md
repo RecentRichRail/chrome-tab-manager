@@ -111,3 +111,7 @@
 ## 2026-08-28 - Avoid unused string allocations in rendering loops
 **Learning:** Performing unused, expensive string manipulations (like `escapeHtml`) inside UI rendering loops severely impacts rendering time and adds unnecessary GC overhead. This is often a leftover from refactoring when values are later safely assigned to native properties like `textContent` and `title`.
 **Action:** When assigning data to native DOM node properties, verify that any pre-escaped or formatted versions of those strings are actually still being used, and remove them if they are entirely redundant.
+
+## 2026-09-02 - Lazy String Allocation in Regex Matchers
+**Learning:** Passing a pre-allocated lowercased string into a pattern matcher that can short-circuit early (e.g., via length check on exact matches) causes redundant memory allocation and CPU overhead in O(N) loops.
+**Action:** Defer expensive string allocations like `.toLowerCase()` by wrapping them in a getter or lazy check inside the matcher function, ensuring the allocation only happens if the early short-circuit conditions fail.
