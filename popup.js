@@ -2061,6 +2061,8 @@ document.addEventListener('DOMContentLoaded', () => {
       headerEl.setAttribute('role', 'button');
       headerEl.setAttribute('tabindex', '0');
       headerEl.setAttribute('aria-controls', contentId);
+      headerEl.setAttribute('aria-label', `Toggle title: ${title}`);
+      headerEl.title = `Toggle title: ${title}`;
       let totalCount = 0;
       for (const m of winMap.values()) { for (const tabs of m.values()) totalCount += tabs.length; }
       headerEl.innerHTML = '';
@@ -2084,6 +2086,8 @@ document.addEventListener('DOMContentLoaded', () => {
         wHeader.setAttribute('role', 'button');
         wHeader.setAttribute('tabindex', '0');
         wHeader.setAttribute('aria-controls', wContentId);
+        wHeader.setAttribute('aria-label', `Toggle window: ${headerTitle}`);
+        wHeader.title = `Toggle window: ${headerTitle}`;
         wHeader.innerHTML = '';
         const wTitleSpan = document.createElement('span'); wTitleSpan.textContent = headerTitle;
         const wArrowSpan = document.createElement('span'); wArrowSpan.className = 'menu-arrow'; wArrowSpan.textContent = '▶';
@@ -2113,6 +2117,8 @@ document.addEventListener('DOMContentLoaded', () => {
           gHeader.setAttribute('role', 'button');
           gHeader.setAttribute('tabindex', '0');
           gHeader.setAttribute('aria-controls', gContentId);
+          gHeader.setAttribute('aria-label', `Toggle group: ${groupTitle}`);
+          gHeader.title = `Toggle group: ${groupTitle}`;
           gHeader.innerHTML = '';
           const gNameDiv = document.createElement('div'); gNameDiv.className = 'group-rule-name'; gNameDiv.textContent = groupTitle;
           const gArrowSpan = document.createElement('span'); gArrowSpan.className = 'menu-arrow'; gArrowSpan.textContent = '▶';
@@ -2278,6 +2284,8 @@ document.addEventListener('DOMContentLoaded', () => {
       headerEl.setAttribute('role', 'button');
       headerEl.setAttribute('tabindex', '0');
       headerEl.setAttribute('aria-controls', contentId);
+      headerEl.setAttribute('aria-label', `Toggle window: ${headerTitle}`);
+      headerEl.title = `Toggle window: ${headerTitle}`;
       headerEl.innerHTML = '';
       const hTitleSpan = document.createElement('span'); hTitleSpan.textContent = headerTitle;
       const hArrowSpan = document.createElement('span'); hArrowSpan.className = 'menu-arrow'; hArrowSpan.textContent = '▶';
@@ -2329,6 +2337,8 @@ document.addEventListener('DOMContentLoaded', () => {
         groupHeader.setAttribute('role', 'button');
         groupHeader.setAttribute('tabindex', '0');
         groupHeader.setAttribute('aria-controls', groupContentId);
+        groupHeader.setAttribute('aria-label', `Toggle group: ${groupTitle}`);
+        groupHeader.title = `Toggle group: ${groupTitle}`;
         groupHeader.innerHTML = '';
         const ghNameDiv = document.createElement('div'); ghNameDiv.className = 'group-rule-name'; ghNameDiv.textContent = groupTitle;
         const ghArrowSpan = document.createElement('span'); ghArrowSpan.className = 'menu-arrow'; ghArrowSpan.textContent = '▶';
