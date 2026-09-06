@@ -83,7 +83,7 @@
 ## 2026-08-06 - Redundant string allocations in early exit paths
 **Learning:** Functions that accept configuration arrays (like list of patterns to match) and default to empty arrays will unnecessarily allocate memory (like `toLowerCase` and `split`) if the string operations occur before checking if the array is empty. This adds measurable overhead per iteration, especially during hot paths like tab updates.
 **Action:** Always place early returns (e.g., `if (!patterns || patterns.length === 0) return false;`) before any string manipulation or parsing logic to avoid redundant O(1) CPU/memory cost when features are disabled by default.
-## $(date +%Y-%m-%d) - Optimize URL Normalization via String Slicing
+## 2026-09-03 - Optimize URL Normalization via String Slicing
 **Learning:** Using `String.prototype.split('#')[0]` for removing hash fragments from strings incurs unnecessary array allocation and full string traversal overhead compared to `indexOf('#')` and `slice()`. When parsing tens of thousands of URLs sequentially (e.g. during duplicate tab processing or tab grouping), this can cause blocking.
 **Action:** Prefer using `indexOf` and `slice` over `split` for simple string truncation operations in hot paths.
 
@@ -105,7 +105,7 @@
 ## 2026-08-26 - Optimize URL pattern matching for Exact Matches and Fast Rejects
 **Learning:** Using `indexOf('*') === -1` allows short-circuiting expensive array allocations (`.split('*')`) for exact matches in hot loops. Hoisting the trailing sequence check (`endsWith`) avoids the O(N) internal loop entirely for negative matches.
 **Action:** When performing regex-like string matching with wildcards in JavaScript hot loops, use `indexOf('*') === -1` to short-circuit expensive array allocations for exact matches, and hoist trailing sequence checks before O(N) iterative loops to early-return on negative paths.
-## $(date +%Y-%m-%d) - Lazy String Allocation in O(N) Loops
+## 2026-09-03 - Lazy String Allocation in O(N) Loops
 **Learning:** Functions that perform input normalization and check against multiple patterns often allocate memory for the normalized version unconditionally. If an earlier check passes, this allocation is redundant and degrades performance in hot paths (like tab status updates).
 **Action:** When validating multiple states (e.g. original string and normalized string) inside iterative loops, defer expensive allocations (like `.toLowerCase()`) using lazy evaluation so they only occur if the first short-circuit check fails.
 ## 2026-08-28 - Avoid unused string allocations in rendering loops
@@ -115,3 +115,6 @@
 ## 2026-09-02 - Lazy String Allocation in Regex Matchers
 **Learning:** Passing a pre-allocated lowercased string into a pattern matcher that can short-circuit early (e.g., via length check on exact matches) causes redundant memory allocation and CPU overhead in O(N) loops.
 **Action:** Defer expensive string allocations like `.toLowerCase()` by wrapping them in a getter or lazy check inside the matcher function, ensuring the allocation only happens if the early short-circuit conditions fail.
+## 2026-09-03 - Avoid unused string allocations in rendering loops
+**Learning:** Performing unused, expensive string manipulations (like `escapeHtml`) inside UI rendering loops severely impacts rendering time and adds unnecessary GC overhead. This is often a leftover from refactoring when values are later safely assigned to native properties like `textContent`.
+**Action:** When assigning data to native DOM node properties, verify that any pre-escaped or formatted versions of those strings are actually still being used, and remove them if they are entirely redundant.
