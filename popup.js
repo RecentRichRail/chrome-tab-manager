@@ -25,21 +25,7 @@ function showButtonFeedback(btn, message, isError = false) {
   btn.setAttribute('aria-label', message);
 
   // Create visually hidden aria-live status element
-  const statusEl = document.createElement('span');
-  statusEl.className = 'visually-hidden-status';
-  statusEl.setAttribute('role', 'status');
-  statusEl.setAttribute('aria-live', 'polite');
-  statusEl.style.position = 'absolute';
-  statusEl.style.width = '1px';
-  statusEl.style.height = '1px';
-  statusEl.style.padding = '0';
-  statusEl.style.margin = '-1px';
-  statusEl.style.overflow = 'hidden';
-  statusEl.style.clip = 'rect(0, 0, 0, 0)';
-  statusEl.style.whiteSpace = 'nowrap';
-  statusEl.style.border = '0';
-  statusEl.textContent = message;
-  btn.appendChild(statusEl);
+  announceToScreenReader(message);
 
   btn.disabled = true;
   setTimeout(() => {
@@ -887,21 +873,7 @@ function removeGroupRule(index, btn = null) {
       btn.style.borderColor = '#ef4444';
       btn.setAttribute('aria-label', 'Confirm deletion');
 
-      const statusEl = document.createElement('span');
-      statusEl.className = 'visually-hidden-status';
-      statusEl.setAttribute('role', 'status');
-      statusEl.setAttribute('aria-live', 'polite');
-      statusEl.style.position = 'absolute';
-      statusEl.style.width = '1px';
-      statusEl.style.height = '1px';
-      statusEl.style.padding = '0';
-      statusEl.style.margin = '-1px';
-      statusEl.style.overflow = 'hidden';
-      statusEl.style.clip = 'rect(0, 0, 0, 0)';
-      statusEl.style.whiteSpace = 'nowrap';
-      statusEl.style.border = '0';
-      statusEl.textContent = 'Please confirm deletion by clicking again';
-      btn.appendChild(statusEl);
+      announceToScreenReader('Please confirm deletion by clicking again');
 
       // Reset after 3 seconds if not clicked again
       btn.dataset.confirmTimeout = setTimeout(() => {
@@ -1639,21 +1611,7 @@ document.addEventListener('DOMContentLoaded', () => {
       importSettingsBtn.style.color = '#ef4444'; // Red for warning
       importSettingsBtn.setAttribute('aria-label', 'Confirm settings overwrite');
 
-      const statusEl = document.createElement('span');
-      statusEl.className = 'visually-hidden-status';
-      statusEl.setAttribute('role', 'status');
-      statusEl.setAttribute('aria-live', 'polite');
-      statusEl.style.position = 'absolute';
-      statusEl.style.width = '1px';
-      statusEl.style.height = '1px';
-      statusEl.style.padding = '0';
-      statusEl.style.margin = '-1px';
-      statusEl.style.overflow = 'hidden';
-      statusEl.style.clip = 'rect(0, 0, 0, 0)';
-      statusEl.style.whiteSpace = 'nowrap';
-      statusEl.style.border = '0';
-      statusEl.textContent = 'Please confirm overwriting settings by clicking again';
-      importSettingsBtn.appendChild(statusEl);
+      announceToScreenReader('Please confirm overwriting settings by clicking again');
 
       importSettingsBtn.dataset.confirmTimeout = setTimeout(() => {
         importSettingsBtn.innerHTML = origText;
@@ -1719,21 +1677,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.style.color = 'var(--brand)';
       btn.setAttribute('aria-label', 'Confirm regroup all tabs');
 
-      const statusEl = document.createElement('span');
-      statusEl.className = 'visually-hidden-status';
-      statusEl.setAttribute('role', 'status');
-      statusEl.setAttribute('aria-live', 'polite');
-      statusEl.style.position = 'absolute';
-      statusEl.style.width = '1px';
-      statusEl.style.height = '1px';
-      statusEl.style.padding = '0';
-      statusEl.style.margin = '-1px';
-      statusEl.style.overflow = 'hidden';
-      statusEl.style.clip = 'rect(0, 0, 0, 0)';
-      statusEl.style.whiteSpace = 'nowrap';
-      statusEl.style.border = '0';
-      statusEl.textContent = 'Please confirm regroup all by clicking again';
-      btn.appendChild(statusEl);
+      announceToScreenReader('Please confirm regroup all by clicking again');
 
       btn.dataset.confirmTimeout = setTimeout(() => {
         btn.innerHTML = originalText;
