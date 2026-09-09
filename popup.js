@@ -12,7 +12,7 @@ function escapeHtml(s) {
 function showButtonFeedback(btn, message, isError = false) {
   if (!btn || btn.dataset.feedbackActive) return;
   btn.dataset.feedbackActive = 'true';
-  const originalText = btn.innerHTML;
+  const originalChildNodes = Array.from(btn.childNodes);
   const originalColor = btn.style.color;
   const originalAriaLabel = btn.getAttribute('aria-label') || '';
 
@@ -43,7 +43,7 @@ function showButtonFeedback(btn, message, isError = false) {
 
   btn.disabled = true;
   setTimeout(() => {
-    btn.innerHTML = originalText;
+    btn.replaceChildren(); originalChildNodes.forEach(node => btn.appendChild(node));
     btn.style.color = originalColor;
     if (originalAriaLabel) {
       btn.setAttribute('aria-label', originalAriaLabel);
@@ -305,16 +305,47 @@ function updateAutoTabGroupingUI() {
 // Update the URL list display
 function updateUrlList() {
   const container = document.getElementById('urlListContainer');
-  container.innerHTML = '';
+  container.replaceChildren();
   
   if (!autoCloseSettings.urlPatterns || autoCloseSettings.urlPatterns.length === 0) {
-    container.innerHTML = `
-      <div style="text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;" role="status" aria-live="polite">
-        <svg viewBox="0 0 24 24" style="width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-        <div style="font-size:14px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No URL patterns</div>
-        <div style="font-size:12px; margin-bottom: 12px;">Add one above to start automatically closing matching tabs.</div>
-      </div>
-    `;
+    const emptyStateEl = document.createElement('div');
+    emptyStateEl.style.textAlign = 'center';
+    emptyStateEl.style.padding = '20px';
+    emptyStateEl.style.color = 'var(--muted)';
+    emptyStateEl.style.border = '1px dashed var(--glass-stroke)';
+    emptyStateEl.style.borderRadius = '8px';
+    emptyStateEl.style.marginTop = '8px';
+    emptyStateEl.setAttribute('role', 'status');
+    emptyStateEl.setAttribute('aria-live', 'polite');
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('style', 'width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;');
+    svg.setAttribute('aria-hidden', 'true');
+    const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path1.setAttribute('d', 'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71');
+    const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path2.setAttribute('d', 'M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71');
+    svg.appendChild(path1);
+    svg.appendChild(path2);
+
+    const titleDiv = document.createElement('div');
+    titleDiv.style.fontSize = '14px';
+    titleDiv.style.fontWeight = '600';
+    titleDiv.style.color = 'var(--text-primary)';
+    titleDiv.style.marginBottom = '4px';
+    titleDiv.textContent = 'No URL patterns';
+
+    const descDiv = document.createElement('div');
+    descDiv.style.fontSize = '12px';
+    descDiv.style.marginBottom = '12px';
+    descDiv.textContent = 'Add one above to start automatically closing matching tabs.';
+
+    emptyStateEl.appendChild(svg);
+    emptyStateEl.appendChild(titleDiv);
+    emptyStateEl.appendChild(descDiv);
+
+    container.appendChild(emptyStateEl);
     return;
   }
 
@@ -367,16 +398,58 @@ function updateUrlList() {
 // Update the duplicate allow list display
 function updateDuplicateAllowList() {
   const container = document.getElementById('duplicateAllowListContainer');
-  container.innerHTML = '';
+  container.replaceChildren();
   
   if (!duplicatePreventionSettings.allowedDuplicatePatterns || duplicatePreventionSettings.allowedDuplicatePatterns.length === 0) {
-    container.innerHTML = `
-      <div style="text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;" role="status" aria-live="polite">
-        <svg viewBox="0 0 24 24" style="width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        <div style="font-size:14px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No exceptions</div>
-        <div style="font-size:12px; margin-bottom: 12px;">All URLs will be checked for duplicates.</div>
-      </div>
-    `;
+    const emptyStateEl = document.createElement('div');
+    emptyStateEl.style.textAlign = 'center';
+    emptyStateEl.style.padding = '20px';
+    emptyStateEl.style.color = 'var(--muted)';
+    emptyStateEl.style.border = '1px dashed var(--glass-stroke)';
+    emptyStateEl.style.borderRadius = '8px';
+    emptyStateEl.style.marginTop = '8px';
+    emptyStateEl.setAttribute('role', 'status');
+    emptyStateEl.setAttribute('aria-live', 'polite');
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('style', 'width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;');
+    svg.setAttribute('aria-hidden', 'true');
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', '12');
+    circle.setAttribute('cy', '12');
+    circle.setAttribute('r', '10');
+    const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line1.setAttribute('x1', '12');
+    line1.setAttribute('y1', '8');
+    line1.setAttribute('x2', '12');
+    line1.setAttribute('y2', '12');
+    const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line2.setAttribute('x1', '12');
+    line2.setAttribute('y1', '16');
+    line2.setAttribute('x2', '12.01');
+    line2.setAttribute('y2', '16');
+    svg.appendChild(circle);
+    svg.appendChild(line1);
+    svg.appendChild(line2);
+
+    const titleDiv = document.createElement('div');
+    titleDiv.style.fontSize = '14px';
+    titleDiv.style.fontWeight = '600';
+    titleDiv.style.color = 'var(--text-primary)';
+    titleDiv.style.marginBottom = '4px';
+    titleDiv.textContent = 'No exceptions';
+
+    const descDiv = document.createElement('div');
+    descDiv.style.fontSize = '12px';
+    descDiv.style.marginBottom = '12px';
+    descDiv.textContent = 'All URLs will be checked for duplicates.';
+
+    emptyStateEl.appendChild(svg);
+    emptyStateEl.appendChild(titleDiv);
+    emptyStateEl.appendChild(descDiv);
+
+    container.appendChild(emptyStateEl);
     return;
   }
 
@@ -429,16 +502,44 @@ function updateDuplicateAllowList() {
 // Update the group rule list display
 function updateGroupRuleList() {
   const container = document.getElementById('groupRuleListContainer');
-  container.innerHTML = '';
+  container.replaceChildren();
   
   if (!autoTabGroupingSettings.tabGroupRules || autoTabGroupingSettings.tabGroupRules.length === 0) {
-    container.innerHTML = `
-      <div style="text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;" role="status" aria-live="polite">
-        <svg viewBox="0 0 24 24" style="width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        <div style="font-size:14px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No tab group rules</div>
-        <div style="font-size:12px; margin-bottom: 12px;">Create one above to start organizing tabs automatically.</div>
-      </div>
-    `;
+    const emptyStateEl = document.createElement('div');
+    emptyStateEl.style.textAlign = 'center';
+    emptyStateEl.style.padding = '20px';
+    emptyStateEl.style.color = 'var(--muted)';
+    emptyStateEl.style.border = '1px dashed var(--glass-stroke)';
+    emptyStateEl.style.borderRadius = '8px';
+    emptyStateEl.style.marginTop = '8px';
+    emptyStateEl.setAttribute('role', 'status');
+    emptyStateEl.setAttribute('aria-live', 'polite');
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('style', 'width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;');
+    svg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5');
+    svg.appendChild(path);
+
+    const titleDiv = document.createElement('div');
+    titleDiv.style.fontSize = '14px';
+    titleDiv.style.fontWeight = '600';
+    titleDiv.style.color = 'var(--text-primary)';
+    titleDiv.style.marginBottom = '4px';
+    titleDiv.textContent = 'No tab group rules';
+
+    const descDiv = document.createElement('div');
+    descDiv.style.fontSize = '12px';
+    descDiv.style.marginBottom = '12px';
+    descDiv.textContent = 'Create one above to start organizing tabs automatically.';
+
+    emptyStateEl.appendChild(svg);
+    emptyStateEl.appendChild(titleDiv);
+    emptyStateEl.appendChild(descDiv);
+
+    container.appendChild(emptyStateEl);
     return;
   }
 
@@ -575,7 +676,7 @@ function startEditingUrl(index) {
   const currentPattern = autoCloseSettings.urlPatterns[index];
   item.classList.add('editing');
   
-  item.innerHTML = '';
+  item.replaceChildren();
   const urlInput = document.createElement('input');
   urlInput.type = 'text';
   urlInput.className = 'url-edit-input';
@@ -661,7 +762,7 @@ function startEditingDuplicateAllowUrl(index) {
   const currentPattern = duplicatePreventionSettings.allowedDuplicatePatterns[index];
   item.classList.add('editing');
   
-  item.innerHTML = '';
+  item.replaceChildren();
   const dupInput = document.createElement('input');
   dupInput.type = 'text';
   dupInput.className = 'duplicate-url-edit-input';
@@ -877,12 +978,12 @@ function removeGroupRule(index, btn = null) {
   if (btn) {
     if (!btn.dataset.confirmState) {
       // First click: show confirmation inline
-      const originalText = btn.innerHTML;
+      const originalChildNodes = Array.from(btn.childNodes);
       const originalAriaLabel = btn.getAttribute('aria-label') || '';
       btn.dataset.confirmState = 'true';
-      btn.dataset.originalText = originalText;
+      btn.dataset.originalText = btn.textContent;
       if (originalAriaLabel) btn.dataset.originalAriaLabel = originalAriaLabel;
-      btn.innerHTML = 'Sure?';
+      btn.textContent = 'Sure?';
       btn.style.color = '#ef4444'; // Red text for warning
       btn.style.borderColor = '#ef4444';
       btn.setAttribute('aria-label', 'Confirm deletion');
@@ -905,7 +1006,7 @@ function removeGroupRule(index, btn = null) {
 
       // Reset after 3 seconds if not clicked again
       btn.dataset.confirmTimeout = setTimeout(() => {
-        btn.innerHTML = originalText;
+        btn.replaceChildren(); originalChildNodes.forEach(node => btn.appendChild(node));
         btn.style.color = '';
         btn.style.borderColor = '';
         if (btn.dataset.originalAriaLabel) {
@@ -1007,7 +1108,7 @@ function startEditingGroupRule(index) {
   row3.appendChild(cancelBtn);
   formDiv.appendChild(row3);
 
-  item.innerHTML = '';
+  item.replaceChildren();
   item.appendChild(formDiv);
   
   // Focus the name input
@@ -1635,7 +1736,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (origAriaLabel) importSettingsBtn.dataset.origAriaLabel = origAriaLabel;
       importSettingsBtn.dataset.pendingImport = JSON.stringify(settingsToImport);
 
-      importSettingsBtn.innerHTML = 'Confirm Overwrite?';
+      importSettingsBtn.textContent = 'Confirm Overwrite?';
       importSettingsBtn.style.color = '#ef4444'; // Red for warning
       importSettingsBtn.setAttribute('aria-label', 'Confirm settings overwrite');
 
@@ -1656,7 +1757,7 @@ document.addEventListener('DOMContentLoaded', () => {
       importSettingsBtn.appendChild(statusEl);
 
       importSettingsBtn.dataset.confirmTimeout = setTimeout(() => {
-        importSettingsBtn.innerHTML = origText;
+        importSettingsBtn.textContent = origText;
         importSettingsBtn.style.color = '';
         if (importSettingsBtn.dataset.origAriaLabel) {
           importSettingsBtn.setAttribute('aria-label', importSettingsBtn.dataset.origAriaLabel);
@@ -1710,12 +1811,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('regroupAllBtn').addEventListener('click', (e) => {
     const btn = e.currentTarget;
     if (!btn.dataset.confirmState) {
-      const originalText = btn.innerHTML;
+      const originalChildNodes = Array.from(btn.childNodes);
       const originalAriaLabel = btn.getAttribute('aria-label') || '';
       btn.dataset.confirmState = 'true';
-      btn.dataset.originalText = originalText;
+      btn.dataset.originalText = btn.textContent;
       if (originalAriaLabel) btn.dataset.originalAriaLabel = originalAriaLabel;
-      btn.innerHTML = 'Sure? Regroup all?';
+      btn.textContent = 'Sure? Regroup all?';
       btn.style.color = 'var(--brand)';
       btn.setAttribute('aria-label', 'Confirm regroup all tabs');
 
@@ -1736,7 +1837,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.appendChild(statusEl);
 
       btn.dataset.confirmTimeout = setTimeout(() => {
-        btn.innerHTML = originalText;
+        btn.replaceChildren(); originalChildNodes.forEach(node => btn.appendChild(node));
         btn.style.color = '';
         if (btn.dataset.originalAriaLabel) {
           btn.setAttribute('aria-label', btn.dataset.originalAriaLabel);
@@ -1752,7 +1853,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     clearTimeout(parseInt(btn.dataset.confirmTimeout));
     delete btn.dataset.confirmState;
-    btn.innerHTML = btn.dataset.originalText;
+    btn.textContent = btn.dataset.originalText;
     btn.style.color = '';
     if (btn.dataset.originalAriaLabel) {
       btn.setAttribute('aria-label', btn.dataset.originalAriaLabel);
@@ -1776,7 +1877,7 @@ document.addEventListener('DOMContentLoaded', () => {
         explorerRoot.style.display = 'none';
         settingsRoot.style.display = 'block';
         // Switch to back chevron for Settings view
-        if (settingsIcon) settingsIcon.innerHTML = '<path class="line-icon" d="M15 6l-6 6 6 6" />';
+        if (settingsIcon) { settingsIcon.replaceChildren(); const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); path.setAttribute('class', 'line-icon'); path.setAttribute('d', 'M15 6l-6 6 6 6'); settingsIcon.appendChild(path); }
         if (headerTitle) headerTitle.textContent = 'Settings';
         openSettingsBtn.setAttribute('title', 'Back to Explorer');
         openSettingsBtn.setAttribute('aria-label', 'Back to Explorer');
@@ -1784,7 +1885,7 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsRoot.style.display = 'none';
         explorerRoot.style.display = 'block';
         // Switch back to gear icon
-        if (settingsIcon) settingsIcon.innerHTML = '<path d="M19.43 12.98c.04-.32.07-.66.07-1s-.03-.68-.07-1l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a7.03 7.03 0 0 0-1.73-1l-.38-2.65A.5.5 0 0 0 13 2h-4a.5.5 0 0 0-.5.42l-.38 2.65a7.03 7.03 0 0 0-1.73 1l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0-.12.64L4.57 10c-.04.32-.07.66-.07 1s.03.68.07 1l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.14.24.43.34.69.22l2.49-1c.53.42 1.11.77 1.73 1l.38 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.38-2.65c.62-.23 1.2-.58 1.73-1l2.49 1c.26.12.55.02.69-.22l2-3.46a.5.5 0 0 0-.12-.64L19.43 12.98zM11 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />';
+        if (settingsIcon) { settingsIcon.replaceChildren(); const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); path.setAttribute('d', 'M19.43 12.98c.04-.32.07-.66.07-1s-.03-.68-.07-1l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a7.03 7.03 0 0 0-1.73-1l-.38-2.65A.5.5 0 0 0 13 2h-4a.5.5 0 0 0-.5.42l-.38 2.65a7.03 7.03 0 0 0-1.73 1l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0-.12.64L4.57 10c-.04.32-.07.66-.07 1s.03.68.07 1l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.14.24.43.34.69.22l2.49-1c.53.42 1.11.77 1.73 1l.38 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.38-2.65c.62-.23 1.2-.58 1.73-1l2.49 1c.26.12.55.02.69-.22l2-3.46a.5.5 0 0 0-.12-.64L19.43 12.98zM11 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6z'); settingsIcon.appendChild(path); }
         if (headerTitle) headerTitle.textContent = 'Tab Explorer';
         openSettingsBtn.setAttribute('title', 'Settings');
         openSettingsBtn.setAttribute('aria-label', 'Settings');
@@ -1991,18 +2092,53 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderExplorerEmptyState(container) {
-    container.innerHTML = `
-      <div style="text-align:center; padding: 40px 20px; color: var(--muted);" role="status" aria-live="polite">
-        <svg viewBox="0 0 24 24" style="width:48px;height:48px;margin:0 auto 12px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <div style="font-size:15px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No tabs found</div>
-        <div style="font-size:13px; margin-bottom: 16px;">Try adjusting your search or filters.</div>
-        <button id="clearSearchFiltersBtn" class="btn-glass">Clear Search & Filters</button>
-      </div>
-    `;
-    const clearBtn = container.querySelector('#clearSearchFiltersBtn');
+    const emptyStateEl = document.createElement('div');
+    emptyStateEl.style.textAlign = 'center';
+    emptyStateEl.style.padding = '40px 20px';
+    emptyStateEl.style.color = 'var(--muted)';
+    emptyStateEl.setAttribute('role', 'status');
+    emptyStateEl.setAttribute('aria-live', 'polite');
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('style', 'width:48px;height:48px;margin:0 auto 12px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;');
+    svg.setAttribute('aria-hidden', 'true');
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', '11');
+        circle.setAttribute('cy', '11');
+        circle.setAttribute('r', '8');
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', '21');
+        line.setAttribute('y1', '21');
+        line.setAttribute('x2', '16.65');
+        line.setAttribute('y2', '16.65');
+        svg.appendChild(circle);
+        svg.appendChild(line);
+
+    const titleDiv = document.createElement('div');
+    titleDiv.style.fontSize = '15px';
+    titleDiv.style.fontWeight = '600';
+    titleDiv.style.color = 'var(--text-primary)';
+    titleDiv.style.marginBottom = '4px';
+    titleDiv.textContent = 'No tabs found';
+
+    const descDiv = document.createElement('div');
+    descDiv.style.fontSize = '13px';
+    descDiv.style.marginBottom = '16px';
+    descDiv.textContent = 'Try adjusting your search or filters.';
+
+    const btn = document.createElement('button');
+    btn.id = 'clearSearchFiltersBtn';
+    btn.className = 'btn-glass';
+    btn.textContent = 'Clear Search & Filters';
+
+    emptyStateEl.appendChild(svg);
+    emptyStateEl.appendChild(titleDiv);
+    emptyStateEl.appendChild(descDiv);
+    emptyStateEl.appendChild(btn);
+
+    container.appendChild(emptyStateEl);
+    const clearBtn = btn;
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         const searchInputEl = document.getElementById('windowSearchInput');
@@ -2065,7 +2201,7 @@ document.addEventListener('DOMContentLoaded', () => {
       headerEl.title = `Toggle title: ${title}`;
       let totalCount = 0;
       for (const m of winMap.values()) { for (const tabs of m.values()) totalCount += tabs.length; }
-      headerEl.innerHTML = '';
+      headerEl.replaceChildren();
       const tSpan = document.createElement('span'); tSpan.textContent = title;
       const cSpan = document.createElement('span'); cSpan.className = 'count-badge'; cSpan.textContent = totalCount;
       const aSpan = document.createElement('span'); aSpan.className = 'menu-arrow'; aSpan.textContent = '▶';
@@ -2088,7 +2224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wHeader.setAttribute('aria-controls', wContentId);
         wHeader.setAttribute('aria-label', `Toggle window: ${headerTitle}`);
         wHeader.title = `Toggle window: ${headerTitle}`;
-        wHeader.innerHTML = '';
+        wHeader.replaceChildren();
         const wTitleSpan = document.createElement('span'); wTitleSpan.textContent = headerTitle;
         const wArrowSpan = document.createElement('span'); wArrowSpan.className = 'menu-arrow'; wArrowSpan.textContent = '▶';
         wHeader.append(wTitleSpan, wArrowSpan);
@@ -2099,7 +2235,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const groupsContainer = document.createElement('div');
         groupsContainer.style.padding = '8px';
-        groupsContainer.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Groups & Tabs</div>`;
+        const groupsTitle = document.createElement('div');
+        groupsTitle.style.fontSize = '12px';
+        groupsTitle.style.color = 'var(--muted)';
+        groupsTitle.style.marginBottom = '6px';
+        groupsTitle.textContent = 'Groups & Tabs';
+        groupsContainer.appendChild(groupsTitle);
 
         for (const [gid, tabs] of grpMap.entries()) {
           const groupContainer = document.createElement('div');
@@ -2119,7 +2260,7 @@ document.addEventListener('DOMContentLoaded', () => {
           gHeader.setAttribute('aria-controls', gContentId);
           gHeader.setAttribute('aria-label', `Toggle group: ${groupTitle}`);
           gHeader.title = `Toggle group: ${groupTitle}`;
-          gHeader.innerHTML = '';
+          gHeader.replaceChildren();
           const gNameDiv = document.createElement('div'); gNameDiv.className = 'group-rule-name'; gNameDiv.textContent = groupTitle;
           const gArrowSpan = document.createElement('span'); gArrowSpan.className = 'menu-arrow'; gArrowSpan.textContent = '▶';
           gHeader.append(gNameDiv, gArrowSpan);
@@ -2286,7 +2427,7 @@ document.addEventListener('DOMContentLoaded', () => {
       headerEl.setAttribute('aria-controls', contentId);
       headerEl.setAttribute('aria-label', `Toggle window: ${headerTitle}`);
       headerEl.title = `Toggle window: ${headerTitle}`;
-      headerEl.innerHTML = '';
+      headerEl.replaceChildren();
       const hTitleSpan = document.createElement('span'); hTitleSpan.textContent = headerTitle;
       const hArrowSpan = document.createElement('span'); hArrowSpan.className = 'menu-arrow'; hArrowSpan.textContent = '▶';
       headerEl.append(hTitleSpan, hArrowSpan);
@@ -2339,7 +2480,7 @@ document.addEventListener('DOMContentLoaded', () => {
         groupHeader.setAttribute('aria-controls', groupContentId);
         groupHeader.setAttribute('aria-label', `Toggle group: ${groupTitle}`);
         groupHeader.title = `Toggle group: ${groupTitle}`;
-        groupHeader.innerHTML = '';
+        groupHeader.replaceChildren();
         const ghNameDiv = document.createElement('div'); ghNameDiv.className = 'group-rule-name'; ghNameDiv.textContent = groupTitle;
         const ghArrowSpan = document.createElement('span'); ghArrowSpan.className = 'menu-arrow'; ghArrowSpan.textContent = '▶';
         groupHeader.append(ghNameDiv, ghArrowSpan);
@@ -2518,7 +2659,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function buildWindowExplorer() {
     const container = document.getElementById('windowListContainer');
-    container.innerHTML = '';
+    container.replaceChildren();
 
     try {
       const { windows, allGroupsList, labelsMsg, ac } = await fetchExplorerData();
@@ -2630,17 +2771,53 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!emptyStateEl) {
         emptyStateEl = document.createElement('div');
         emptyStateEl.className = 'empty-search-state';
-        emptyStateEl.innerHTML = `
-          <div style="text-align:center; padding: 40px 20px; color: var(--muted);" role="status" aria-live="polite">
-            <svg viewBox="0 0 24 24" style="width:48px;height:48px;margin:0 auto 12px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <div style="font-size:15px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No tabs found</div>
-            <div style="font-size:13px; margin-bottom: 16px;">Try adjusting your search or filters.</div>
-            <button id="clearSearchFiltersBtnFilter" class="btn-glass">Clear Search & Filters</button>
-          </div>
-        `;
+
+        const innerDiv = document.createElement('div');
+        innerDiv.style.textAlign = 'center';
+        innerDiv.style.padding = '40px 20px';
+        innerDiv.style.color = 'var(--muted)';
+        innerDiv.setAttribute('role', 'status');
+        innerDiv.setAttribute('aria-live', 'polite');
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('style', 'width:48px;height:48px;margin:0 auto 12px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;');
+        svg.setAttribute('aria-hidden', 'true');
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', '11');
+        circle.setAttribute('cy', '11');
+        circle.setAttribute('r', '8');
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', '21');
+        line.setAttribute('y1', '21');
+        line.setAttribute('x2', '16.65');
+        line.setAttribute('y2', '16.65');
+        svg.appendChild(circle);
+        svg.appendChild(line);
+
+        const titleDiv = document.createElement('div');
+        titleDiv.style.fontSize = '15px';
+        titleDiv.style.fontWeight = '600';
+        titleDiv.style.color = 'var(--text-primary)';
+        titleDiv.style.marginBottom = '4px';
+        titleDiv.textContent = 'No tabs found';
+
+        const descDiv = document.createElement('div');
+        descDiv.style.fontSize = '13px';
+        descDiv.style.marginBottom = '16px';
+        descDiv.textContent = 'Try adjusting your search or filters.';
+
+        const btn = document.createElement('button');
+        btn.id = 'clearSearchFiltersBtnFilter';
+        btn.className = 'btn-glass';
+        btn.textContent = 'Clear Search & Filters';
+
+        innerDiv.appendChild(svg);
+        innerDiv.appendChild(titleDiv);
+        innerDiv.appendChild(descDiv);
+        innerDiv.appendChild(btn);
+
+        emptyStateEl.appendChild(innerDiv);
         container.appendChild(emptyStateEl);
         const clearBtn = emptyStateEl.querySelector('#clearSearchFiltersBtnFilter');
         if (clearBtn) {

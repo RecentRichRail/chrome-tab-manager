@@ -66,3 +66,8 @@
 **Vulnerability:** XSS via innerHTML injection in group rules editing form and url inputs.
 **Learning:** Using innerHTML with template literals can introduce HTML injection and XSS vulnerabilities, even if variables seem benign.
 **Prevention:** Use safe DOM methods like document.createElement and textContent instead of innerHTML for creating inputs and forms dynamically.
+
+## 2026-08-20 - DOM XSS via innerHTML across UI
+**Vulnerability:** XSS via multiple innerHTML injections across `popup.js`, especially when handling empty states or replacing DOM fragments using template strings. Even if some strings seem benign, it establishes an unsafe pattern that violates CSP and can easily introduce XSS vulnerabilities later.
+**Learning:** Avoid `innerHTML` in all contexts, even when rendering static SVG data or replacing strings without explicit variables. Replacing elements safely prevents unescaped variables or maliciously structured settings (like import JSON configurations) from executing code.
+**Prevention:** Completely refactor `.innerHTML` usages, using `document.createElement()`, `document.createElementNS()` for SVGs, `.textContent`, and `element.replaceChildren()` to construct or reset the DOM tree securely.
