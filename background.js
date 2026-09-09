@@ -423,26 +423,36 @@ function isAllowedDuplicate(url, patterns) {
 
   // Check patterns against both original URL and normalized URL (without hash)
   const normalizedUrl = normalizeUrl(url);
-  const lowerUrl = url.toLowerCase();
+
+  // ⚡ Bolt Performance Optimization:
+  // Defer lowerUrl materialization using a getter to avoid GC overhead
+  // in cases where exact match length checks fail, eliminating redundant memory allocations.
+  let lowerUrl = null;
+  const getLowerUrl = () => {
+    if (lowerUrl === null) lowerUrl = url.toLowerCase();
+    return lowerUrl;
+  };
 
   // ⚡ Bolt Performance Optimization:
   // Check if normalizedUrl is identical to original string (no hash) to skip redundant
   // execution branching and lazy string allocations inside the iteration block,
   // reducing CPU execution time by ~13% for standard URLs in this hot path.
   const isNormalizedSame = normalizedUrl === url;
-  let lowerNormalizedUrl = isNormalizedSame ? lowerUrl : null;
+  let lowerNormalizedUrl = null;
+  const getLowerNormalizedUrl = () => {
+    if (isNormalizedSame) return getLowerUrl();
+    if (lowerNormalizedUrl === null) lowerNormalizedUrl = normalizedUrl.toLowerCase();
+    return lowerNormalizedUrl;
+  };
 
   return patterns.some(pattern => {
-    if (matchesPattern(url, pattern, lowerUrl)) {
+    if (matchesPattern(url, pattern, getLowerUrl)) {
       return true;
     }
     if (isNormalizedSame) {
       return false;
     }
-    if (lowerNormalizedUrl === null) {
-      lowerNormalizedUrl = normalizedUrl.toLowerCase();
-    }
-    return matchesPattern(normalizedUrl, pattern, lowerNormalizedUrl);
+    return matchesPattern(normalizedUrl, pattern, getLowerNormalizedUrl);
   });
 }
 
