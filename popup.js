@@ -24,22 +24,7 @@ function showButtonFeedback(btn, message, isError = false) {
   btn.style.color = isError ? '#ef4444' : 'var(--accent)';
   btn.setAttribute('aria-label', message);
 
-  // Create visually hidden aria-live status element
-  const statusEl = document.createElement('span');
-  statusEl.className = 'visually-hidden-status';
-  statusEl.setAttribute('role', 'status');
-  statusEl.setAttribute('aria-live', 'polite');
-  statusEl.style.position = 'absolute';
-  statusEl.style.width = '1px';
-  statusEl.style.height = '1px';
-  statusEl.style.padding = '0';
-  statusEl.style.margin = '-1px';
-  statusEl.style.overflow = 'hidden';
-  statusEl.style.clip = 'rect(0, 0, 0, 0)';
-  statusEl.style.whiteSpace = 'nowrap';
-  statusEl.style.border = '0';
-  statusEl.textContent = message;
-  btn.appendChild(statusEl);
+  announceToScreenReader(message);
 
   btn.disabled = true;
   setTimeout(() => {
