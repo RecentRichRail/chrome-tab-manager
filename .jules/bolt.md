@@ -118,3 +118,6 @@
 ## 2026-09-03 - Avoid unused string allocations in rendering loops
 **Learning:** Performing unused, expensive string manipulations (like `escapeHtml`) inside UI rendering loops severely impacts rendering time and adds unnecessary GC overhead. This is often a leftover from refactoring when values are later safely assigned to native properties like `textContent`.
 **Action:** When assigning data to native DOM node properties, verify that any pre-escaped or formatted versions of those strings are actually still being used, and remove them if they are entirely redundant.
+## 2026-09-10 - Fast Reject via Pre-calculated Pattern Lengths
+**Learning:** Checking lengths of wildcard patterns during iterative matching involves redundant parsing and prevents early O(1) short-circuiting when URLs are physically too short to match the pattern, leading to unnecessary string allocations and loop execution.
+**Action:** When parsing regex-like wildcard strings, pre-calculate and cache the minimum matching string length. In hot loops, always check the candidate string length against this cached minimum to achieve a fast-reject O(1) early return, saving CPU cycles before any string allocation occurs.
