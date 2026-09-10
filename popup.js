@@ -308,13 +308,26 @@ function updateUrlList() {
   container.innerHTML = '';
   
   if (!autoCloseSettings.urlPatterns || autoCloseSettings.urlPatterns.length === 0) {
-    container.innerHTML = `
-      <div style="text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;" role="status" aria-live="polite">
-        <svg viewBox="0 0 24 24" style="width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-        <div style="font-size:14px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No URL patterns</div>
-        <div style="font-size:12px; margin-bottom: 12px;">Add one above to start automatically closing matching tabs.</div>
-      </div>
-    `;
+    const emptyState = document.createElement('div');
+    emptyState.style.cssText = 'text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;';
+    emptyState.setAttribute('role', 'status');
+    emptyState.setAttribute('aria-live', 'polite');
+
+    emptyState.innerHTML = '<svg viewBox="0 0 24 24" style="width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:14px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;';
+    title.textContent = 'No URL patterns';
+
+    const subtitle = document.createElement('div');
+    subtitle.style.cssText = 'font-size:12px; margin-bottom: 12px;';
+    subtitle.textContent = 'Add one above to start automatically closing matching tabs.';
+
+    emptyState.appendChild(title);
+    emptyState.appendChild(subtitle);
+
+    container.textContent = '';
+    container.appendChild(emptyState);
     return;
   }
 
@@ -370,13 +383,26 @@ function updateDuplicateAllowList() {
   container.innerHTML = '';
   
   if (!duplicatePreventionSettings.allowedDuplicatePatterns || duplicatePreventionSettings.allowedDuplicatePatterns.length === 0) {
-    container.innerHTML = `
-      <div style="text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;" role="status" aria-live="polite">
-        <svg viewBox="0 0 24 24" style="width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        <div style="font-size:14px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No exceptions</div>
-        <div style="font-size:12px; margin-bottom: 12px;">All URLs will be checked for duplicates.</div>
-      </div>
-    `;
+    const emptyState = document.createElement('div');
+    emptyState.style.cssText = 'text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;';
+    emptyState.setAttribute('role', 'status');
+    emptyState.setAttribute('aria-live', 'polite');
+
+    emptyState.innerHTML = '<svg viewBox="0 0 24 24" style="width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:14px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;';
+    title.textContent = 'No exceptions';
+
+    const subtitle = document.createElement('div');
+    subtitle.style.cssText = 'font-size:12px; margin-bottom: 12px;';
+    subtitle.textContent = 'All URLs will be checked for duplicates.';
+
+    emptyState.appendChild(title);
+    emptyState.appendChild(subtitle);
+
+    container.textContent = '';
+    container.appendChild(emptyState);
     return;
   }
 
@@ -432,13 +458,26 @@ function updateGroupRuleList() {
   container.innerHTML = '';
   
   if (!autoTabGroupingSettings.tabGroupRules || autoTabGroupingSettings.tabGroupRules.length === 0) {
-    container.innerHTML = `
-      <div style="text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;" role="status" aria-live="polite">
-        <svg viewBox="0 0 24 24" style="width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        <div style="font-size:14px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No tab group rules</div>
-        <div style="font-size:12px; margin-bottom: 12px;">Create one above to start organizing tabs automatically.</div>
-      </div>
-    `;
+    const emptyState = document.createElement('div');
+    emptyState.style.cssText = 'text-align:center; padding: 20px; color: var(--muted); border: 1px dashed var(--glass-stroke); border-radius: 8px; margin-top: 8px;';
+    emptyState.setAttribute('role', 'status');
+    emptyState.setAttribute('aria-live', 'polite');
+
+    emptyState.innerHTML = '<svg viewBox="0 0 24 24" style="width:32px;height:32px;margin:0 auto 8px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:14px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;';
+    title.textContent = 'No tab group rules';
+
+    const subtitle = document.createElement('div');
+    subtitle.style.cssText = 'font-size:12px; margin-bottom: 12px;';
+    subtitle.textContent = 'Create one above to start organizing tabs automatically.';
+
+    emptyState.appendChild(title);
+    emptyState.appendChild(subtitle);
+
+    container.textContent = '';
+    container.appendChild(emptyState);
     return;
   }
 
@@ -1991,17 +2030,31 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderExplorerEmptyState(container) {
-    container.innerHTML = `
-      <div style="text-align:center; padding: 40px 20px; color: var(--muted);" role="status" aria-live="polite">
-        <svg viewBox="0 0 24 24" style="width:48px;height:48px;margin:0 auto 12px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <div style="font-size:15px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No tabs found</div>
-        <div style="font-size:13px; margin-bottom: 16px;">Try adjusting your search or filters.</div>
-        <button id="clearSearchFiltersBtn" class="btn-glass">Clear Search & Filters</button>
-      </div>
-    `;
+    container.textContent = '';
+    const emptyState = document.createElement('div');
+    emptyState.style.cssText = 'text-align:center; padding: 40px 20px; color: var(--muted);';
+    emptyState.setAttribute('role', 'status');
+    emptyState.setAttribute('aria-live', 'polite');
+
+    emptyState.innerHTML = '<svg viewBox="0 0 24 24" style="width:48px;height:48px;margin:0 auto 12px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:15px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;';
+    title.textContent = 'No tabs found';
+
+    const subtitle = document.createElement('div');
+    subtitle.style.cssText = 'font-size:13px; margin-bottom: 16px;';
+    subtitle.textContent = 'Try adjusting your search or filters.';
+
+    const btn = document.createElement('button');
+    btn.id = 'clearSearchFiltersBtn';
+    btn.className = 'btn-glass';
+    btn.textContent = 'Clear Search & Filters';
+
+    emptyState.appendChild(title);
+    emptyState.appendChild(subtitle);
+    emptyState.appendChild(btn);
+    container.appendChild(emptyState);
     const clearBtn = container.querySelector('#clearSearchFiltersBtn');
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
@@ -2099,7 +2152,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const groupsContainer = document.createElement('div');
         groupsContainer.style.padding = '8px';
-        groupsContainer.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Groups & Tabs</div>`;
+        groupsContainer.textContent = '';
+        const groupsTitle = document.createElement('div');
+        groupsTitle.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:6px;';
+        groupsTitle.textContent = 'Groups & Tabs';
+        groupsContainer.appendChild(groupsTitle);
 
         for (const [gid, tabs] of grpMap.entries()) {
           const groupContainer = document.createElement('div');
@@ -2630,17 +2687,29 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!emptyStateEl) {
         emptyStateEl = document.createElement('div');
         emptyStateEl.className = 'empty-search-state';
-        emptyStateEl.innerHTML = `
-          <div style="text-align:center; padding: 40px 20px; color: var(--muted);" role="status" aria-live="polite">
-            <svg viewBox="0 0 24 24" style="width:48px;height:48px;margin:0 auto 12px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <div style="font-size:15px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;">No tabs found</div>
-            <div style="font-size:13px; margin-bottom: 16px;">Try adjusting your search or filters.</div>
-            <button id="clearSearchFiltersBtnFilter" class="btn-glass">Clear Search & Filters</button>
-          </div>
-        `;
+        emptyStateEl.textContent = '';
+        emptyStateEl.style.cssText = 'text-align:center; padding: 40px 20px; color: var(--muted);';
+        emptyStateEl.setAttribute('role', 'status');
+        emptyStateEl.setAttribute('aria-live', 'polite');
+
+        emptyStateEl.innerHTML = '<svg viewBox="0 0 24 24" style="width:48px;height:48px;margin:0 auto 12px;opacity:0.5;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>';
+
+        const title = document.createElement('div');
+        title.style.cssText = 'font-size:15px; font-weight:600; color: var(--text-primary); margin-bottom: 4px;';
+        title.textContent = 'No tabs found';
+
+        const subtitle = document.createElement('div');
+        subtitle.style.cssText = 'font-size:13px; margin-bottom: 16px;';
+        subtitle.textContent = 'Try adjusting your search or filters.';
+
+        const btn = document.createElement('button');
+        btn.id = 'clearSearchFiltersBtnFilter';
+        btn.className = 'btn-glass';
+        btn.textContent = 'Clear Search & Filters';
+
+        emptyStateEl.appendChild(title);
+        emptyStateEl.appendChild(subtitle);
+        emptyStateEl.appendChild(btn);
         container.appendChild(emptyStateEl);
         const clearBtn = emptyStateEl.querySelector('#clearSearchFiltersBtnFilter');
         if (clearBtn) {
