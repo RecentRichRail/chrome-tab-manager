@@ -66,3 +66,8 @@
 **Vulnerability:** XSS via innerHTML injection in group rules editing form and url inputs.
 **Learning:** Using innerHTML with template literals can introduce HTML injection and XSS vulnerabilities, even if variables seem benign.
 **Prevention:** Use safe DOM methods like document.createElement and textContent instead of innerHTML for creating inputs and forms dynamically.
+
+## 2026-08-20 - Use Safe DOM Methods for Empty States UIs
+**Vulnerability:** Empty states in popup.js were created using innerHTML, which poses a potential XSS vector if dynamic data is injected in the future, and violates strict CSP rules.
+**Learning:** Even benign innerHTML usages (e.g. static UI) create fragile areas in the code that can easily become XSS vulnerabilities upon refactoring.
+**Prevention:** Consistently use safe DOM construction methods like document.createElement, document.createElementNS (for SVGs), and textContent across the entire codebase to build UIs, eliminating reliance on innerHTML.
