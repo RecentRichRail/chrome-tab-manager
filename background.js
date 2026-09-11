@@ -765,14 +765,16 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
         parsedPattern = {
           exact: true,
           lowerPattern: pattern.toLowerCase(),
-          lowerParts: []
+          lowerParts: [],
+          minLength: pattern.length
         };
       } else {
         const parts = pattern.split('*');
         parsedPattern = {
           exact: false,
           lowerPattern: null,
-          lowerParts: parts.map(p => p.toLowerCase())
+          lowerParts: parts.map(p => p.toLowerCase()),
+          minLength: parts.reduce((sum, p) => sum + p.length, 0)
         };
       }
 
@@ -783,6 +785,13 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
     // When doing an exact match without wildcards, if cachedLowerUrl isn't provided,
     // explicitly check string lengths first to avoid O(N) string allocation (toLowerCase).
     const exact = parsedPattern.exact;
+
+    // ⚡ Bolt Performance Optimization:
+    // Check if the URL length is at least the minimum required length for a match.
+    // This provides an O(1) fast-reject early return before executing string allocations or iterative match logic.
+    if (url.length < parsedPattern.minLength) {
+      return false;
+    }
 
     // ⚡ Bolt Performance Optimization:
     // When doing an exact match without wildcards, explicitly check string lengths
