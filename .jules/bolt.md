@@ -121,3 +121,7 @@
 ## 2026-09-03 - Lazy String Allocation in O(N) Loops
 **Learning:** Functions that perform input normalization and check against multiple patterns often allocate memory for the normalized version unconditionally. If an earlier check passes, this allocation is redundant and degrades performance in hot paths (like tab status updates).
 **Action:** When validating multiple states (e.g. original string and normalized string) inside iterative loops, defer expensive allocations (like `.toLowerCase()`) using lazy evaluation so they only occur if the first short-circuit check fails.
+
+## 2024-05-24 - Pre-calculate minimum length for regex-like wildcard matches
+**Learning:** When parsing regex-like wildcard strings for repetitive matching, calculating and caching the minimum possible matching string length (the sum of all non-wildcard segments) provides an opportunity for a massive performance boost.
+**Action:** In hot loops, always check the candidate string length against this cached minimum to achieve a fast-reject O(1) early return before executing iterative match logic or string allocations.
