@@ -69,9 +69,38 @@ function announceToScreenReader(text) {
 }
 
 // 🎨 Palette: Helper function to securely update button text and announce state
-function setAsyncButtonState(btn, text) {
+function setAsyncButtonState(btn, text, isLoading = false) {
   if (!btn) return;
-  btn.textContent = text;
+
+  if (isLoading) {
+    btn.disabled = true;
+    // Safely construct SVG using createElementNS to strictly comply with Manifest V3 CSP
+    const wrapper = document.createElement('div');
+    wrapper.style.display = 'inline-flex';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.justifyContent = 'center';
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'spin');
+    svg.setAttribute('style', 'width:16px;height:16px;margin-right:8px;');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M12 4V2C6.477 2 2 6.477 2 12h2c0-4.418 3.582-8 8-8z');
+    path.setAttribute('fill', 'currentColor');
+
+    svg.appendChild(path);
+    wrapper.appendChild(svg);
+    wrapper.appendChild(document.createTextNode(text));
+
+    btn.replaceChildren();
+    btn.appendChild(wrapper);
+  } else {
+    btn.disabled = false;
+    btn.textContent = text;
+  }
+
   announceToScreenReader(text);
 }
 
@@ -1280,8 +1309,7 @@ async function updateTabCount() {
 async function expandAllGroups() {
   const btn = document.getElementById('expandAllBtn');
   if (btn) {
-    btn.disabled = true;
-    setAsyncButtonState(btn, 'Expanding...');
+    setAsyncButtonState(btn, 'Expanding...', true);
   }
   try {
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -1300,15 +1328,14 @@ async function expandAllGroups() {
 
     console.log(`Expanded ${tabGroups.length} tab groups`);
     updateTabCount();
-    if (btn) setAsyncButtonState(btn, 'Expanded!');
+    if (btn) setAsyncButtonState(btn, 'Expanded!', false);
   } catch (error) {
     console.error('Error expanding groups:', error);
-    if (btn) setAsyncButtonState(btn, 'Error');
+    if (btn) setAsyncButtonState(btn, 'Error', false);
   } finally {
     if (btn) {
       setTimeout(() => {
-        setAsyncButtonState(btn, 'Expand All Groups');
-        btn.disabled = false;
+        setAsyncButtonState(btn, 'Expand All Groups', false);
       }, 1500);
     }
   }
@@ -1318,8 +1345,7 @@ async function expandAllGroups() {
 async function collapseAllGroups() {
   const btn = document.getElementById('collapseAllBtn');
   if (btn) {
-    btn.disabled = true;
-    setAsyncButtonState(btn, 'Collapsing...');
+    setAsyncButtonState(btn, 'Collapsing...', true);
   }
   try {
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -1340,15 +1366,14 @@ async function collapseAllGroups() {
 
     console.log('Collapsed all inactive tab groups');
     updateTabCount();
-    if (btn) setAsyncButtonState(btn, 'Collapsed!');
+    if (btn) setAsyncButtonState(btn, 'Collapsed!', false);
   } catch (error) {
     console.error('Error collapsing groups:', error);
-    if (btn) setAsyncButtonState(btn, 'Error');
+    if (btn) setAsyncButtonState(btn, 'Error', false);
   } finally {
     if (btn) {
       setTimeout(() => {
-        setAsyncButtonState(btn, 'Collapse All Groups');
-        btn.disabled = false;
+        setAsyncButtonState(btn, 'Collapse All Groups', false);
       }, 1500);
     }
   }
@@ -1358,8 +1383,7 @@ async function collapseAllGroups() {
 async function regroupAllTabs() {
   const btn = document.getElementById('regroupAllBtn');
   if (btn) {
-    btn.disabled = true;
-    setAsyncButtonState(btn, 'Regrouping...');
+    setAsyncButtonState(btn, 'Regrouping...', true);
   }
   try {
     console.log('Regrouping all tabs based on current rules...');
@@ -1371,19 +1395,18 @@ async function regroupAllTabs() {
       console.log('Successfully regrouped all tabs');
       // Update the tab count and group info
       setTimeout(updateTabCount, 500);
-      if (btn) setAsyncButtonState(btn, 'Regrouped!');
+      if (btn) setAsyncButtonState(btn, 'Regrouped!', false);
     } else {
       console.error('Failed to regroup tabs:', response?.error);
-      if (btn) setAsyncButtonState(btn, 'Error');
+      if (btn) setAsyncButtonState(btn, 'Error', false);
     }
   } catch (error) {
     console.error('Error regrouping tabs:', error);
-    if (btn) setAsyncButtonState(btn, 'Error');
+    if (btn) setAsyncButtonState(btn, 'Error', false);
   } finally {
     if (btn) {
       setTimeout(() => {
-        setAsyncButtonState(btn, 'Regroup All Tabs');
-        btn.disabled = false;
+        setAsyncButtonState(btn, 'Regroup All Tabs', false);
       }, 1500);
     }
   }
