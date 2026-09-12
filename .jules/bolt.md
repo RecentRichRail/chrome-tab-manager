@@ -121,3 +121,7 @@
 ## 2026-09-03 - Lazy String Allocation in O(N) Loops
 **Learning:** Functions that perform input normalization and check against multiple patterns often allocate memory for the normalized version unconditionally. If an earlier check passes, this allocation is redundant and degrades performance in hot paths (like tab status updates).
 **Action:** When validating multiple states (e.g. original string and normalized string) inside iterative loops, defer expensive allocations (like `.toLowerCase()`) using lazy evaluation so they only occur if the first short-circuit check fails.
+
+## 2025-02-15 - Fast Reject in Wildcard Matching
+**Learning:** When evaluating wildcard strings against many URLs in a hot loop, allocating strings (e.g. \`.toLowerCase()\`) is costly.
+**Action:** Pre-calculate and cache the minimum required string length (sum of non-wildcard parts) for patterns. Check \`url.length < minLength\` to early-return before executing string allocation.
