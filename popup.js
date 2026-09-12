@@ -1914,7 +1914,8 @@ document.addEventListener('DOMContentLoaded', () => {
           url: url,
           lowerTitle: title.toLowerCase(),
           lowerUrl: url.toLowerCase(),
-          lastAccessed: t.lastAccessed || 0
+          lastAccessed: t.lastAccessed || 0,
+          active: t.active
         });
       }
     }
@@ -2245,11 +2246,31 @@ document.addEventListener('DOMContentLoaded', () => {
             titleDiv.style.fontSize = '13px';
             titleDiv.style.fontWeight = '600';
             titleDiv.style.color = 'var(--text-primary)';
-            titleDiv.style.whiteSpace = 'nowrap';
-            titleDiv.style.overflow = 'hidden';
-            titleDiv.style.textOverflow = 'ellipsis';
+            titleDiv.style.display = 'flex';
+            titleDiv.style.alignItems = 'center';
+            titleDiv.style.gap = '6px';
             titleDiv.title = baseTitle;
-            titleDiv.textContent = baseTitle;
+
+            const titleText = document.createElement('span');
+            titleText.style.whiteSpace = 'nowrap';
+            titleText.style.overflow = 'hidden';
+            titleText.style.textOverflow = 'ellipsis';
+            titleText.textContent = baseTitle;
+            titleDiv.appendChild(titleText);
+
+            if (tab.active) {
+              contentWrapper.setAttribute('aria-current', 'true');
+              const activeBadge = document.createElement('span');
+              activeBadge.style.background = 'var(--badge-bg)';
+              activeBadge.style.color = 'var(--badge-fg)';
+              activeBadge.style.borderRadius = '999px';
+              activeBadge.style.padding = '1px 6px';
+              activeBadge.style.fontSize = '10px';
+              activeBadge.style.fontWeight = '700';
+              activeBadge.style.flexShrink = '0';
+              activeBadge.textContent = 'Active';
+              titleDiv.appendChild(activeBadge);
+            }
             contentWrapper.appendChild(titleDiv);
 
             const urlDiv = document.createElement('div');
@@ -2472,11 +2493,31 @@ document.addEventListener('DOMContentLoaded', () => {
             titleDiv.style.fontSize = '13px';
             titleDiv.style.fontWeight = '600';
             titleDiv.style.color = 'var(--text-primary)';
-            titleDiv.style.whiteSpace = 'nowrap';
-            titleDiv.style.overflow = 'hidden';
-            titleDiv.style.textOverflow = 'ellipsis';
+            titleDiv.style.display = 'flex';
+            titleDiv.style.alignItems = 'center';
+            titleDiv.style.gap = '6px';
             titleDiv.title = tab.title || '(no title)';
-            titleDiv.textContent = tab.title || '(no title)';
+
+            const titleText = document.createElement('span');
+            titleText.style.whiteSpace = 'nowrap';
+            titleText.style.overflow = 'hidden';
+            titleText.style.textOverflow = 'ellipsis';
+            titleText.textContent = tab.title || '(no title)';
+            titleDiv.appendChild(titleText);
+
+            if (tab.active) {
+              contentWrapper.setAttribute('aria-current', 'true');
+              const activeBadge = document.createElement('span');
+              activeBadge.style.background = 'var(--badge-bg)';
+              activeBadge.style.color = 'var(--badge-fg)';
+              activeBadge.style.borderRadius = '999px';
+              activeBadge.style.padding = '1px 6px';
+              activeBadge.style.fontSize = '10px';
+              activeBadge.style.fontWeight = '700';
+              activeBadge.style.flexShrink = '0';
+              activeBadge.textContent = 'Active';
+              titleDiv.appendChild(activeBadge);
+            }
             contentWrapper.appendChild(titleDiv);
 
             const urlDiv = document.createElement('div');
