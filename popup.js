@@ -1914,7 +1914,8 @@ document.addEventListener('DOMContentLoaded', () => {
           url: url,
           lowerTitle: title.toLowerCase(),
           lowerUrl: url.toLowerCase(),
-          lastAccessed: t.lastAccessed || 0
+          lastAccessed: t.lastAccessed || 0,
+          active: t.active || false
         });
       }
     }
@@ -2234,7 +2235,14 @@ document.addEventListener('DOMContentLoaded', () => {
             contentWrapper.className = 'explorer-tab-content';
             contentWrapper.setAttribute('role', 'button');
             contentWrapper.setAttribute('tabindex', '0');
-            contentWrapper.setAttribute('aria-label', `Switch to tab: ${baseTitle}`);
+            if (tab.active) {
+              contentWrapper.setAttribute('aria-current', 'true');
+              contentWrapper.setAttribute('aria-label', `Switch to tab: ${baseTitle} (Active)`);
+              tEl.style.borderColor = 'var(--brand)';
+              tEl.style.background = 'var(--glass-bg-strong)';
+            } else {
+              contentWrapper.setAttribute('aria-label', `Switch to tab: ${baseTitle}`);
+            }
             contentWrapper.style.flex = '1';
             contentWrapper.style.minWidth = '0';
             contentWrapper.style.display = 'flex';
@@ -2461,7 +2469,14 @@ document.addEventListener('DOMContentLoaded', () => {
             contentWrapper.className = 'explorer-tab-content';
             contentWrapper.setAttribute('role', 'button');
             contentWrapper.setAttribute('tabindex', '0');
-            contentWrapper.setAttribute('aria-label', `Switch to tab: ${titleStr}`);
+            if (tab.active) {
+              contentWrapper.setAttribute('aria-current', 'true');
+              contentWrapper.setAttribute('aria-label', `Switch to tab: ${titleStr} (Active)`);
+              tEl.style.borderColor = 'var(--brand)';
+              tEl.style.background = 'var(--glass-bg-strong)';
+            } else {
+              contentWrapper.setAttribute('aria-label', `Switch to tab: ${titleStr}`);
+            }
             contentWrapper.style.flex = '1';
             contentWrapper.style.minWidth = '0';
             contentWrapper.style.display = 'flex';
