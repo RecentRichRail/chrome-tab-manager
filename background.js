@@ -769,10 +769,13 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
         };
       } else {
         const parts = pattern.split('*');
+        const lowerParts = parts.map(p => p.toLowerCase());
+        const minLength = lowerParts.reduce((sum, part) => sum + part.length, 0);
         parsedPattern = {
           exact: false,
           lowerPattern: null,
-          lowerParts: parts.map(p => p.toLowerCase())
+          lowerParts: lowerParts,
+          minLength: minLength
         };
       }
 
@@ -783,6 +786,12 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
     // When doing an exact match without wildcards, if cachedLowerUrl isn't provided,
     // explicitly check string lengths first to avoid O(N) string allocation (toLowerCase).
     const exact = parsedPattern.exact;
+
+    // ⚡ Bolt Performance Optimization:
+    // Fast-reject O(1) early return for wildcard matches by checking against the cached minimum length
+    if (!exact && url.length < parsedPattern.minLength) {
+      return false;
+    }
 
     // ⚡ Bolt Performance Optimization:
     // When doing an exact match without wildcards, explicitly check string lengths
