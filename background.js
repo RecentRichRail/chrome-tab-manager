@@ -762,21 +762,32 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
       const exact = pattern.indexOf('*') === -1;
 
       if (exact) {
+        const lowerPattern = pattern.toLowerCase();
         parsedPattern = {
           exact: true,
-          lowerPattern: pattern.toLowerCase(),
-          lowerParts: []
+          lowerPattern: lowerPattern,
+          lowerParts: [],
+          minLength: lowerPattern.length
         };
       } else {
         const parts = pattern.split('*');
+        const lowerParts = parts.map(p => p.toLowerCase());
         parsedPattern = {
           exact: false,
           lowerPattern: null,
-          lowerParts: parts.map(p => p.toLowerCase())
+          lowerParts: lowerParts,
+          minLength: lowerParts.reduce((sum, p) => sum + p.length, 0)
         };
       }
 
       patternParseCache.set(pattern, parsedPattern);
+    }
+
+    // ⚡ Bolt Performance Optimization:
+    // Pre-calculate and cache the minimum required string length (the sum of all non-wildcard
+    // segment lengths) to achieve a fast-reject O(1) early return before string allocations.
+    if (url.length < parsedPattern.minLength) {
+      return false;
     }
 
     // ⚡ Bolt Performance Optimization:
