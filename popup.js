@@ -1969,10 +1969,12 @@ document.addEventListener('DOMContentLoaded', () => {
             };
           } else {
             const parts = pattern.split('*');
+            const lowerParts = parts.map(p => p.toLowerCase());
             parsed = {
               exact: false,
               lowerPattern: null,
-              lowerParts: parts.map(p => p.toLowerCase())
+              lowerParts: lowerParts,
+              minLength: lowerParts.reduce((sum, part) => sum + part.length, 0)
             };
           }
           cache.set(pattern, parsed);
@@ -1982,6 +1984,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const matchesParsedPattern = (url, lazyLowerUrl, parsed) => {
         if (!url || url.length > 2000) return false;
+
+        // ⚡ Bolt Performance Optimization:
+        // Fast-reject wildcard patterns before generating lowerUrl by checking against pre-calculated min length.
+        if (!parsed.exact && url.length < parsed.minLength) return false;
 
         // ⚡ Bolt Performance Optimization:
         // Defer lowerUrl materialization for exact matches to avoid GC overhead
