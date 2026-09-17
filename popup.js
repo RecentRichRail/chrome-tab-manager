@@ -2810,6 +2810,12 @@ document.addEventListener('DOMContentLoaded', () => {
     saveAutoCollapseSettings();
   });
   
+  document.getElementById('collapseDelayInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.target.blur();
+    }
+  });
+
   document.getElementById('collapseDelayInput').addEventListener('change', (e) => {
     const value = parseInt(e.target.value);
     if (value >= 1 && value <= 30) {
@@ -2826,6 +2832,12 @@ document.addEventListener('DOMContentLoaded', () => {
     saveAutoCloseSettings();
   });
   
+  document.getElementById('closeDelayInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.target.blur();
+    }
+  });
+
   document.getElementById('closeDelayInput').addEventListener('change', (e) => {
     const value = parseInt(e.target.value);
     if (value >= 1 && value <= 300) {
@@ -2893,13 +2905,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const duplicateBannerDelayInput = document.getElementById('duplicateBannerDelayInput');
-  if (duplicateBannerDelayInput) duplicateBannerDelayInput.addEventListener('change', (e) => {
+  if (duplicateBannerDelayInput) {
+    duplicateBannerDelayInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.target.blur();
+      }
+    });
+    duplicateBannerDelayInput.addEventListener('change', (e) => {
     const v = parseInt(e.target.value);
     if (Number.isFinite(v) && v >= 1 && v <= 300) {
       duplicatePreventionSettings.duplicateBannerDelaySeconds = v;
       saveDuplicatePreventionSettings();
     }
   });
+  }
   
   document.getElementById('addDuplicateAllowBtn').addEventListener('click', addDuplicateAllowPattern);
   
