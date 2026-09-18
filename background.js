@@ -769,10 +769,12 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
         };
       } else {
         const parts = pattern.split('*');
+        const lowerParts = parts.map(p => p.toLowerCase());
         parsedPattern = {
           exact: false,
           lowerPattern: null,
-          lowerParts: parts.map(p => p.toLowerCase())
+          lowerParts,
+          minLen: lowerParts.reduce((acc, part) => acc + part.length, 0)
         };
       }
 
@@ -788,16 +790,25 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
     // When doing an exact match without wildcards, explicitly check string lengths
     // first to avoid O(N) string allocation (toLowerCase). We also defer the lowerUrl
     // creation until after this check if cachedLowerUrl was not provided.
-    if (exact && !cachedLowerUrl && typeof cachedLowerUrl !== 'function') {
-      if (url.length !== parsedPattern.lowerPattern.length) return false;
+    if (!cachedLowerUrl && typeof cachedLowerUrl !== 'function') {
+      if (exact) {
+        if (url.length !== parsedPattern.lowerPattern.length) return false;
+      } else {
+        if (url.length < parsedPattern.minLen) return false;
+      }
     }
 
     // Support passing a getter function for lazy evaluation of lowerUrl
     let lowerUrl = null;
     if (typeof cachedLowerUrl === 'function') {
-      if (exact && url.length !== parsedPattern.lowerPattern.length) return false; // Early return before calling getter
+      if (exact) {
+        if (url.length !== parsedPattern.lowerPattern.length) return false; // Early return before calling getter
+      } else {
+        if (url.length < parsedPattern.minLen) return false;
+      }
       lowerUrl = cachedLowerUrl();
     } else {
+      if (!exact && url.length < parsedPattern.minLen) return false;
       lowerUrl = cachedLowerUrl || url.toLowerCase();
     }
 
