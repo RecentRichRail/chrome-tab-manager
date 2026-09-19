@@ -1965,14 +1965,16 @@ document.addEventListener('DOMContentLoaded', () => {
             parsed = {
               exact: true,
               lowerPattern: pattern.toLowerCase(),
-              lowerParts: []
+              lowerParts: [],
+              minLength: pattern.length
             };
           } else {
             const parts = pattern.split('*');
             parsed = {
               exact: false,
               lowerPattern: null,
-              lowerParts: parts.map(p => p.toLowerCase())
+              lowerParts: parts.map(p => p.toLowerCase()),
+              minLength: parts.reduce((sum, p) => sum + p.length, 0)
             };
           }
           cache.set(pattern, parsed);
@@ -1984,10 +1986,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!url || url.length > 2000) return false;
 
         // ⚡ Bolt Performance Optimization:
+        // Fast-reject candidate strings that are shorter than the minimum required length
+        // (sum of all non-wildcard segments). This O(1) check avoids expensive string
+        // allocations and iterative match logic in hot loops.
+        if (url.length < parsed.minLength) return false;
+
+        // ⚡ Bolt Performance Optimization:
         // Defer lowerUrl materialization for exact matches to avoid GC overhead
         // if lengths don't match, significantly improving matching performance in O(N) loops.
         if (parsed.exact) {
-          if (url.length !== parsed.lowerPattern.length) return false;
+          if (url.length !== parsed.minLength) return false;
           let lowerUrl = typeof lazyLowerUrl === 'function' ? lazyLowerUrl() : (lazyLowerUrl || url.toLowerCase());
           return lowerUrl === parsed.lowerPattern;
         }
