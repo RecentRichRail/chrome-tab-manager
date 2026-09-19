@@ -121,3 +121,6 @@
 ## 2026-09-03 - Lazy String Allocation in O(N) Loops
 **Learning:** Functions that perform input normalization and check against multiple patterns often allocate memory for the normalized version unconditionally. If an earlier check passes, this allocation is redundant and degrades performance in hot paths (like tab status updates).
 **Action:** When validating multiple states (e.g. original string and normalized string) inside iterative loops, defer expensive allocations (like `.toLowerCase()`) using lazy evaluation so they only occur if the first short-circuit check fails.
+## 2026-09-19 - Pre-calculate pattern length for fast rejection
+**Learning:** In JavaScript hot loops dealing with regex-like wildcards, pre-calculating the minimum required string length allows for an O(1) early return. This avoids expensive string allocations and iterative O(N) traversal on candidate strings that are physically too short to match.
+**Action:** When parsing wildcard strings for repetitive matching, cache the sum of all non-wildcard segment lengths and use it to fast-reject candidates.

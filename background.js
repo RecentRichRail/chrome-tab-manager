@@ -765,14 +765,16 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
         parsedPattern = {
           exact: true,
           lowerPattern: pattern.toLowerCase(),
-          lowerParts: []
+          lowerParts: [],
+          minLength: pattern.length
         };
       } else {
         const parts = pattern.split('*');
         parsedPattern = {
           exact: false,
           lowerPattern: null,
-          lowerParts: parts.map(p => p.toLowerCase())
+          lowerParts: parts.map(p => p.toLowerCase()),
+          minLength: parts.reduce((sum, p) => sum + p.length, 0)
         };
       }
 
@@ -785,17 +787,25 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
     const exact = parsedPattern.exact;
 
     // ⚡ Bolt Performance Optimization:
+    // Fast-reject candidate strings that are shorter than the minimum required length
+    // (sum of all non-wildcard segments). This O(1) check avoids expensive string
+    // allocations and iterative match logic in hot loops.
+    if (url.length < parsedPattern.minLength) {
+      return false;
+    }
+
+    // ⚡ Bolt Performance Optimization:
     // When doing an exact match without wildcards, explicitly check string lengths
     // first to avoid O(N) string allocation (toLowerCase). We also defer the lowerUrl
     // creation until after this check if cachedLowerUrl was not provided.
     if (exact && !cachedLowerUrl && typeof cachedLowerUrl !== 'function') {
-      if (url.length !== parsedPattern.lowerPattern.length) return false;
+      if (url.length !== parsedPattern.minLength) return false;
     }
 
     // Support passing a getter function for lazy evaluation of lowerUrl
     let lowerUrl = null;
     if (typeof cachedLowerUrl === 'function') {
-      if (exact && url.length !== parsedPattern.lowerPattern.length) return false; // Early return before calling getter
+      if (exact && url.length !== parsedPattern.minLength) return false; // Early return before calling getter
       lowerUrl = cachedLowerUrl();
     } else {
       lowerUrl = cachedLowerUrl || url.toLowerCase();
