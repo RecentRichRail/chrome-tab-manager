@@ -1969,10 +1969,20 @@ document.addEventListener('DOMContentLoaded', () => {
             };
           } else {
             const parts = pattern.split('*');
+            const lowerParts = parts.map(p => p.toLowerCase());
+
+            // ⚡ Bolt Performance Optimization:
+            // Pre-calculate and cache the minimum required string length for wildcard patterns.
+            let minLength = 0;
+            for (let i = 0; i < lowerParts.length; i++) {
+              minLength += lowerParts[i].length;
+            }
+
             parsed = {
               exact: false,
               lowerPattern: null,
-              lowerParts: parts.map(p => p.toLowerCase())
+              lowerParts: lowerParts,
+              minRequiredLength: minLength
             };
           }
           cache.set(pattern, parsed);
@@ -1990,6 +2000,13 @@ document.addEventListener('DOMContentLoaded', () => {
           if (url.length !== parsed.lowerPattern.length) return false;
           let lowerUrl = typeof lazyLowerUrl === 'function' ? lazyLowerUrl() : (lazyLowerUrl || url.toLowerCase());
           return lowerUrl === parsed.lowerPattern;
+        }
+
+        // ⚡ Bolt Performance Optimization:
+        // Fast-reject checking if the target URL is even long enough to possibly match the pattern
+        // before allocating the lowercase string or doing iterative checks.
+        if (url.length < parsed.minRequiredLength) {
+          return false;
         }
 
         let lowerUrl = typeof lazyLowerUrl === 'function' ? lazyLowerUrl() : (lazyLowerUrl || url.toLowerCase());

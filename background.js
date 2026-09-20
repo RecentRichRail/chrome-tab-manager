@@ -769,10 +769,20 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
         };
       } else {
         const parts = pattern.split('*');
+        const lowerParts = parts.map(p => p.toLowerCase());
+
+        // ⚡ Bolt Performance Optimization:
+        // Pre-calculate and cache the minimum required string length for wildcard patterns.
+        let minLength = 0;
+        for (let i = 0; i < lowerParts.length; i++) {
+          minLength += lowerParts[i].length;
+        }
+
         parsedPattern = {
           exact: false,
           lowerPattern: null,
-          lowerParts: parts.map(p => p.toLowerCase())
+          lowerParts: lowerParts,
+          minRequiredLength: minLength
         };
       }
 
@@ -805,6 +815,13 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
       return lowerUrl === parsedPattern.lowerPattern;
     }
     const lowerParts = parsedPattern.lowerParts;
+
+    // ⚡ Bolt Performance Optimization:
+    // Fast-reject checking if the target URL is even long enough to possibly match the pattern
+    // before allocating the lowercase string or doing iterative checks, reducing matching time in O(N) loops.
+    if (url.length < parsedPattern.minRequiredLength) {
+      return false;
+    }
 
     const firstPart = lowerParts[0];
     if (firstPart !== '' && !lowerUrl.startsWith(firstPart)) {
