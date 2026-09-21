@@ -1967,12 +1967,19 @@ document.addEventListener('DOMContentLoaded', () => {
               lowerPattern: pattern.toLowerCase(),
               lowerParts: []
             };
-          } else {
+} else {
             const parts = pattern.split('*');
+            // ⚡ Bolt Performance Optimization:
+            // Pre-calculate minimum required string length for fast-reject O(1) checks.
+            let minLength = 0;
+            for (let i = 0; i < parts.length; i++) {
+              minLength += parts[i].length;
+            }
             parsed = {
               exact: false,
               lowerPattern: null,
-              lowerParts: parts.map(p => p.toLowerCase())
+              lowerParts: parts.map(p => p.toLowerCase()),
+              minLength: minLength
             };
           }
           cache.set(pattern, parsed);
@@ -1986,10 +1993,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // ⚡ Bolt Performance Optimization:
         // Defer lowerUrl materialization for exact matches to avoid GC overhead
         // if lengths don't match, significantly improving matching performance in O(N) loops.
-        if (parsed.exact) {
+if (parsed.exact) {
           if (url.length !== parsed.lowerPattern.length) return false;
           let lowerUrl = typeof lazyLowerUrl === 'function' ? lazyLowerUrl() : (lazyLowerUrl || url.toLowerCase());
           return lowerUrl === parsed.lowerPattern;
+        }
+
+        // ⚡ Bolt Performance Optimization:
+        // Fast-reject wildcard strings that are shorter than the sum of all non-wildcard segments.
+        if (!parsed.exact && url.length < parsed.minLength) {
+          return false;
         }
 
         let lowerUrl = typeof lazyLowerUrl === 'function' ? lazyLowerUrl() : (lazyLowerUrl || url.toLowerCase());

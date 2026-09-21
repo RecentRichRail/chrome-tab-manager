@@ -767,12 +767,19 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
           lowerPattern: pattern.toLowerCase(),
           lowerParts: []
         };
-      } else {
+} else {
         const parts = pattern.split('*');
+        // ⚡ Bolt Performance Optimization:
+        // Pre-calculate minimum required string length for fast-reject O(1) checks.
+        let minLength = 0;
+        for (let i = 0; i < parts.length; i++) {
+          minLength += parts[i].length;
+        }
         parsedPattern = {
           exact: false,
           lowerPattern: null,
-          lowerParts: parts.map(p => p.toLowerCase())
+          lowerParts: parts.map(p => p.toLowerCase()),
+          minLength: minLength
         };
       }
 
@@ -782,7 +789,13 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
     // ⚡ Bolt Performance Optimization:
     // When doing an exact match without wildcards, if cachedLowerUrl isn't provided,
     // explicitly check string lengths first to avoid O(N) string allocation (toLowerCase).
-    const exact = parsedPattern.exact;
+const exact = parsedPattern.exact;
+
+    // ⚡ Bolt Performance Optimization:
+    // Fast-reject wildcard strings that are shorter than the sum of all non-wildcard segments.
+    if (!exact && url.length < parsedPattern.minLength) {
+      return false;
+    }
 
     // ⚡ Bolt Performance Optimization:
     // When doing an exact match without wildcards, explicitly check string lengths
