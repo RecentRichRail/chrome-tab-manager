@@ -1914,7 +1914,8 @@ document.addEventListener('DOMContentLoaded', () => {
           url: url,
           lowerTitle: title.toLowerCase(),
           lowerUrl: url.toLowerCase(),
-          lastAccessed: t.lastAccessed || 0
+          lastAccessed: t.lastAccessed || 0,
+          active: t.active
         });
       }
     }
@@ -2218,6 +2219,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const tEl = document.createElement('div');
             tEl.className = 'url-item explorer-tab-item';
             tEl.style.margin = '6px 0';
+            if (tab.active) {
+              tEl.setAttribute('aria-current', 'true');
+              tEl.style.borderColor = 'var(--brand)';
+              tEl.style.backgroundColor = 'rgba(79, 70, 229, 0.05)';
+            }
             tEl.dataset.title = String(tab.title || '(no title)');
             tEl.dataset.url = String(tab.url || '');
             tEl.dataset.lowertitle = tab.lowerTitle;
@@ -2442,6 +2448,11 @@ document.addEventListener('DOMContentLoaded', () => {
           const tEl = document.createElement('div');
           tEl.className = 'url-item explorer-tab-item';
           tEl.style.margin = '6px 0';
+          if (tab.active) {
+            tEl.setAttribute('aria-current', 'true');
+            tEl.style.borderColor = 'var(--brand)';
+            tEl.style.backgroundColor = 'rgba(79, 70, 229, 0.05)';
+          }
           tEl.dataset.title = titleStr;
           tEl.dataset.url = urlStr;
           // ⚡ Bolt Performance Optimization:
