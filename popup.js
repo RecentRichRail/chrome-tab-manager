@@ -1969,10 +1969,21 @@ document.addEventListener('DOMContentLoaded', () => {
             };
           } else {
             const parts = pattern.split('*');
+            const lowerParts = parts.map(p => p.toLowerCase());
+
+            // ⚡ Bolt Performance Optimization:
+            // Pre-calculate and cache the minimum required string length for wildcard patterns
+            // (sum of all non-wildcard segment lengths) to enable O(1) early return.
+            let minLength = 0;
+            for (let i = 0; i < lowerParts.length; i++) {
+              minLength += lowerParts[i].length;
+            }
+
             parsed = {
               exact: false,
               lowerPattern: null,
-              lowerParts: parts.map(p => p.toLowerCase())
+              lowerParts: lowerParts,
+              minLength: minLength
             };
           }
           cache.set(pattern, parsed);
@@ -1984,12 +1995,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!url || url.length > 2000) return false;
 
         // ⚡ Bolt Performance Optimization:
-        // Defer lowerUrl materialization for exact matches to avoid GC overhead
-        // if lengths don't match, significantly improving matching performance in O(N) loops.
+        // Defer lowerUrl materialization to avoid GC overhead if lengths don't match,
+        // significantly improving matching performance in O(N) loops.
+        // For wildcard patterns, check if the candidate string length is at least the cached minLength.
         if (parsed.exact) {
           if (url.length !== parsed.lowerPattern.length) return false;
           let lowerUrl = typeof lazyLowerUrl === 'function' ? lazyLowerUrl() : (lazyLowerUrl || url.toLowerCase());
           return lowerUrl === parsed.lowerPattern;
+        } else {
+          if (url.length < parsed.minLength) return false;
         }
 
         let lowerUrl = typeof lazyLowerUrl === 'function' ? lazyLowerUrl() : (lazyLowerUrl || url.toLowerCase());
