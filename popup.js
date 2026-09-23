@@ -2112,6 +2112,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+// ⚡ Bolt Performance Optimization:
+// Cache and clone a DOM template for explorer tab items to avoid redundant
+// document.createElement calls and style assignments in the rendering hot loop,
+// significantly improving render performance for large numbers of tabs.
+function getExplorerTabTemplate() {
+  if (!window.__explorerTabTemplate) {
+    const t = document.createElement('div');
+    t.className = 'url-item explorer-tab-item';
+    t.style.margin = '6px 0';
+
+    const cw = document.createElement('div');
+    cw.className = 'explorer-tab-content';
+    cw.setAttribute('role', 'button');
+    cw.setAttribute('tabindex', '0');
+    cw.style.flex = '1';
+    cw.style.minWidth = '0';
+    cw.style.display = 'flex';
+    cw.style.flexDirection = 'column';
+    cw.style.justifyContent = 'center';
+
+    const td = document.createElement('div');
+    td.style.fontSize = '13px';
+    td.style.fontWeight = '600';
+    td.style.color = 'var(--text-primary)';
+    td.style.whiteSpace = 'nowrap';
+    td.style.overflow = 'hidden';
+    td.style.textOverflow = 'ellipsis';
+    cw.appendChild(td);
+
+    const ud = document.createElement('div');
+    ud.style.fontSize = '11px';
+    ud.style.color = 'var(--muted)';
+    ud.style.whiteSpace = 'nowrap';
+    ud.style.overflow = 'hidden';
+    ud.style.textOverflow = 'ellipsis';
+    ud.style.marginTop = '2px';
+    cw.appendChild(ud);
+
+    const aw = document.createElement('div');
+    aw.style.marginLeft = '8px';
+    aw.style.flexShrink = '0';
+    aw.style.display = 'flex';
+    aw.style.alignItems = 'center';
+    aw.style.gap = '6px';
+
+    const cb = document.createElement('button');
+    cb.className = 'close-tab-btn';
+    cb.title = 'Close tab';
+    cb.textContent = '✕';
+    aw.appendChild(cb);
+
+    t.appendChild(cw);
+    t.appendChild(aw);
+    window.__explorerTabTemplate = t;
+  }
+  return window.__explorerTabTemplate.cloneNode(true);
+}
+
   function renderExplorerByTitle(container, filteredTabs, searchFilter, labelMap, groupMap) {
     let a11yIdCounter = 0;
     const byTitle = new Map();
@@ -2215,9 +2273,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
           for (const tab of tabs) {
             const baseTitle = stripWindowLabel(tab.title, tab.windowId, labelMap);
-            const tEl = document.createElement('div');
-            tEl.className = 'url-item explorer-tab-item';
-            tEl.style.margin = '6px 0';
+
+
+            const tEl = getExplorerTabTemplate();
             tEl.dataset.title = String(tab.title || '(no title)');
             tEl.dataset.url = String(tab.url || '');
             tEl.dataset.lowertitle = tab.lowerTitle;
@@ -2226,60 +2284,21 @@ document.addEventListener('DOMContentLoaded', () => {
             tEl.dataset.windowid = String(tab.windowId);
             tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
 
-            // ⚡ Bolt Performance Optimization:
-            // Removed redundant unused escapeHtml allocations for title and url
-            // during the UI rendering hot loop, significantly reducing CPU overhead
-            // and GC pressure.
-            const contentWrapper = document.createElement('div');
-            contentWrapper.className = 'explorer-tab-content';
-            contentWrapper.setAttribute('role', 'button');
-            contentWrapper.setAttribute('tabindex', '0');
+            const contentWrapper = tEl.firstChild;
             contentWrapper.setAttribute('aria-label', `Switch to tab: ${baseTitle}`);
-            contentWrapper.style.flex = '1';
-            contentWrapper.style.minWidth = '0';
-            contentWrapper.style.display = 'flex';
-            contentWrapper.style.flexDirection = 'column';
-            contentWrapper.style.justifyContent = 'center';
 
-            const titleDiv = document.createElement('div');
-            titleDiv.style.fontSize = '13px';
-            titleDiv.style.fontWeight = '600';
-            titleDiv.style.color = 'var(--text-primary)';
-            titleDiv.style.whiteSpace = 'nowrap';
-            titleDiv.style.overflow = 'hidden';
-            titleDiv.style.textOverflow = 'ellipsis';
+            const titleDiv = contentWrapper.firstChild;
             titleDiv.title = baseTitle;
             titleDiv.textContent = baseTitle;
-            contentWrapper.appendChild(titleDiv);
 
-            const urlDiv = document.createElement('div');
-            urlDiv.style.fontSize = '11px';
-            urlDiv.style.color = 'var(--muted)';
-            urlDiv.style.whiteSpace = 'nowrap';
-            urlDiv.style.overflow = 'hidden';
-            urlDiv.style.textOverflow = 'ellipsis';
-            urlDiv.style.marginTop = '2px';
+            const urlDiv = contentWrapper.lastChild;
             urlDiv.title = tab.url || '';
             urlDiv.textContent = tab.url || '';
-            contentWrapper.appendChild(urlDiv);
 
-            const actionWrapper = document.createElement('div');
-            actionWrapper.style.marginLeft = '8px';
-            actionWrapper.style.flexShrink = '0';
-            actionWrapper.style.display = 'flex';
-            actionWrapper.style.alignItems = 'center';
-            actionWrapper.style.gap = '6px';
-
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'close-tab-btn';
-            closeBtn.title = 'Close tab';
+            const closeBtn = tEl.lastChild.firstChild;
             closeBtn.setAttribute('aria-label', `Close tab: ${baseTitle}`);
             closeBtn.dataset.tabid = tab.tabId;
-            closeBtn.textContent = '✕';
-            actionWrapper.appendChild(closeBtn);
 
-            tEl.appendChild(contentWrapper);
-            tEl.appendChild(actionWrapper);
             gContent.appendChild(tEl);
           }
           groupContainer.appendChild(gHeader);
@@ -2439,74 +2458,32 @@ document.addEventListener('DOMContentLoaded', () => {
           const lowerTitle = tab.lowerTitle !== undefined ? tab.lowerTitle : titleStr.toLowerCase();
           const lowerUrl = tab.lowerUrl !== undefined ? tab.lowerUrl : urlStr.toLowerCase();
           if (!searchFilter({ title: tab.title, url: tab.url, lowerTitle: lowerTitle, lowerUrl: lowerUrl })) continue;
-          const tEl = document.createElement('div');
-          tEl.className = 'url-item explorer-tab-item';
-          tEl.style.margin = '6px 0';
+
+
+          const tEl = getExplorerTabTemplate();
           tEl.dataset.title = titleStr;
           tEl.dataset.url = urlStr;
-          // ⚡ Bolt Performance Optimization:
-          // Use pre-computed lowerTitle and lowerUrl to avoid redundant string allocation
-          // operations inside rendering hot loop, significantly improving rendering time.
           tEl.dataset.lowertitle = lowerTitle;
           tEl.dataset.lowerurl = lowerUrl;
           tEl.dataset.tabid = String(tab.id);
           tEl.dataset.windowid = String(w.id);
           tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
 
-            // ⚡ Bolt Performance Optimization:
-            // Removed redundant unused escapeHtml allocations for title and url
-            // during the UI rendering hot loop, significantly reducing CPU overhead
-            // and GC pressure.
-            const contentWrapper = document.createElement('div');
-            contentWrapper.className = 'explorer-tab-content';
-            contentWrapper.setAttribute('role', 'button');
-            contentWrapper.setAttribute('tabindex', '0');
-            contentWrapper.setAttribute('aria-label', `Switch to tab: ${titleStr}`);
-            contentWrapper.style.flex = '1';
-            contentWrapper.style.minWidth = '0';
-            contentWrapper.style.display = 'flex';
-            contentWrapper.style.flexDirection = 'column';
-            contentWrapper.style.justifyContent = 'center';
+          const contentWrapper = tEl.firstChild;
+          contentWrapper.setAttribute('aria-label', `Switch to tab: ${titleStr}`);
 
-            const titleDiv = document.createElement('div');
-            titleDiv.style.fontSize = '13px';
-            titleDiv.style.fontWeight = '600';
-            titleDiv.style.color = 'var(--text-primary)';
-            titleDiv.style.whiteSpace = 'nowrap';
-            titleDiv.style.overflow = 'hidden';
-            titleDiv.style.textOverflow = 'ellipsis';
-            titleDiv.title = tab.title || '(no title)';
-            titleDiv.textContent = tab.title || '(no title)';
-            contentWrapper.appendChild(titleDiv);
+          const titleDiv = contentWrapper.firstChild;
+          titleDiv.title = tab.title || '(no title)';
+          titleDiv.textContent = tab.title || '(no title)';
 
-            const urlDiv = document.createElement('div');
-            urlDiv.style.fontSize = '11px';
-            urlDiv.style.color = 'var(--muted)';
-            urlDiv.style.whiteSpace = 'nowrap';
-            urlDiv.style.overflow = 'hidden';
-            urlDiv.style.textOverflow = 'ellipsis';
-            urlDiv.style.marginTop = '2px';
-            urlDiv.title = tab.url || '';
-            urlDiv.textContent = tab.url || '';
-            contentWrapper.appendChild(urlDiv);
+          const urlDiv = contentWrapper.lastChild;
+          urlDiv.title = tab.url || '';
+          urlDiv.textContent = tab.url || '';
 
-            const actionWrapper = document.createElement('div');
-            actionWrapper.style.marginLeft = '8px';
-            actionWrapper.style.flexShrink = '0';
-            actionWrapper.style.display = 'flex';
-            actionWrapper.style.alignItems = 'center';
-            actionWrapper.style.gap = '6px';
+          const closeBtn = tEl.lastChild.firstChild;
+          closeBtn.setAttribute('aria-label', `Close tab: ${tab.title || '(no title)'}`);
+          closeBtn.dataset.tabid = tab.id;
 
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'close-tab-btn';
-            closeBtn.title = 'Close tab';
-            closeBtn.setAttribute('aria-label', `Close tab: ${tab.title || '(no title)'}`);
-            closeBtn.dataset.tabid = tab.id;
-            closeBtn.textContent = '✕';
-            actionWrapper.appendChild(closeBtn);
-
-            tEl.appendChild(contentWrapper);
-            tEl.appendChild(actionWrapper);
           groupContent.appendChild(tEl);
         }
 
