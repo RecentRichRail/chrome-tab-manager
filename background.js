@@ -365,7 +365,7 @@ function sanitizeUrlForLog(urlStr) {
   if (!urlStr) return String(urlStr);
   try {
     const u = new URL(urlStr);
-    return u.origin + u.pathname;
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.origin + u.pathname : u.protocol;
   } catch (error) {
     return '[invalid/redacted url]';
   }

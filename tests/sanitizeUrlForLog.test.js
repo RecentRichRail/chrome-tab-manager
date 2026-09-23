@@ -87,4 +87,11 @@ test('sanitizeUrlForLog', async (t) => {
     await t.test('returns redacted string for URL with only a path', () => {
         assert.strictEqual(sanitizeUrlForLog('/just/a/path'), '[invalid/redacted url]');
     });
+
+    await t.test('returns protocol for restricted schemes to prevent payload leak', () => {
+        assert.strictEqual(sanitizeUrlForLog('javascript:alert(1)'), 'javascript:');
+        assert.strictEqual(sanitizeUrlForLog('data:text/html,<script>alert(1)</script>'), 'data:');
+        assert.strictEqual(sanitizeUrlForLog('file:///etc/passwd'), 'file:');
+        assert.strictEqual(sanitizeUrlForLog('chrome-extension://id/popup.html'), 'chrome-extension:');
+    });
 });
