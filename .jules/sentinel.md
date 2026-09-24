@@ -71,3 +71,8 @@
 **Vulnerability:** XSS via multiple innerHTML injections across `popup.js`, especially when handling empty states or replacing DOM fragments using template strings. Even if some strings seem benign, it establishes an unsafe pattern that violates CSP and can easily introduce XSS vulnerabilities later.
 **Learning:** Avoid `innerHTML` in all contexts, even when rendering static SVG data or replacing strings without explicit variables. Replacing elements safely prevents unescaped variables or maliciously structured settings (like import JSON configurations) from executing code.
 **Prevention:** Completely refactor `.innerHTML` usages, using `document.createElement()`, `document.createElementNS()` for SVGs, `.textContent`, and `element.replaceChildren()` to construct or reset the DOM tree securely.
+
+## 2026-08-25 - Sensitive Data Leak in URL Sanitization for Opaque Schemes
+**Vulnerability:** The `sanitizeUrlForLog` function leaked the payload of opaque URL schemes like `javascript:` and `data:` because it blindly concatenated `u.origin + u.pathname`. For opaque schemes, the `origin` is `'null'` and the payload is parsed as the `pathname`, exposing potentially sensitive or malicious strings in the logs.
+**Learning:** When using the `URL` constructor to parse and sanitize URLs, opaque schemes behave differently than HTTP/HTTPS URLs. Extracting the `pathname` from an opaque scheme URL extracts its payload, which is unsafe to log.
+**Prevention:** When sanitizing URLs for logging by extracting components (like origin and pathname), always validate the `protocol` against an allow-list (e.g., `http:`, `https:`) before accessing the pathname, and explicitly redact unsupported schemes.
