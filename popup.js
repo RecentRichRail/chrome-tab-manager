@@ -2235,6 +2235,11 @@ document.addEventListener('DOMContentLoaded', () => {
             contentWrapper.setAttribute('role', 'button');
             contentWrapper.setAttribute('tabindex', '0');
             contentWrapper.setAttribute('aria-label', `Switch to tab: ${baseTitle}`);
+            if (tab.active) {
+              contentWrapper.setAttribute('aria-current', 'true');
+              tEl.style.borderLeft = '4px solid var(--brand)';
+              tEl.style.background = 'rgba(79,70,229,0.05)';
+            }
             contentWrapper.style.flex = '1';
             contentWrapper.style.minWidth = '0';
             contentWrapper.style.display = 'flex';
@@ -2462,6 +2467,11 @@ document.addEventListener('DOMContentLoaded', () => {
             contentWrapper.setAttribute('role', 'button');
             contentWrapper.setAttribute('tabindex', '0');
             contentWrapper.setAttribute('aria-label', `Switch to tab: ${titleStr}`);
+            if (tab.active) {
+              contentWrapper.setAttribute('aria-current', 'true');
+              tEl.style.borderLeft = '4px solid var(--brand)';
+              tEl.style.background = 'rgba(79,70,229,0.05)';
+            }
             contentWrapper.style.flex = '1';
             contentWrapper.style.minWidth = '0';
             contentWrapper.style.display = 'flex';

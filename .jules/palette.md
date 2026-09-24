@@ -81,3 +81,7 @@
 
 **Learning:** To provide screen reader feedback for asynchronous button states, injecting a visually hidden aria-live element inside the button while simultaneously updating the button textContent causes screen readers to read the text twice.
 **Action:** Always use a single, globally injected, visually hidden aria-live element (an announcer) located outside the button to handle state communications during async operations.
+
+## 2024-09-24 - Active Tab Styling
+**Learning:** Found that the active tab in the tab explorer lacked accessible indication and clear visual distinction, making it hard to identify the current tab.
+**Action:** Added `aria-current="true"` to the active tab's container for screen readers and provided a distinct left border and background color to visually highlight the active item.
