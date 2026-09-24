@@ -84,6 +84,14 @@ test('sanitizeUrlForLog', async (t) => {
         assert.strictEqual(sanitizeUrlForLog('not-a-valid-url'), '[invalid/redacted url]');
     });
 
+    await t.test('returns redacted string for javascript: URLs', () => {
+        assert.strictEqual(sanitizeUrlForLog('javascript:alert("XSS")'), '[redacted javascript: url]');
+    });
+
+    await t.test('returns redacted string for data: URLs', () => {
+        assert.strictEqual(sanitizeUrlForLog('data:text/html,<script>alert("XSS")</script>'), '[redacted data: url]');
+    });
+
     await t.test('returns redacted string for URL with only a path', () => {
         assert.strictEqual(sanitizeUrlForLog('/just/a/path'), '[invalid/redacted url]');
     });
