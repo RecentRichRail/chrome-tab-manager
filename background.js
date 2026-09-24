@@ -765,14 +765,16 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
         parsedPattern = {
           exact: true,
           lowerPattern: pattern.toLowerCase(),
-          lowerParts: []
+          lowerParts: [],
+          minLen: pattern.length
         };
       } else {
         const parts = pattern.split('*');
         parsedPattern = {
           exact: false,
           lowerPattern: null,
-          lowerParts: parts.map(p => p.toLowerCase())
+          lowerParts: parts.map(p => p.toLowerCase()),
+          minLen: parts.reduce((sum, p) => sum + p.length, 0)
         };
       }
 
@@ -785,17 +787,17 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
     const exact = parsedPattern.exact;
 
     // ⚡ Bolt Performance Optimization:
-    // When doing an exact match without wildcards, explicitly check string lengths
-    // first to avoid O(N) string allocation (toLowerCase). We also defer the lowerUrl
-    // creation until after this check if cachedLowerUrl was not provided.
-    if (exact && !cachedLowerUrl && typeof cachedLowerUrl !== 'function') {
-      if (url.length !== parsedPattern.lowerPattern.length) return false;
+    // Fast-reject based on pre-calculated minimum required string length.
+    // Avoids O(N) string allocation (toLowerCase) if the URL is too short to possibly match.
+    if (exact) {
+      if (url.length !== parsedPattern.minLen) return false;
+    } else {
+      if (url.length < parsedPattern.minLen) return false;
     }
 
     // Support passing a getter function for lazy evaluation of lowerUrl
     let lowerUrl = null;
     if (typeof cachedLowerUrl === 'function') {
-      if (exact && url.length !== parsedPattern.lowerPattern.length) return false; // Early return before calling getter
       lowerUrl = cachedLowerUrl();
     } else {
       lowerUrl = cachedLowerUrl || url.toLowerCase();
