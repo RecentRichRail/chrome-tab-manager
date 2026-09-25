@@ -765,37 +765,42 @@ function matchesPattern(url, pattern, cachedLowerUrl = null) {
         parsedPattern = {
           exact: true,
           lowerPattern: pattern.toLowerCase(),
-          lowerParts: []
+          lowerParts: [],
+          minLength: pattern.length
         };
       } else {
         const parts = pattern.split('*');
+        const lowerParts = parts.map(p => p.toLowerCase());
+        let minLength = 0;
+        for (let i = 0; i < lowerParts.length; i++) {
+          minLength += lowerParts[i].length;
+        }
         parsedPattern = {
           exact: false,
           lowerPattern: null,
-          lowerParts: parts.map(p => p.toLowerCase())
+          lowerParts: lowerParts,
+          minLength: minLength
         };
       }
 
       patternParseCache.set(pattern, parsedPattern);
     }
 
-    // ⚡ Bolt Performance Optimization:
-    // When doing an exact match without wildcards, if cachedLowerUrl isn't provided,
-    // explicitly check string lengths first to avoid O(N) string allocation (toLowerCase).
     const exact = parsedPattern.exact;
 
     // ⚡ Bolt Performance Optimization:
-    // When doing an exact match without wildcards, explicitly check string lengths
-    // first to avoid O(N) string allocation (toLowerCase). We also defer the lowerUrl
-    // creation until after this check if cachedLowerUrl was not provided.
-    if (exact && !cachedLowerUrl && typeof cachedLowerUrl !== 'function') {
-      if (url.length !== parsedPattern.lowerPattern.length) return false;
+    // Pre-calculate and cache the minimum required string length (sum of all non-wildcard segments)
+    // for regex-like wildcard patterns. Use this cached minimum in hot loops to achieve a fast-reject
+    // O(1) early return before executing iterative match logic or string allocations.
+    if (exact) {
+      if (url.length !== parsedPattern.minLength) return false;
+    } else {
+      if (url.length < parsedPattern.minLength) return false;
     }
 
     // Support passing a getter function for lazy evaluation of lowerUrl
     let lowerUrl = null;
     if (typeof cachedLowerUrl === 'function') {
-      if (exact && url.length !== parsedPattern.lowerPattern.length) return false; // Early return before calling getter
       lowerUrl = cachedLowerUrl();
     } else {
       lowerUrl = cachedLowerUrl || url.toLowerCase();
