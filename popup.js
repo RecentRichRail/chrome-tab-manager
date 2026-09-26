@@ -1914,7 +1914,8 @@ document.addEventListener('DOMContentLoaded', () => {
           url: url,
           lowerTitle: title.toLowerCase(),
           lowerUrl: url.toLowerCase(),
-          lastAccessed: t.lastAccessed || 0
+          lastAccessed: t.lastAccessed || 0,
+          active: t.active || false
         });
       }
     }
@@ -2225,6 +2226,10 @@ document.addEventListener('DOMContentLoaded', () => {
             tEl.dataset.tabid = String(tab.tabId);
             tEl.dataset.windowid = String(tab.windowId);
             tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
+            if (tab.active) {
+              tEl.setAttribute('aria-current', 'true');
+              tEl.style.boxShadow = 'inset 0 0 0 2px var(--brand)';
+            }
 
             // ⚡ Bolt Performance Optimization:
             // Removed redundant unused escapeHtml allocations for title and url
@@ -2452,6 +2457,10 @@ document.addEventListener('DOMContentLoaded', () => {
           tEl.dataset.tabid = String(tab.id);
           tEl.dataset.windowid = String(w.id);
           tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
+            if (tab.active) {
+              tEl.setAttribute('aria-current', 'true');
+              tEl.style.boxShadow = 'inset 0 0 0 2px var(--brand)';
+            }
 
             // ⚡ Bolt Performance Optimization:
             // Removed redundant unused escapeHtml allocations for title and url
