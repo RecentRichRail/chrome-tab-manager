@@ -121,3 +121,11 @@
 ## 2026-09-03 - Lazy String Allocation in O(N) Loops
 **Learning:** Functions that perform input normalization and check against multiple patterns often allocate memory for the normalized version unconditionally. If an earlier check passes, this allocation is redundant and degrades performance in hot paths (like tab status updates).
 **Action:** When validating multiple states (e.g. original string and normalized string) inside iterative loops, defer expensive allocations (like `.toLowerCase()`) using lazy evaluation so they only occur if the first short-circuit check fails.
+
+## 2024-05-18 - Nested Map Overhead vs Object Dictionaries
+**Learning:** Instantiating nested `new Map()` structures during hot render loops (like grouping tabs by Title -> Window ID -> Group ID) introduces significant allocation overhead and execution time compared to simple `Object.create(null)` dictionaries, degrading rendering speed for large datasets.
+**Action:** When performing deep grouping operations in performance-critical paths, prefer `Object.create(null)` dictionaries over `Map` unless specific Map features (like insertion order or non-string keys) are strictly necessary.
+
+## 2024-05-18 - Array.from overhead in NodeList iteration
+**Learning:** Using `Array.from(nodeList).forEach()` inside nested loops for DOM filtering (e.g., during live search) causes rapid array allocations, putting pressure on the garbage collector and causing frame drops.
+**Action:** Always iterate directly over `NodeList` objects returned by `querySelectorAll` using plain `for` loops in hot paths to avoid intermediate array allocations.
