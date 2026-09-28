@@ -2653,23 +2653,34 @@ document.addEventListener('DOMContentLoaded', () => {
   function filterWindowExplorer(q) {
     const container = document.getElementById('windowListContainer');
     const query = (q || '').toLowerCase();
-    const windows = Array.from(container.querySelectorAll('.explorer-window'));
+    const windows = container.querySelectorAll('.explorer-window');
 
     // Helper to collapse all by default
     const collapseAll = () => {
       const emptyStateEl = container.querySelector('.empty-search-state');
       if (emptyStateEl) emptyStateEl.style.display = 'none';
 
-      windows.forEach(w => {
+      for (let wIndex = 0; wIndex < windows.length; wIndex++) {
+        const w = windows[wIndex];
         const content = w.querySelector('.menu-content');
         if (content) content.style.display = 'none';
-        w.querySelectorAll('.explorer-group-content').forEach(gc => { gc.setAttribute('data-collapsed', 'true'); gc.style.display = 'none'; });
+        const groupContents = w.querySelectorAll('.explorer-group-content');
+        for (let i = 0; i < groupContents.length; i++) {
+          groupContents[i].setAttribute('data-collapsed', 'true');
+          groupContents[i].style.display = 'none';
+        }
         // show all tabs
-        w.querySelectorAll('.explorer-tab-item').forEach(t => { t.style.display = 'block'; });
+        const tabs = w.querySelectorAll('.explorer-tab-item');
+        for (let i = 0; i < tabs.length; i++) {
+          tabs[i].style.display = 'block';
+        }
         // show all groups/windows
         w.style.display = 'block';
-        w.querySelectorAll('.explorer-group').forEach(g => { g.style.display = 'block'; });
-      });
+        const groups = w.querySelectorAll('.explorer-group');
+        for (let i = 0; i < groups.length; i++) {
+          groups[i].style.display = 'block';
+        }
+      }
     };
 
     if (!query) {
@@ -2679,25 +2690,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // When searching, hide everything by default, then show matches and expand parents
     let anyMatchFound = false;
-    windows.forEach(w => {
+
+    // ⚡ Bolt Performance Optimization:
+    // Replaced Array.from(querySelectorAll).forEach with direct NodeList for-loops.
+    // This prevents expensive intermediate array allocations and reduces GC pressure
+    // during frequent search filtering operations.
+    for (let wIndex = 0; wIndex < windows.length; wIndex++) {
+      const w = windows[wIndex];
       let windowHasMatch = false;
-      const groups = Array.from(w.querySelectorAll('.explorer-group'));
-      groups.forEach(g => {
+      const groups = w.querySelectorAll('.explorer-group');
+      for (let gIndex = 0; gIndex < groups.length; gIndex++) {
+        const g = groups[gIndex];
         let groupHasMatch = false;
-        const tabs = Array.from(g.querySelectorAll('.explorer-tab-item'));
-        tabs.forEach(t => {
+        const tabs = g.querySelectorAll('.explorer-tab-item');
+        for (let tIndex = 0; tIndex < tabs.length; tIndex++) {
+          const t = tabs[tIndex];
           const lowerTitle = t.dataset.lowertitle || '';
           const lowerUrl = t.dataset.lowerurl || '';
           const match = lowerTitle.includes(query) || lowerUrl.includes(query);
           t.style.display = match ? 'block' : 'none';
           if (match) groupHasMatch = true;
-        });
+        }
         // Group visibility & expansion
         g.style.display = groupHasMatch ? 'block' : 'none';
         const gc = g.querySelector('.explorer-group-content');
         if (gc) gc.style.display = groupHasMatch ? 'block' : 'none';
         if (groupHasMatch) windowHasMatch = true;
-      });
+      }
       // Window visibility & expansion
       w.style.display = windowHasMatch ? 'block' : 'none';
       const wc = w.querySelector('.menu-content');
@@ -2708,7 +2727,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (arrow) arrow.classList.toggle('expanded', windowHasMatch);
       }
       if (windowHasMatch) anyMatchFound = true;
-    });
+    }
 
     let emptyStateEl = container.querySelector('.empty-search-state');
     if (!anyMatchFound) {

@@ -121,3 +121,7 @@
 ## 2026-09-03 - Lazy String Allocation in O(N) Loops
 **Learning:** Functions that perform input normalization and check against multiple patterns often allocate memory for the normalized version unconditionally. If an earlier check passes, this allocation is redundant and degrades performance in hot paths (like tab status updates).
 **Action:** When validating multiple states (e.g. original string and normalized string) inside iterative loops, defer expensive allocations (like `.toLowerCase()`) using lazy evaluation so they only occur if the first short-circuit check fails.
+
+## 2024-10-18 - Fast `NodeList` iteration in DOM hot paths
+**Learning:** In a hot path (like searching/filtering UI elements), converting a `NodeList` returned by `querySelectorAll` into an array using `Array.from()` creates unnecessary garbage and CPU overhead.
+**Action:** Iterate directly over the `NodeList` using a plain `for` loop, as it is significantly faster and creates less GC pressure.
