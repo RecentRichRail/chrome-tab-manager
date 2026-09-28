@@ -81,3 +81,6 @@
 
 **Learning:** To provide screen reader feedback for asynchronous button states, injecting a visually hidden aria-live element inside the button while simultaneously updating the button textContent causes screen readers to read the text twice.
 **Action:** Always use a single, globally injected, visually hidden aria-live element (an announcer) located outside the button to handle state communications during async operations.
+## 2025-05-23 - Highlight Active Items in List Iterations
+**Learning:** When generating a list of selectable items (like tabs) iteratively, the active state is not communicated correctly to screen readers or sighted users by default.
+**Action:** Ensure the `aria-current="true"` attribute and explicit visual feedback via inline styles or utility classes are applied directly in the item's rendering logic when processing the currently active item.

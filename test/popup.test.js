@@ -3,18 +3,52 @@ const assert = require('node:assert');
 
 // Simulate basic environment
 global.document = {
-    getElementById: (id) => {
-        return {
-            id,
-            checked: false,
-            value: '',
-            addEventListener: () => {},
+    createElementNS: (ns, tag) => {
+        const el = {
+            tagName: tag.toUpperCase(),
             style: {},
-            classList: { contains: () => false, add: () => {}, remove: () => {} }
+            dataset: {},
+            classList: { add: () => {}, remove: () => {}, contains: () => false },
+            setAttribute: () => {},
+            removeAttribute: () => {},
+            appendChild: () => {},
+            replaceChildren: () => {},
+            addEventListener: () => {},
         };
+        return el;
+    },
+    createElement: (tag) => {
+      const el = {
+        tagName: tag.toUpperCase(),
+        style: {},
+        dataset: {},
+        classList: { add: () => {}, remove: () => {}, contains: () => false },
+        setAttribute: () => {},
+        removeAttribute: () => {},
+        appendChild: () => {},
+        replaceChildren: () => {},
+        addEventListener: () => {},
+      };
+      return el;
+    },
+    getElementById: (id) => {
+        let m = {
+             id,
+             checked: false,
+             value: '',
+             addEventListener: () => {},
+             style: {},
+             classList: { contains: () => false, add: () => {}, remove: () => {} },
+             replaceChildren: () => {},
+             appendChild: () => {},
+             querySelectorAll: () => []
+        };
+        if (id === 'autoCloseToggle') Object.defineProperty(m, 'checked', { set(val) { toggleChecked = val; } });
+        if (id === 'closeDelayInput') Object.defineProperty(m, 'value', { set(val) { delayValue = val; } });
+        return m;
     },
     addEventListener: () => {},
-    createElement: (tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {} })
+
 };
 global.window = {
     addEventListener: () => {},
@@ -79,7 +113,8 @@ test('updateAutoCloseUI updates DOM elements based on settings', () => {
     global.document.getElementById = (id) => {
         if (id === 'autoCloseToggle') return { set checked(val) { toggleChecked = val; } };
         if (id === 'closeDelayInput') return { set value(val) { delayValue = val; } };
-        return { checked: false, value: '' }; // Mock for other elements
+        if (id === 'autoCloseBannerToggle') return { set checked(val) {} };
+        return { checked: false, value: '', replaceChildren: () => {}, appendChild: () => {} }; // Mock for other elements
     };
 
     popup.updateAutoCloseUI();
