@@ -52,6 +52,14 @@ test('sanitizeUrlForLog', async (t) => {
         assert.strictEqual(sanitizeUrlForLog('http://example.com'), 'http://example.com/');
     });
 
+    await t.test('redacts javascript: opaque URLs', () => {
+        assert.strictEqual(sanitizeUrlForLog('javascript:alert("secret")'), '[invalid/redacted url]');
+    });
+
+    await t.test('redacts data: opaque URLs', () => {
+        assert.strictEqual(sanitizeUrlForLog('data:text/plain,secretdata'), '[invalid/redacted url]');
+    });
+
     await t.test('strips query parameters from the URL', () => {
         assert.strictEqual(sanitizeUrlForLog('https://example.com/search?q=test&lang=en'), 'https://example.com/search');
     });
