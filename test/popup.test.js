@@ -3,6 +3,8 @@ const assert = require('node:assert');
 
 // Simulate basic environment
 global.document = {
+    createElementNS: (ns, tag) => ({ setAttribute: () => {}, appendChild: () => {}, style: {} }),
+    createElement: (tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {}, style: {} }),
     getElementById: (id) => {
         return {
             id,
@@ -10,11 +12,12 @@ global.document = {
             value: '',
             addEventListener: () => {},
             style: {},
-            classList: { contains: () => false, add: () => {}, remove: () => {} }
+            classList: { contains: () => false, add: () => {}, remove: () => {} },
+            replaceChildren: () => {},
+            appendChild: () => {}
         };
     },
-    addEventListener: () => {},
-    createElement: (tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {} })
+    addEventListener: () => {}
 };
 global.window = {
     addEventListener: () => {},
@@ -79,7 +82,8 @@ test('updateAutoCloseUI updates DOM elements based on settings', () => {
     global.document.getElementById = (id) => {
         if (id === 'autoCloseToggle') return { set checked(val) { toggleChecked = val; } };
         if (id === 'closeDelayInput') return { set value(val) { delayValue = val; } };
-        return { checked: false, value: '' }; // Mock for other elements
+        if (id === 'urlListContainer') return { replaceChildren: () => {}, appendChild: () => {} };
+        return { checked: false, value: '', replaceChildren: () => {}, appendChild: () => {} }; // Mock for other elements
     };
 
     popup.updateAutoCloseUI();
