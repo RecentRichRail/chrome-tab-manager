@@ -10,11 +10,14 @@ global.document = {
             value: '',
             addEventListener: () => {},
             style: {},
-            classList: { contains: () => false, add: () => {}, remove: () => {} }
+            classList: { contains: () => false, add: () => {}, remove: () => {} },
+            replaceChildren: () => {},
+            appendChild: () => {}
         };
     },
     addEventListener: () => {},
-    createElement: (tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {} })
+    createElementNS: (ns, tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {}, style: {}, dataset: {} }),
+    createElement: (tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {}, style: {}, dataset: {} })
 };
 global.window = {
     addEventListener: () => {},
@@ -79,7 +82,7 @@ test('updateAutoCloseUI updates DOM elements based on settings', () => {
     global.document.getElementById = (id) => {
         if (id === 'autoCloseToggle') return { set checked(val) { toggleChecked = val; } };
         if (id === 'closeDelayInput') return { set value(val) { delayValue = val; } };
-        return { checked: false, value: '' }; // Mock for other elements
+        return { checked: false, value: '', replaceChildren: () => {}, appendChild: () => {}, setAttribute: () => {} }; // Mock for other elements
     };
 
     popup.updateAutoCloseUI();
