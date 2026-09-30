@@ -1965,14 +1965,16 @@ document.addEventListener('DOMContentLoaded', () => {
             parsed = {
               exact: true,
               lowerPattern: pattern.toLowerCase(),
-              lowerParts: []
+              lowerParts: [],
+              minLength: pattern.length
             };
           } else {
             const parts = pattern.split('*');
             parsed = {
               exact: false,
               lowerPattern: null,
-              lowerParts: parts.map(p => p.toLowerCase())
+              lowerParts: parts.map(p => p.toLowerCase()),
+              minLength: parts.reduce((sum, p) => sum + p.length, 0)
             };
           }
           cache.set(pattern, parsed);
@@ -1982,6 +1984,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const matchesParsedPattern = (url, lazyLowerUrl, parsed) => {
         if (!url || url.length > 2000) return false;
+
+        // ⚡ Bolt Performance Optimization:
+        // Check if the URL length is at least the minimum required length for a match.
+        // This provides an O(1) fast-reject early return before executing string allocations or iterative match logic.
+        if (url.length < parsed.minLength) {
+          return false;
+        }
 
         // ⚡ Bolt Performance Optimization:
         // Defer lowerUrl materialization for exact matches to avoid GC overhead
