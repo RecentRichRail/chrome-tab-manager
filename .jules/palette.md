@@ -81,3 +81,6 @@
 
 **Learning:** To provide screen reader feedback for asynchronous button states, injecting a visually hidden aria-live element inside the button while simultaneously updating the button textContent causes screen readers to read the text twice.
 **Action:** Always use a single, globally injected, visually hidden aria-live element (an announcer) located outside the button to handle state communications during async operations.
+## 2024-05-18 - Missing loading state on action buttons
+**Learning:** Found that long running action buttons (like "Regroup All Tabs" or "Expand All Groups") don't have proper loading states, leading to confusing user experiences and potential double clicks.
+**Action:** Always add loading states to async action buttons and disable them while the action is in progress.
