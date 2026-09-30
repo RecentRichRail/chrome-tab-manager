@@ -1724,12 +1724,40 @@ document.addEventListener('DOMContentLoaded', () => {
           .slice(0, 100);
       }
 
+      // 🛡️ Sentinel: Mitigate Mass Assignment by exclusively permitting known settings keys with correct types
+      const safeSettings = {};
+
+      // Auto-close settings
+      if (typeof settingsToImport.autoCloseEnabled === 'boolean') safeSettings.autoCloseEnabled = settingsToImport.autoCloseEnabled;
+      if (typeof settingsToImport.closeDelay === 'number') safeSettings.closeDelay = settingsToImport.closeDelay;
+      if (typeof settingsToImport.autoCloseBannerEnabled === 'boolean') safeSettings.autoCloseBannerEnabled = settingsToImport.autoCloseBannerEnabled;
+      if (settingsToImport.urlPatterns) safeSettings.urlPatterns = settingsToImport.urlPatterns; // Already sanitized above
+
+      // Duplicate prevention settings
+      if (typeof settingsToImport.duplicatePreventionEnabled === 'boolean') safeSettings.duplicatePreventionEnabled = settingsToImport.duplicatePreventionEnabled;
+      if (typeof settingsToImport.closeOlderTab === 'boolean') safeSettings.closeOlderTab = settingsToImport.closeOlderTab;
+      if (typeof settingsToImport.duplicateBannerEnabled === 'boolean') safeSettings.duplicateBannerEnabled = settingsToImport.duplicateBannerEnabled;
+      if (typeof settingsToImport.duplicateBannerDelaySeconds === 'number') safeSettings.duplicateBannerDelaySeconds = settingsToImport.duplicateBannerDelaySeconds;
+      if (settingsToImport.allowedDuplicatePatterns) safeSettings.allowedDuplicatePatterns = settingsToImport.allowedDuplicatePatterns; // Already sanitized above
+
+      // Auto-collapse settings
+      if (typeof settingsToImport.autoCollapseEnabled === 'boolean') safeSettings.autoCollapseEnabled = settingsToImport.autoCollapseEnabled;
+      if (typeof settingsToImport.collapseDelay === 'number') safeSettings.collapseDelay = settingsToImport.collapseDelay;
+
+      // Auto tab grouping settings
+      if (typeof settingsToImport.autoTabGroupingEnabled === 'boolean') safeSettings.autoTabGroupingEnabled = settingsToImport.autoTabGroupingEnabled;
+      if (typeof settingsToImport.applyToGroupedTabs === 'boolean') safeSettings.applyToGroupedTabs = settingsToImport.applyToGroupedTabs;
+      if (typeof settingsToImport.ignorePinnedTabs === 'boolean') safeSettings.ignorePinnedTabs = settingsToImport.ignorePinnedTabs;
+      if (typeof settingsToImport.autoCloseSingleTabGroups === 'boolean') safeSettings.autoCloseSingleTabGroups = settingsToImport.autoCloseSingleTabGroups;
+      if (typeof settingsToImport.addTabPosition === 'string' && ['left', 'right'].includes(settingsToImport.addTabPosition)) safeSettings.addTabPosition = settingsToImport.addTabPosition;
+      if (settingsToImport.tabGroupRules) safeSettings.tabGroupRules = settingsToImport.tabGroupRules; // Already sanitized above
+
       // Using inline feedback instead of alert/confirm
       const origText = importSettingsBtn.textContent;
       const origAriaLabel = importSettingsBtn.getAttribute('aria-label') || '';
       importSettingsBtn.dataset.origText = origText;
       if (origAriaLabel) importSettingsBtn.dataset.origAriaLabel = origAriaLabel;
-      importSettingsBtn.dataset.pendingImport = JSON.stringify(settingsToImport);
+      importSettingsBtn.dataset.pendingImport = JSON.stringify(safeSettings);
 
       importSettingsBtn.textContent = 'Confirm Overwrite?';
       importSettingsBtn.style.color = '#ef4444'; // Red for warning
