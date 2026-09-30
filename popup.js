@@ -1937,7 +1937,8 @@ document.addEventListener('DOMContentLoaded', () => {
           url: url,
           lowerTitle: title.toLowerCase(),
           lowerUrl: url.toLowerCase(),
-          lastAccessed: t.lastAccessed || 0
+          lastAccessed: t.lastAccessed || 0,
+          active: t.active || false
         });
       }
     }
@@ -2258,6 +2259,11 @@ document.addEventListener('DOMContentLoaded', () => {
             tEl.dataset.windowid = String(tab.windowId);
             tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
 
+            if (tab.active) {
+              tEl.style.borderColor = 'var(--brand)';
+              tEl.style.backgroundColor = 'var(--badge-bg)';
+            }
+
             // ⚡ Bolt Performance Optimization:
             // Removed redundant unused escapeHtml allocations for title and url
             // during the UI rendering hot loop, significantly reducing CPU overhead
@@ -2266,6 +2272,7 @@ document.addEventListener('DOMContentLoaded', () => {
             contentWrapper.className = 'explorer-tab-content';
             contentWrapper.setAttribute('role', 'button');
             contentWrapper.setAttribute('tabindex', '0');
+            if (tab.active) contentWrapper.setAttribute('aria-current', 'true');
             contentWrapper.setAttribute('aria-label', `Switch to tab: ${baseTitle}`);
             contentWrapper.style.flex = '1';
             contentWrapper.style.minWidth = '0';
@@ -2485,6 +2492,11 @@ document.addEventListener('DOMContentLoaded', () => {
           tEl.dataset.windowid = String(w.id);
           tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
 
+          if (tab.active) {
+            tEl.style.borderColor = 'var(--brand)';
+            tEl.style.backgroundColor = 'var(--badge-bg)';
+          }
+
             // ⚡ Bolt Performance Optimization:
             // Removed redundant unused escapeHtml allocations for title and url
             // during the UI rendering hot loop, significantly reducing CPU overhead
@@ -2493,6 +2505,7 @@ document.addEventListener('DOMContentLoaded', () => {
             contentWrapper.className = 'explorer-tab-content';
             contentWrapper.setAttribute('role', 'button');
             contentWrapper.setAttribute('tabindex', '0');
+            if (tab.active) contentWrapper.setAttribute('aria-current', 'true');
             contentWrapper.setAttribute('aria-label', `Switch to tab: ${titleStr}`);
             contentWrapper.style.flex = '1';
             contentWrapper.style.minWidth = '0';
