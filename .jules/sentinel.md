@@ -71,3 +71,7 @@
 **Vulnerability:** XSS via multiple innerHTML injections across `popup.js`, especially when handling empty states or replacing DOM fragments using template strings. Even if some strings seem benign, it establishes an unsafe pattern that violates CSP and can easily introduce XSS vulnerabilities later.
 **Learning:** Avoid `innerHTML` in all contexts, even when rendering static SVG data or replacing strings without explicit variables. Replacing elements safely prevents unescaped variables or maliciously structured settings (like import JSON configurations) from executing code.
 **Prevention:** Completely refactor `.innerHTML` usages, using `document.createElement()`, `document.createElementNS()` for SVGs, `.textContent`, and `element.replaceChildren()` to construct or reset the DOM tree securely.
+## 2026-08-22 - Weak Randomness for Tab Group Colors
+**Vulnerability:** Weak random number generation using `Math.random()` in `background.js` for selecting tab group colors.
+**Learning:** `Math.random()` is not cryptographically secure and its outputs can be predicted. While selecting tab group colors is not a high-risk security operation, relying on weak randomness sets a poor precedent and can be flagged by security scanners.
+**Prevention:** Always use cryptographically secure random number generators like `crypto.getRandomValues()` (or `crypto.randomUUID()` for tokens) to generate random values, ensuring unpredictability and adhering to secure coding standards.

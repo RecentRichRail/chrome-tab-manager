@@ -100,6 +100,11 @@ async function getAutoTabGroupingSettings() {
 // Function to get a random tab group color
 function getRandomTabGroupColor() {
   const colors = ['grey', 'blue', 'red', 'yellow', 'green', 'pink', 'purple', 'cyan', 'orange'];
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    return colors[array[0] % colors.length];
+  }
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
