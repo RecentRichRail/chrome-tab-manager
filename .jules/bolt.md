@@ -125,3 +125,6 @@
 ## 2024-05-24 - Pre-calculate minimum length for regex-like wildcard matches
 **Learning:** When parsing regex-like wildcard strings for repetitive matching, calculating and caching the minimum possible matching string length (the sum of all non-wildcard segments) provides an opportunity for a massive performance boost.
 **Action:** In hot loops, always check the candidate string length against this cached minimum to achieve a fast-reject O(1) early return before executing iterative match logic or string allocations.
+## 2026-10-01 - Direct NodeList iteration in DOM-heavy hot loops
+**Learning:** Iterating directly over a NodeList using a `for...of` loop is significantly faster and creates less garbage collection pressure than converting it to an array using `Array.from(nodeList).forEach()`, especially in UI search filtering.
+**Action:** Use plain `for` or `for...of` loops when iterating over NodeLists in DOM-heavy hot loops.
