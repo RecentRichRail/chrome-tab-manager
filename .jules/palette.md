@@ -84,3 +84,7 @@
 ## 2024-05-18 - Missing loading state on action buttons
 **Learning:** Found that long running action buttons (like "Regroup All Tabs" or "Expand All Groups") don't have proper loading states, leading to confusing user experiences and potential double clicks.
 **Action:** Always add loading states to async action buttons and disable them while the action is in progress.
+
+## 2026-10-01 - Add Escape key support to inputs for better accessibility
+**Learning:** For users who navigate primarily using a keyboard, adding standard Escape key support to dismiss/cancel inputs that act as settings forms significantly improves the form usability and aligns with standard interaction patterns.
+**Action:** Always ensure that form inputs have Escape key support in addition to Enter key support.
