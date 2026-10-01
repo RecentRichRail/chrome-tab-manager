@@ -87,4 +87,12 @@ test('sanitizeUrlForLog', async (t) => {
     await t.test('returns redacted string for URL with only a path', () => {
         assert.strictEqual(sanitizeUrlForLog('/just/a/path'), '[invalid/redacted url]');
     });
+
+    await t.test('redacts payload for javascript: urls', () => {
+        assert.strictEqual(sanitizeUrlForLog("javascript:alert('secret')"), 'javascript:[redacted]');
+    });
+
+    await t.test('redacts payload for data: urls', () => {
+        assert.strictEqual(sanitizeUrlForLog("data:text/html,<h1>secret</h1>"), 'data:[redacted]');
+    });
 });
