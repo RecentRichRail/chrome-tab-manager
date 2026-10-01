@@ -10,7 +10,8 @@ global.document = {
             value: '',
             addEventListener: () => {},
             style: {},
-            classList: { contains: () => false, add: () => {}, remove: () => {} }
+            classList: { contains: () => false, add: () => {}, remove: () => {} },
+            replaceChildren: () => {}
         };
     },
     addEventListener: () => {},
