@@ -1947,7 +1947,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function applyExplorerFilters(allTabs, filterMode, ac) {
     let filteredTabs = allTabs.slice();
     if (filterMode === 'duplicates') {
-      const byUrl = new Map();
+      // ⚡ Bolt Performance Optimization:
+      // Using Object.create(null) for data grouping instead of new Map()
+      // reduces memory overhead and object instantiation time during filtering.
+      const byUrl = Object.create(null);
       const normalizeUrl = (url) => {
         // ⚡ Bolt Performance Optimization:
         // Using indexOf and slice instead of split('#')[0] avoids array allocation
@@ -1958,11 +1961,12 @@ document.addEventListener('DOMContentLoaded', () => {
       };
       for (const t of allTabs) {
         const key = normalizeUrl(t.url);
-        if (!byUrl.has(key)) byUrl.set(key, []);
-        byUrl.get(key).push(t);
+        if (!byUrl[key]) byUrl[key] = [];
+        byUrl[key].push(t);
       }
       const allDups = [];
-      for (const list of byUrl.values()) {
+      for (const key in byUrl) {
+        const list = byUrl[key];
         if (list.length > 1) allDups.push(...list);
       }
       filteredTabs = allDups;
@@ -2430,7 +2434,10 @@ document.addEventListener('DOMContentLoaded', () => {
       winDiv.appendChild(contentEl);
       windowFragment.appendChild(winDiv);
 
-      const groups = {};
+      // ⚡ Bolt Performance Optimization:
+      // Using Object.create(null) for data grouping instead of {}
+      // avoids prototype chain lookups and reduces memory overhead.
+      const groups = Object.create(null);
       for (const t of w.tabs) {
         const gid = t.groupId === -1 ? 'ungrouped' : String(t.groupId);
         if (!groups[gid]) groups[gid] = [];
@@ -2438,7 +2445,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const groupsContainer = winDiv.querySelector(`#window-${w.id}-groups`);
-      for (const [gid, tabs] of Object.entries(groups)) {
+      for (const gid in groups) {
+        const tabs = groups[gid];
         const groupContainer = document.createElement('div');
         groupContainer.className = 'group-rule-item explorer-group';
         let groupTitle = 'Ungrouped';
