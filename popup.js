@@ -656,7 +656,7 @@ function updateGroupRuleList() {
 
     const pInput = document.createElement('input');
     pInput.type = 'text';
-    pInput.className = 'pattern-input';
+    pInput.className = 'pattern-input form-input';
     pInput.maxLength = 200;
     pInput.placeholder = 'URL pattern (e.g., *github.com*)';
     pInput.id = 'pattern-input-' + index;
@@ -694,7 +694,7 @@ function startEditingUrl(index) {
   item.replaceChildren();
   const urlInput = document.createElement('input');
   urlInput.type = 'text';
-  urlInput.className = 'url-edit-input';
+  urlInput.className = 'url-edit-input form-input';
   urlInput.maxLength = 200;
   urlInput.value = currentPattern || '';
   urlInput.dataset.index = index;
@@ -780,7 +780,7 @@ function startEditingDuplicateAllowUrl(index) {
   item.replaceChildren();
   const dupInput = document.createElement('input');
   dupInput.type = 'text';
-  dupInput.className = 'duplicate-url-edit-input';
+  dupInput.className = 'duplicate-url-edit-input form-input';
   dupInput.maxLength = 200;
   dupInput.value = currentPattern || '';
   dupInput.dataset.index = index;
@@ -1073,7 +1073,7 @@ function startEditingGroupRule(index) {
   label2.className = 'form-label';
   label2.textContent = 'Color:';
   const select2 = document.createElement('select');
-  select2.className = 'color-select group-rule-color-edit';
+  select2.className = 'color-select group-rule-color-edit dropdown-select';
   select2.dataset.index = index;
   select2.setAttribute('aria-label', 'Group rule color');
 
