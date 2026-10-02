@@ -84,3 +84,6 @@
 ## 2024-05-18 - Missing loading state on action buttons
 **Learning:** Found that long running action buttons (like "Regroup All Tabs" or "Expand All Groups") don't have proper loading states, leading to confusing user experiences and potential double clicks.
 **Action:** Always add loading states to async action buttons and disable them while the action is in progress.
+## 2024-05-18 - Missing base styles on dynamically created form elements
+**Learning:** When injecting form inputs or selects dynamically in JS, forgetting to add base design system classes (like .form-input or .dropdown-select) results in unstyled, inaccessible elements that lack focus states and proper contrast.
+**Action:** Always verify that dynamically created input elements receive the same base utility/component classes as statically defined inputs in HTML.
