@@ -1700,21 +1700,51 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 🛡️ Sentinel: Sanitize imported arrays to prevent Logic DoS (Type Confusion)
+      // and construct a strict payload to prevent Mass Assignment
+      const sanitizedSettings = {};
+
+      const booleanKeys = [
+        'autoCloseEnabled', 'autoCloseBannerEnabled',
+        'duplicatePreventionEnabled', 'closeOlderTab', 'duplicateBannerEnabled',
+        'autoCollapseEnabled',
+        'autoTabGroupingEnabled', 'applyToGroupedTabs', 'ignorePinnedTabs', 'autoCloseSingleTabGroups'
+      ];
+
+      for (const key of booleanKeys) {
+        if (typeof settingsToImport[key] === 'boolean') {
+          sanitizedSettings[key] = settingsToImport[key];
+        }
+      }
+
+      const numberKeys = [
+        'closeDelay', 'duplicateBannerDelaySeconds', 'collapseDelay'
+      ];
+
+      for (const key of numberKeys) {
+        if (typeof settingsToImport[key] === 'number') {
+          sanitizedSettings[key] = settingsToImport[key];
+        }
+      }
+
+      if (typeof settingsToImport.addTabPosition === 'string') {
+        sanitizedSettings.addTabPosition = settingsToImport.addTabPosition;
+      }
+
       if (settingsToImport.urlPatterns) {
         if (!Array.isArray(settingsToImport.urlPatterns)) settingsToImport.urlPatterns = [];
-        settingsToImport.urlPatterns = settingsToImport.urlPatterns
+        sanitizedSettings.urlPatterns = settingsToImport.urlPatterns
           .filter(p => typeof p === 'string' && p.length <= 200)
           .slice(0, 1000);
       }
       if (settingsToImport.allowedDuplicatePatterns) {
         if (!Array.isArray(settingsToImport.allowedDuplicatePatterns)) settingsToImport.allowedDuplicatePatterns = [];
-        settingsToImport.allowedDuplicatePatterns = settingsToImport.allowedDuplicatePatterns
+        sanitizedSettings.allowedDuplicatePatterns = settingsToImport.allowedDuplicatePatterns
           .filter(p => typeof p === 'string' && p.length <= 200)
           .slice(0, 1000);
       }
       if (settingsToImport.tabGroupRules) {
         if (!Array.isArray(settingsToImport.tabGroupRules)) settingsToImport.tabGroupRules = [];
-        settingsToImport.tabGroupRules = settingsToImport.tabGroupRules
+        sanitizedSettings.tabGroupRules = settingsToImport.tabGroupRules
           .filter(r => r && typeof r === 'object')
           .map(r => ({
             groupName: typeof r.groupName === 'string' ? r.groupName.slice(0, 50) : 'Imported Group',
@@ -1729,7 +1759,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const origAriaLabel = importSettingsBtn.getAttribute('aria-label') || '';
       importSettingsBtn.dataset.origText = origText;
       if (origAriaLabel) importSettingsBtn.dataset.origAriaLabel = origAriaLabel;
-      importSettingsBtn.dataset.pendingImport = JSON.stringify(settingsToImport);
+      importSettingsBtn.dataset.pendingImport = JSON.stringify(sanitizedSettings);
 
       importSettingsBtn.textContent = 'Confirm Overwrite?';
       importSettingsBtn.style.color = '#ef4444'; // Red for warning

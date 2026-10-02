@@ -75,3 +75,7 @@
 **Vulnerability:** Weak random number generation using `Math.random()` in `background.js` for selecting tab group colors.
 **Learning:** `Math.random()` is not cryptographically secure and its outputs can be predicted. While selecting tab group colors is not a high-risk security operation, relying on weak randomness sets a poor precedent and can be flagged by security scanners.
 **Prevention:** Always use cryptographically secure random number generators like `crypto.getRandomValues()` (or `crypto.randomUUID()` for tokens) to generate random values, ensuring unpredictability and adhering to secure coding standards.
+## 2024-07-28 - Mass Assignment and Type Confusion in Settings Import
+**Vulnerability:** When importing settings via JSON, user-supplied objects were directly passed to `chrome.storage.sync.set`, leading to Mass Assignment vulnerabilities where attackers could inject arbitrary keys. Additionally, arrays were partially checked but not strictly reconstructed, leading to Type Confusion (Logic DoS).
+**Learning:** Trusting the structure of imported JSON configurations can allow an attacker to bypass quotas and inject unexpected properties into the extension's storage layer. `Object.assign` or direct setting without sanitization is unsafe.
+**Prevention:** To prevent Mass Assignment and Type Confusion when importing user-provided settings into extension storage, strictly pick known configuration keys and validate their primitive data types (e.g., using `typeof`) before saving them.
