@@ -14,7 +14,8 @@ global.document = {
         };
     },
     addEventListener: () => {},
-    createElement: (tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {} })
+    createElement: (tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {}, style: {}, dataset: {}, replaceChildren: () => {} }),
+    createElementNS: (ns, tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {}, style: {}, dataset: {}, replaceChildren: () => {} })
 };
 global.window = {
     addEventListener: () => {},
@@ -79,7 +80,29 @@ test('updateAutoCloseUI updates DOM elements based on settings', () => {
     global.document.getElementById = (id) => {
         if (id === 'autoCloseToggle') return { set checked(val) { toggleChecked = val; } };
         if (id === 'closeDelayInput') return { set value(val) { delayValue = val; } };
-        return { checked: false, value: '' }; // Mock for other elements
+        if (id === 'urlListContainer') return {
+            replaceChildren: () => {},
+            appendChild: () => {},
+            style: {},
+            dataset: {},
+            setAttribute: () => {},
+            querySelectorAll: () => []
+        };
+        if (id === 'duplicateAllowListContainer') return {
+            replaceChildren: () => {},
+            appendChild: () => {},
+            style: {},
+            dataset: {},
+            setAttribute: () => {}
+        };
+        if (id === 'groupRuleListContainer') return {
+            replaceChildren: () => {},
+            appendChild: () => {},
+            style: {},
+            dataset: {},
+            setAttribute: () => {}
+        };
+        return { checked: false, value: '', style: {}, dataset: {}, setAttribute: () => {}, replaceChildren: () => {}, appendChild: () => {}, querySelectorAll: () => [], classList: { contains: () => false, add: () => {}, remove: () => {} } }; // Mock for other elements
     };
 
     popup.updateAutoCloseUI();

@@ -143,8 +143,10 @@ async function groupExistingTabsForRule(rule, allTabs = null) {
       return;
     }
 
-    // Group tabs by window
-    const tabsByWindow = {};
+    // ⚡ Bolt Performance Optimization:
+    // Using Object.create(null) for data grouping instead of {}
+    // avoids prototype chain lookups and reduces memory overhead.
+    const tabsByWindow = Object.create(null);
     for (const tab of matchingTabs) {
       if (!tabsByWindow[tab.windowId]) tabsByWindow[tab.windowId] = [];
       tabsByWindow[tab.windowId].push(tab);
@@ -1529,14 +1531,16 @@ async function collapseInactiveGroups() {
       chrome.tabs.query({ windowId: activeTab.windowId })
     ]);
 
-    // Group tabs by groupId for O(1) lookup
-    const tabsByGroupId = new Map();
+    // ⚡ Bolt Performance Optimization:
+    // Using Object.create(null) for data grouping instead of new Map()
+    // reduces memory overhead and instantiation time.
+    const tabsByGroupId = Object.create(null);
     for (const tab of allWindowTabs) {
       if (tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) {
-        if (!tabsByGroupId.has(tab.groupId)) {
-          tabsByGroupId.set(tab.groupId, []);
+        if (!tabsByGroupId[tab.groupId]) {
+          tabsByGroupId[tab.groupId] = [];
         }
-        tabsByGroupId.get(tab.groupId).push(tab);
+        tabsByGroupId[tab.groupId].push(tab);
       }
     }
     
@@ -1552,7 +1556,7 @@ async function collapseInactiveGroups() {
       }
       
       // Check if this group has any tabs that were recently active
-      const groupTabs = tabsByGroupId.get(group.id) || [];
+      const groupTabs = tabsByGroupId[group.id] || [];
       const hasRecentActivity = groupTabs.some(tab => 
         Date.now() - (tab.lastAccessed || 0) < 5000 // 5 seconds threshold
       );

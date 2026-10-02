@@ -125,3 +125,7 @@
 ## 2024-05-24 - Pre-calculate minimum length for regex-like wildcard matches
 **Learning:** When parsing regex-like wildcard strings for repetitive matching, calculating and caching the minimum possible matching string length (the sum of all non-wildcard segments) provides an opportunity for a massive performance boost.
 **Action:** In hot loops, always check the candidate string length against this cached minimum to achieve a fast-reject O(1) early return before executing iterative match logic or string allocations.
+## 2024-05-24 - Pure Dictionary Object.create(null)
+
+**Learning:** When performing frequent aggregations and grouping of collections (such as grouping tabs by URL, title, or window ID) in high-volume hot paths, using `new Map()` or plain object literals `{}` incurs unnecessary object instantiation overhead or prototype chain lookups.
+**Action:** Replace `new Map()` or `{}` with `Object.create(null)` for simple key-value grouping structures, particularly in recursive or nested grouping structures. This significantly reduces memory footprint and object instantiation time while preventing prototype pollution or unintended prototype property lookups.
