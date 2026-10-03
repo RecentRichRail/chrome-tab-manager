@@ -2685,14 +2685,18 @@ document.addEventListener('DOMContentLoaded', () => {
   function filterWindowExplorer(q) {
     const container = document.getElementById('windowListContainer');
     const query = (q || '').toLowerCase();
-    const windows = Array.from(container.querySelectorAll('.explorer-window'));
+
+    // ⚡ Bolt Performance Optimization:
+    // Iterate directly over NodeLists using for...of instead of converting to Arrays with Array.from().
+    // This avoids unnecessary O(N) array allocations and reduces garbage collection pressure during rapid filtering.
+    const windows = container.querySelectorAll('.explorer-window');
 
     // Helper to collapse all by default
     const collapseAll = () => {
       const emptyStateEl = container.querySelector('.empty-search-state');
       if (emptyStateEl) emptyStateEl.style.display = 'none';
 
-      windows.forEach(w => {
+      for (const w of windows) {
         const content = w.querySelector('.menu-content');
         if (content) content.style.display = 'none';
         w.querySelectorAll('.explorer-group-content').forEach(gc => { gc.setAttribute('data-collapsed', 'true'); gc.style.display = 'none'; });
@@ -2701,7 +2705,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // show all groups/windows
         w.style.display = 'block';
         w.querySelectorAll('.explorer-group').forEach(g => { g.style.display = 'block'; });
-      });
+      }
     };
 
     if (!query) {
@@ -2711,25 +2715,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // When searching, hide everything by default, then show matches and expand parents
     let anyMatchFound = false;
-    windows.forEach(w => {
+    for (const w of windows) {
       let windowHasMatch = false;
-      const groups = Array.from(w.querySelectorAll('.explorer-group'));
-      groups.forEach(g => {
+      const groups = w.querySelectorAll('.explorer-group');
+      for (const g of groups) {
         let groupHasMatch = false;
-        const tabs = Array.from(g.querySelectorAll('.explorer-tab-item'));
-        tabs.forEach(t => {
+        const tabs = g.querySelectorAll('.explorer-tab-item');
+        for (const t of tabs) {
           const lowerTitle = t.dataset.lowertitle || '';
           const lowerUrl = t.dataset.lowerurl || '';
           const match = lowerTitle.includes(query) || lowerUrl.includes(query);
           t.style.display = match ? 'block' : 'none';
           if (match) groupHasMatch = true;
-        });
+        }
         // Group visibility & expansion
         g.style.display = groupHasMatch ? 'block' : 'none';
         const gc = g.querySelector('.explorer-group-content');
         if (gc) gc.style.display = groupHasMatch ? 'block' : 'none';
         if (groupHasMatch) windowHasMatch = true;
-      });
+      }
       // Window visibility & expansion
       w.style.display = windowHasMatch ? 'block' : 'none';
       const wc = w.querySelector('.menu-content');
@@ -2740,7 +2744,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (arrow) arrow.classList.toggle('expanded', windowHasMatch);
       }
       if (windowHasMatch) anyMatchFound = true;
-    });
+    }
+
 
     let emptyStateEl = container.querySelector('.empty-search-state');
     if (!anyMatchFound) {
