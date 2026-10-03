@@ -87,4 +87,16 @@ test('sanitizeUrlForLog', async (t) => {
     await t.test('returns redacted string for URL with only a path', () => {
         assert.strictEqual(sanitizeUrlForLog('/just/a/path'), '[invalid/redacted url]');
     });
+
+    await t.test('returns redacted string for opaque scheme URLs (javascript:)', () => {
+        assert.strictEqual(sanitizeUrlForLog('javascript:alert("secret")'), '[invalid/redacted url]');
+    });
+
+    await t.test('returns redacted string for opaque scheme URLs (data:)', () => {
+        assert.strictEqual(sanitizeUrlForLog('data:text/html,<html>secret</html>'), '[invalid/redacted url]');
+    });
+
+    await t.test('returns redacted string for chrome-extension: URLs', () => {
+        assert.strictEqual(sanitizeUrlForLog('chrome-extension://xyz/popup.html'), '[invalid/redacted url]');
+    });
 });
