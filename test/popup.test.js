@@ -14,7 +14,8 @@ global.document = {
         };
     },
     addEventListener: () => {},
-    createElement: (tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {} })
+    createElement: (tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {}, style: {}, dataset: {} }),
+    createElementNS: (ns, tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {}, style: {}, dataset: {} })
 };
 global.window = {
     addEventListener: () => {},
@@ -79,7 +80,7 @@ test('updateAutoCloseUI updates DOM elements based on settings', () => {
     global.document.getElementById = (id) => {
         if (id === 'autoCloseToggle') return { set checked(val) { toggleChecked = val; } };
         if (id === 'closeDelayInput') return { set value(val) { delayValue = val; } };
-        return { checked: false, value: '' }; // Mock for other elements
+        return { checked: false, value: '', replaceChildren: () => {}, appendChild: () => {}, classList: { add: () => {}, remove: () => {} }, setAttribute: () => {}, dataset: {}, style: { textAlign: '', padding: '', color: '', border: '', borderRadius: '', marginTop: '' } }; // Mock for other elements
     };
 
     popup.updateAutoCloseUI();

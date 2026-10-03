@@ -84,3 +84,7 @@
 ## 2024-05-18 - Missing loading state on action buttons
 **Learning:** Found that long running action buttons (like "Regroup All Tabs" or "Expand All Groups") don't have proper loading states, leading to confusing user experiences and potential double clicks.
 **Action:** Always add loading states to async action buttons and disable them while the action is in progress.
+
+## 2026-10-03 - Active list item accessibility
+**Learning:** Users who rely on screen readers and keyboard navigation need clear indication of which item in a list (like tabs) is currently active. Without explicit cues, it's hard to understand current state.
+**Action:** Always add aria-current="true" to the active item's container for screen readers, and provide a distinct visual cue (like a border or background change) for sighted users.
