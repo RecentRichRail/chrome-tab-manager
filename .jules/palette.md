@@ -84,3 +84,6 @@
 ## 2024-05-18 - Missing loading state on action buttons
 **Learning:** Found that long running action buttons (like "Regroup All Tabs" or "Expand All Groups") don't have proper loading states, leading to confusing user experiences and potential double clicks.
 **Action:** Always add loading states to async action buttons and disable them while the action is in progress.
+## 2026-09-08 - Escape key support for inline editing
+**Learning:** In addition to adding Enter key support, inputs that change state or values (especially inline edits) must implement Escape key support to easily dismiss and cancel edits (blur), providing a complete keyboard accessibility fallback without relying on mouse clicks.
+**Action:** Always add 'keydown' listeners that explicitly listen for 'Escape' alongside 'Enter', executing `e.target.blur()` or the appropriate cancel function.

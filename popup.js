@@ -1535,6 +1535,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('windowLabelInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       document.getElementById('saveWindowLabelBtn').click();
+    } else if (e.key === 'Escape') {
+      e.target.blur();
     }
   });
 
@@ -1593,6 +1595,8 @@ document.addEventListener('DOMContentLoaded', () => {
       initInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
           initSaveBtn.click();
+        } else if (e.key === 'Escape') {
+          e.target.blur();
         }
       });
     }
@@ -2843,7 +2847,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   document.getElementById('collapseDelayInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.key === 'Escape') {
       e.target.blur();
     }
   });
@@ -2865,7 +2869,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   document.getElementById('closeDelayInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.key === 'Escape') {
       e.target.blur();
     }
   });
@@ -2901,6 +2905,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('urlInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       addUrlPattern();
+    } else if (e.key === 'Escape') {
+      e.target.blur();
     }
   });
   
@@ -2939,7 +2945,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const duplicateBannerDelayInput = document.getElementById('duplicateBannerDelayInput');
   if (duplicateBannerDelayInput) {
     duplicateBannerDelayInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' || e.key === 'Escape') {
         e.target.blur();
       }
     });
@@ -2957,6 +2963,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('duplicateAllowInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       addDuplicateAllowPattern();
+    } else if (e.key === 'Escape') {
+      e.target.blur();
     }
   });
   
@@ -2993,6 +3001,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('groupRuleNameInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       createGroupRule();
+    } else if (e.key === 'Escape') {
+      e.target.blur();
     }
   });
   
