@@ -75,3 +75,8 @@
 **Vulnerability:** Weak random number generation using `Math.random()` in `background.js` for selecting tab group colors.
 **Learning:** `Math.random()` is not cryptographically secure and its outputs can be predicted. While selecting tab group colors is not a high-risk security operation, relying on weak randomness sets a poor precedent and can be flagged by security scanners.
 **Prevention:** Always use cryptographically secure random number generators like `crypto.getRandomValues()` (or `crypto.randomUUID()` for tokens) to generate random values, ensuring unpredictability and adhering to secure coding standards.
+
+## 2026-08-25 - Prevent Sensitive Payload Leakage from Opaque URLs
+**Vulnerability:** The `sanitizeUrlForLog` function used `u.origin + u.pathname` to sanitize URLs, which evaluated to `'null' + payload` for opaque protocols like `javascript:` and `data:`, leaking sensitive data.
+**Learning:** The URL constructor parses the payload of opaque origins into the `pathname` property. Blindly concatenating origin and pathname for these protocols exposes their contents.
+**Prevention:** Restrict full URL extraction to `http:` and `https:` protocols when sanitizing URLs, and redact the rest.
