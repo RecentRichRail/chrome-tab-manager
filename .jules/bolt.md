@@ -125,3 +125,6 @@
 ## 2024-05-24 - Pre-calculate minimum length for regex-like wildcard matches
 **Learning:** When parsing regex-like wildcard strings for repetitive matching, calculating and caching the minimum possible matching string length (the sum of all non-wildcard segments) provides an opportunity for a massive performance boost.
 **Action:** In hot loops, always check the candidate string length against this cached minimum to achieve a fast-reject O(1) early return before executing iterative match logic or string allocations.
+## 2026-10-07 - Optimize data grouping structures
+**Learning:** When grouping large datasets with nested structures (like in `renderExplorerByTitle`), instantiating and interacting with nested `new Map()` objects introduces noticeable performance overhead compared to using plain objects created with `Object.create(null)`. This is due to the lack of prototype chain overhead and faster property access in tight loops.
+**Action:** For performance optimization in data grouping scenarios where keys are primitives (strings/numbers), use `Object.create(null)` instead of `new Map()` to reduce instantiation time and memory overhead, especially in UI rendering hot loops.
