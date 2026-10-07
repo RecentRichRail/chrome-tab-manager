@@ -1724,12 +1724,29 @@ document.addEventListener('DOMContentLoaded', () => {
           .slice(0, 100);
       }
 
+      // 🛡️ Sentinel: Strictly pick and validate configuration keys to prevent Mass Assignment
+      const safeSettings = {
+        autoCloseEnabled: typeof settingsToImport.autoCloseEnabled === 'boolean' ? settingsToImport.autoCloseEnabled : false,
+        closeDelay: typeof settingsToImport.closeDelay === 'number' || typeof settingsToImport.closeDelay === 'string' ? settingsToImport.closeDelay : '5',
+        urlPatterns: Array.isArray(settingsToImport.urlPatterns) ? settingsToImport.urlPatterns : [],
+        duplicatePreventionEnabled: typeof settingsToImport.duplicatePreventionEnabled === 'boolean' ? settingsToImport.duplicatePreventionEnabled : true,
+        closeOlderTab: typeof settingsToImport.closeOlderTab === 'boolean' ? settingsToImport.closeOlderTab : false,
+        duplicateBannerEnabled: typeof settingsToImport.duplicateBannerEnabled === 'boolean' ? settingsToImport.duplicateBannerEnabled : true,
+        duplicateBannerDelaySeconds: typeof settingsToImport.duplicateBannerDelaySeconds === 'number' || typeof settingsToImport.duplicateBannerDelaySeconds === 'string' ? settingsToImport.duplicateBannerDelaySeconds : '5',
+        allowedDuplicatePatterns: Array.isArray(settingsToImport.allowedDuplicatePatterns) ? settingsToImport.allowedDuplicatePatterns : [],
+        autoTabGroupingEnabled: typeof settingsToImport.autoTabGroupingEnabled === 'boolean' ? settingsToImport.autoTabGroupingEnabled : false,
+        ignorePinnedTabs: typeof settingsToImport.ignorePinnedTabs === 'boolean' ? settingsToImport.ignorePinnedTabs : false,
+        autoCloseSingleTabGroups: typeof settingsToImport.autoCloseSingleTabGroups === 'boolean' ? settingsToImport.autoCloseSingleTabGroups : false,
+        addTabPosition: typeof settingsToImport.addTabPosition === 'string' ? settingsToImport.addTabPosition : 'right',
+        tabGroupRules: Array.isArray(settingsToImport.tabGroupRules) ? settingsToImport.tabGroupRules : []
+      };
+
       // Using inline feedback instead of alert/confirm
       const origText = importSettingsBtn.textContent;
       const origAriaLabel = importSettingsBtn.getAttribute('aria-label') || '';
       importSettingsBtn.dataset.origText = origText;
       if (origAriaLabel) importSettingsBtn.dataset.origAriaLabel = origAriaLabel;
-      importSettingsBtn.dataset.pendingImport = JSON.stringify(settingsToImport);
+      importSettingsBtn.dataset.pendingImport = JSON.stringify(safeSettings);
 
       importSettingsBtn.textContent = 'Confirm Overwrite?';
       importSettingsBtn.style.color = '#ef4444'; // Red for warning
