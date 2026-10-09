@@ -1700,21 +1700,42 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 🛡️ Sentinel: Sanitize imported arrays to prevent Logic DoS (Type Confusion)
+      // and explicitly pick known keys to prevent Mass Assignment
+      const sanitizedSettings = {};
+
+      if (typeof settingsToImport.autoCloseEnabled === 'boolean') sanitizedSettings.autoCloseEnabled = settingsToImport.autoCloseEnabled;
+      if (typeof settingsToImport.closeDelay === 'number') sanitizedSettings.closeDelay = settingsToImport.closeDelay;
+      if (typeof settingsToImport.autoCloseBannerEnabled === 'boolean') sanitizedSettings.autoCloseBannerEnabled = settingsToImport.autoCloseBannerEnabled;
+
+      if (typeof settingsToImport.duplicatePreventionEnabled === 'boolean') sanitizedSettings.duplicatePreventionEnabled = settingsToImport.duplicatePreventionEnabled;
+      if (typeof settingsToImport.closeOlderTab === 'boolean') sanitizedSettings.closeOlderTab = settingsToImport.closeOlderTab;
+      if (typeof settingsToImport.duplicateBannerEnabled === 'boolean') sanitizedSettings.duplicateBannerEnabled = settingsToImport.duplicateBannerEnabled;
+      if (typeof settingsToImport.duplicateBannerDelaySeconds === 'number') sanitizedSettings.duplicateBannerDelaySeconds = settingsToImport.duplicateBannerDelaySeconds;
+
+      if (typeof settingsToImport.autoCollapseEnabled === 'boolean') sanitizedSettings.autoCollapseEnabled = settingsToImport.autoCollapseEnabled;
+      if (typeof settingsToImport.collapseDelay === 'number') sanitizedSettings.collapseDelay = settingsToImport.collapseDelay;
+
+      if (typeof settingsToImport.autoTabGroupingEnabled === 'boolean') sanitizedSettings.autoTabGroupingEnabled = settingsToImport.autoTabGroupingEnabled;
+      if (typeof settingsToImport.applyToGroupedTabs === 'boolean') sanitizedSettings.applyToGroupedTabs = settingsToImport.applyToGroupedTabs;
+      if (typeof settingsToImport.ignorePinnedTabs === 'boolean') sanitizedSettings.ignorePinnedTabs = settingsToImport.ignorePinnedTabs;
+      if (typeof settingsToImport.addTabPosition === 'string') sanitizedSettings.addTabPosition = settingsToImport.addTabPosition;
+      if (typeof settingsToImport.autoCloseSingleTabGroups === 'boolean') sanitizedSettings.autoCloseSingleTabGroups = settingsToImport.autoCloseSingleTabGroups;
+
       if (settingsToImport.urlPatterns) {
-        if (!Array.isArray(settingsToImport.urlPatterns)) settingsToImport.urlPatterns = [];
-        settingsToImport.urlPatterns = settingsToImport.urlPatterns
+        let patterns = Array.isArray(settingsToImport.urlPatterns) ? settingsToImport.urlPatterns : [];
+        sanitizedSettings.urlPatterns = patterns
           .filter(p => typeof p === 'string' && p.length <= 200)
           .slice(0, 1000);
       }
       if (settingsToImport.allowedDuplicatePatterns) {
-        if (!Array.isArray(settingsToImport.allowedDuplicatePatterns)) settingsToImport.allowedDuplicatePatterns = [];
-        settingsToImport.allowedDuplicatePatterns = settingsToImport.allowedDuplicatePatterns
+        let patterns = Array.isArray(settingsToImport.allowedDuplicatePatterns) ? settingsToImport.allowedDuplicatePatterns : [];
+        sanitizedSettings.allowedDuplicatePatterns = patterns
           .filter(p => typeof p === 'string' && p.length <= 200)
           .slice(0, 1000);
       }
       if (settingsToImport.tabGroupRules) {
-        if (!Array.isArray(settingsToImport.tabGroupRules)) settingsToImport.tabGroupRules = [];
-        settingsToImport.tabGroupRules = settingsToImport.tabGroupRules
+        let rules = Array.isArray(settingsToImport.tabGroupRules) ? settingsToImport.tabGroupRules : [];
+        sanitizedSettings.tabGroupRules = rules
           .filter(r => r && typeof r === 'object')
           .map(r => ({
             groupName: typeof r.groupName === 'string' ? r.groupName.slice(0, 50) : 'Imported Group',
@@ -1729,7 +1750,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const origAriaLabel = importSettingsBtn.getAttribute('aria-label') || '';
       importSettingsBtn.dataset.origText = origText;
       if (origAriaLabel) importSettingsBtn.dataset.origAriaLabel = origAriaLabel;
-      importSettingsBtn.dataset.pendingImport = JSON.stringify(settingsToImport);
+      importSettingsBtn.dataset.pendingImport = JSON.stringify(sanitizedSettings);
 
       importSettingsBtn.textContent = 'Confirm Overwrite?';
       importSettingsBtn.style.color = '#ef4444'; // Red for warning
