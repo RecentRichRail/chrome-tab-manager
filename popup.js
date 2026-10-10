@@ -2685,7 +2685,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function filterWindowExplorer(q) {
     const container = document.getElementById('windowListContainer');
     const query = (q || '').toLowerCase();
-    const windows = Array.from(container.querySelectorAll('.explorer-window'));
+    // ⚡ Bolt Performance Optimization:
+    // Iterating directly over NodeList is faster and creates less GC pressure than using Array.from().
+    const windows = container.querySelectorAll('.explorer-window');
 
     // Helper to collapse all by default
     const collapseAll = () => {
@@ -2713,10 +2715,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let anyMatchFound = false;
     windows.forEach(w => {
       let windowHasMatch = false;
-      const groups = Array.from(w.querySelectorAll('.explorer-group'));
+      const groups = w.querySelectorAll('.explorer-group');
       groups.forEach(g => {
         let groupHasMatch = false;
-        const tabs = Array.from(g.querySelectorAll('.explorer-tab-item'));
+        const tabs = g.querySelectorAll('.explorer-tab-item');
         tabs.forEach(t => {
           const lowerTitle = t.dataset.lowertitle || '';
           const lowerUrl = t.dataset.lowerurl || '';
