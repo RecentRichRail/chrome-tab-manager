@@ -84,3 +84,7 @@
 ## 2024-05-18 - Missing loading state on action buttons
 **Learning:** Found that long running action buttons (like "Regroup All Tabs" or "Expand All Groups") don't have proper loading states, leading to confusing user experiences and potential double clicks.
 **Action:** Always add loading states to async action buttons and disable them while the action is in progress.
+
+## 2026-10-10 - Escape key support for blur events on delay inputs
+**Learning:** For users who navigate primarily using a keyboard, adding standard Escape key support for input fields that save on 'change' (blur) allows them to easily dismiss the input without submitting it, significantly improving form usability.
+**Action:** Always ensure that form inputs have Escape key support to dismiss focus, especially when they are not wrapped in standard form tags where the browser would handle this automatically.
