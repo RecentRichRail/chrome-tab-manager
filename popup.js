@@ -1699,22 +1699,71 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // 🛡️ Sentinel: Prevent Mass Assignment by explicitly picking and validating known keys
+      const safeSettings = {};
+
+      if (typeof settingsToImport.autoCloseEnabled === 'boolean') {
+        safeSettings.autoCloseEnabled = settingsToImport.autoCloseEnabled;
+      }
+      if (typeof settingsToImport.closeDelay === 'number') {
+        safeSettings.closeDelay = settingsToImport.closeDelay;
+      }
+      if (typeof settingsToImport.autoCloseBannerEnabled === 'boolean') {
+        safeSettings.autoCloseBannerEnabled = settingsToImport.autoCloseBannerEnabled;
+      }
+
+      if (typeof settingsToImport.duplicatePreventionEnabled === 'boolean') {
+        safeSettings.duplicatePreventionEnabled = settingsToImport.duplicatePreventionEnabled;
+      }
+      if (typeof settingsToImport.closeOlderTab === 'boolean') {
+        safeSettings.closeOlderTab = settingsToImport.closeOlderTab;
+      }
+      if (typeof settingsToImport.duplicateBannerEnabled === 'boolean') {
+        safeSettings.duplicateBannerEnabled = settingsToImport.duplicateBannerEnabled;
+      }
+      if (typeof settingsToImport.duplicateBannerDelaySeconds === 'number') {
+        safeSettings.duplicateBannerDelaySeconds = settingsToImport.duplicateBannerDelaySeconds;
+      }
+
+      if (typeof settingsToImport.autoCollapseEnabled === 'boolean') {
+        safeSettings.autoCollapseEnabled = settingsToImport.autoCollapseEnabled;
+      }
+      if (typeof settingsToImport.collapseDelay === 'number') {
+        safeSettings.collapseDelay = settingsToImport.collapseDelay;
+      }
+
+      if (typeof settingsToImport.autoTabGroupingEnabled === 'boolean') {
+        safeSettings.autoTabGroupingEnabled = settingsToImport.autoTabGroupingEnabled;
+      }
+      if (typeof settingsToImport.applyToGroupedTabs === 'boolean') {
+        safeSettings.applyToGroupedTabs = settingsToImport.applyToGroupedTabs;
+      }
+      if (typeof settingsToImport.ignorePinnedTabs === 'boolean') {
+        safeSettings.ignorePinnedTabs = settingsToImport.ignorePinnedTabs;
+      }
+      if (typeof settingsToImport.autoCloseSingleTabGroups === 'boolean') {
+        safeSettings.autoCloseSingleTabGroups = settingsToImport.autoCloseSingleTabGroups;
+      }
+      if (typeof settingsToImport.addTabPosition === 'string') {
+        safeSettings.addTabPosition = settingsToImport.addTabPosition;
+      }
+
       // 🛡️ Sentinel: Sanitize imported arrays to prevent Logic DoS (Type Confusion)
       if (settingsToImport.urlPatterns) {
-        if (!Array.isArray(settingsToImport.urlPatterns)) settingsToImport.urlPatterns = [];
-        settingsToImport.urlPatterns = settingsToImport.urlPatterns
+        if (!Array.isArray(settingsToImport.urlPatterns)) safeSettings.urlPatterns = [];
+        else safeSettings.urlPatterns = settingsToImport.urlPatterns
           .filter(p => typeof p === 'string' && p.length <= 200)
           .slice(0, 1000);
       }
       if (settingsToImport.allowedDuplicatePatterns) {
-        if (!Array.isArray(settingsToImport.allowedDuplicatePatterns)) settingsToImport.allowedDuplicatePatterns = [];
-        settingsToImport.allowedDuplicatePatterns = settingsToImport.allowedDuplicatePatterns
+        if (!Array.isArray(settingsToImport.allowedDuplicatePatterns)) safeSettings.allowedDuplicatePatterns = [];
+        else safeSettings.allowedDuplicatePatterns = settingsToImport.allowedDuplicatePatterns
           .filter(p => typeof p === 'string' && p.length <= 200)
           .slice(0, 1000);
       }
       if (settingsToImport.tabGroupRules) {
-        if (!Array.isArray(settingsToImport.tabGroupRules)) settingsToImport.tabGroupRules = [];
-        settingsToImport.tabGroupRules = settingsToImport.tabGroupRules
+        if (!Array.isArray(settingsToImport.tabGroupRules)) safeSettings.tabGroupRules = [];
+        else safeSettings.tabGroupRules = settingsToImport.tabGroupRules
           .filter(r => r && typeof r === 'object')
           .map(r => ({
             groupName: typeof r.groupName === 'string' ? r.groupName.slice(0, 50) : 'Imported Group',
@@ -1729,7 +1778,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const origAriaLabel = importSettingsBtn.getAttribute('aria-label') || '';
       importSettingsBtn.dataset.origText = origText;
       if (origAriaLabel) importSettingsBtn.dataset.origAriaLabel = origAriaLabel;
-      importSettingsBtn.dataset.pendingImport = JSON.stringify(settingsToImport);
+      importSettingsBtn.dataset.pendingImport = JSON.stringify(safeSettings);
 
       importSettingsBtn.textContent = 'Confirm Overwrite?';
       importSettingsBtn.style.color = '#ef4444'; // Red for warning
