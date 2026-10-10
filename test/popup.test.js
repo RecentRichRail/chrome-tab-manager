@@ -3,6 +3,8 @@ const assert = require('node:assert');
 
 // Simulate basic environment
 global.document = {
+    createElementNS: (ns, tag) => ({ ns, tag, appendChild: () => {}, setAttribute: () => {}, style: {} }),
+    createDocumentFragment: () => ({ appendChild: () => {} }),
     getElementById: (id) => {
         return {
             id,
@@ -14,7 +16,7 @@ global.document = {
         };
     },
     addEventListener: () => {},
-    createElement: (tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {} })
+    createElement: (tag) => ({ tag, classList: { add: () => {} }, appendChild: () => {}, setAttribute: () => {}, style: {} })
 };
 global.window = {
     addEventListener: () => {},
@@ -79,7 +81,7 @@ test('updateAutoCloseUI updates DOM elements based on settings', () => {
     global.document.getElementById = (id) => {
         if (id === 'autoCloseToggle') return { set checked(val) { toggleChecked = val; } };
         if (id === 'closeDelayInput') return { set value(val) { delayValue = val; } };
-        return { checked: false, value: '' }; // Mock for other elements
+        return { checked: false, value: '', replaceChildren: () => {}, appendChild: () => {} }; // Mock for other elements
     };
 
     popup.updateAutoCloseUI();
