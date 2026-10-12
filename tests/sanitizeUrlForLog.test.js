@@ -80,6 +80,15 @@ test('sanitizeUrlForLog', async (t) => {
         assert.strictEqual(sanitizeUrlForLog(undefined), 'undefined');
     });
 
+
+    await t.test('returns redacted string for opaque schemes like javascript:', () => {
+        assert.strictEqual(sanitizeUrlForLog('javascript:alert("secret_payload_123")'), '[invalid/redacted url]');
+    });
+
+    await t.test('returns redacted string for opaque schemes like data:', () => {
+        assert.strictEqual(sanitizeUrlForLog('data:text/html;base64,PGgxPkhlbGxvPC9oMT4='), '[invalid/redacted url]');
+    });
+
     await t.test('returns redacted string for invalid URLs', () => {
         assert.strictEqual(sanitizeUrlForLog('not-a-valid-url'), '[invalid/redacted url]');
     });

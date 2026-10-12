@@ -370,7 +370,10 @@ function sanitizeUrlForLog(urlStr) {
   if (!urlStr) return String(urlStr);
   try {
     const u = new URL(urlStr);
-    return u.origin + u.pathname;
+    if (u.protocol === 'http:' || u.protocol === 'https:') {
+      return u.origin + u.pathname;
+    }
+    return '[invalid/redacted url]';
   } catch (error) {
     return '[invalid/redacted url]';
   }
