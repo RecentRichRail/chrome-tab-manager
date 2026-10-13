@@ -1937,7 +1937,8 @@ document.addEventListener('DOMContentLoaded', () => {
           url: url,
           lowerTitle: title.toLowerCase(),
           lowerUrl: url.toLowerCase(),
-          lastAccessed: t.lastAccessed || 0
+          lastAccessed: t.lastAccessed || 0,
+          active: t.active || false
         });
       }
     }
@@ -2257,6 +2258,11 @@ document.addEventListener('DOMContentLoaded', () => {
             tEl.dataset.tabid = String(tab.tabId);
             tEl.dataset.windowid = String(tab.windowId);
             tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
+            if (tab.active) {
+              tEl.style.borderColor = 'var(--brand)';
+              tEl.style.background = 'var(--glass-bg-strong)';
+              contentWrapper.setAttribute('aria-current', 'true');
+            }
 
             // ⚡ Bolt Performance Optimization:
             // Removed redundant unused escapeHtml allocations for title and url
@@ -2484,6 +2490,11 @@ document.addEventListener('DOMContentLoaded', () => {
           tEl.dataset.tabid = String(tab.id);
           tEl.dataset.windowid = String(w.id);
           tEl.dataset.groupid = String(gid === 'ungrouped' ? '-1' : gid);
+            if (tab.active) {
+              tEl.style.borderColor = 'var(--brand)';
+              tEl.style.background = 'var(--glass-bg-strong)';
+              contentWrapper.setAttribute('aria-current', 'true');
+            }
 
             // ⚡ Bolt Performance Optimization:
             // Removed redundant unused escapeHtml allocations for title and url
@@ -2843,7 +2854,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   document.getElementById('collapseDelayInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.key === 'Escape') {
       e.target.blur();
     }
   });
@@ -2865,7 +2876,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   document.getElementById('closeDelayInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.key === 'Escape') {
       e.target.blur();
     }
   });
@@ -2939,7 +2950,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const duplicateBannerDelayInput = document.getElementById('duplicateBannerDelayInput');
   if (duplicateBannerDelayInput) {
     duplicateBannerDelayInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' || e.key === 'Escape') {
         e.target.blur();
       }
     });
