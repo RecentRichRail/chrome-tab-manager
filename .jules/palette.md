@@ -84,3 +84,11 @@
 ## 2024-05-18 - Missing loading state on action buttons
 **Learning:** Found that long running action buttons (like "Regroup All Tabs" or "Expand All Groups") don't have proper loading states, leading to confusing user experiences and potential double clicks.
 **Action:** Always add loading states to async action buttons and disable them while the action is in progress.
+
+## 2024-05-24 - Mocking Chrome APIs for Playwright Visual Tests
+**Learning:** When using Playwright to verify the Chrome extension popup UI, the script must mock necessary `window.chrome` APIs (like `chrome.tabs.query`, `chrome.windows.getAll`, and `chrome.windows.getLastFocused`) by returning valid Promises with dummy data. Failing to do so causes async UI rendering to stall, resulting in timeout errors for expected DOM elements like `.explorer-tab-item` or `.explorer-window`.
+**Action:** Always use `page.add_init_script()` to inject robust mocks for `window.chrome` APIs *before* `page.goto()` when testing extension UIs in isolation.
+
+## 2024-05-24 - Indicating Active Item State
+**Learning:** To ensure accessibility and usability for the currently active item in a list (e.g., an active tab or selected menu item), standard visual cues (like bold text or colors) are insufficient for screen readers.
+**Action:** Always add `aria-current="true"` to the active item's container for screen readers, alongside providing a distinct visual cue (such as a border or background change) for sighted users.
