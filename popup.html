@@ -164,11 +164,11 @@
     <!-- Regroup All Tabs section moved to top -->
   <div class="glass-card" style="padding:12px;margin-top:0;margin-bottom:16px;">
       <div style="display:flex;gap:6px;">
-        <button id="regroupAllBtn" class="btn-glass" style="flex:1;">Regroup All Tabs</button>
+        <button id="regroupAllBtn" class="btn-glass" style="flex:1;" aria-label="Regroup all tabs">Regroup All Tabs</button>
       </div>
       <div style="display:flex;gap:6px;margin-top:8px;">
-        <button id="expandAllBtn" class="btn-glass" style="flex:1;">Expand All Groups</button>
-        <button id="collapseAllBtn" class="btn-glass" style="flex:1;">Collapse All Groups</button>
+        <button id="expandAllBtn" class="btn-glass" style="flex:1;" aria-label="Expand all groups">Expand All Groups</button>
+        <button id="collapseAllBtn" class="btn-glass" style="flex:1;" aria-label="Collapse all groups">Collapse All Groups</button>
       </div>
       <div class="glass-card" style="padding:12px;margin-top:12px;text-align:center;" aria-live="polite" aria-atomic="true">
         <div class="tab-count-number" id="tabCount">0</div>
@@ -183,7 +183,7 @@
       <div class="menu-content" id="windowNameContent">
         <div style="display:flex;gap:8px;align-items:center;">
           <input id="windowLabelInput" type="text" class="form-input" maxlength="50" placeholder="Give this window a name (e.g., Work, Research)" aria-label="Give this window a name" aria-describedby="windowLabelHelp" />
-          <button id="saveWindowLabelBtn" class="btn-glass">Save</button>
+          <button id="saveWindowLabelBtn" class="btn-glass" aria-label="Save window name">Save</button>
         </div>
         <div id="windowLabelHelp" class="help-text" style="margin-top:8px;">This prefix will be added to the title of each tab in this window so the OS window title shows it when that tab is active.</div>
         <div style="margin-top:6px;">
@@ -231,7 +231,7 @@
         </div>
         <div class="url-list">
           <input type="text" id="urlInput" class="form-input" maxlength="200" placeholder="Enter URL pattern (e.g., *login*, https://example.com/auth*)" aria-label="Enter URL pattern">
-          <button id="addUrlBtn" class="btn-glass">Add URL Pattern</button>
+          <button id="addUrlBtn" class="btn-glass" aria-label="Add URL pattern to auto-close list">Add URL Pattern</button>
           <div id="urlListContainer"></div>
         </div>
       </div>
@@ -290,7 +290,7 @@
               <option value="orange">Orange</option>
             </select>
           </div>
-          <button id="createGroupRuleBtn" class="btn-glass">Create Tab Group Rule</button>
+          <button id="createGroupRuleBtn" class="btn-glass" aria-label="Create tab group rule">Create Tab Group Rule</button>
           <div id="groupRuleListContainer"></div>
         </div>
       </div>
@@ -322,7 +322,7 @@
         <div class="actions"><label class="setting-label" for="duplicateBannerDelayInput">Banner timer (seconds)</label><input type="number" id="duplicateBannerDelayInput" class="form-input" value="5" min="1" max="300" style="width:100px;" aria-label="Duplicate banner timer in seconds"></div>
         <div class="url-list">
           <input type="text" id="duplicateAllowInput" class="form-input" maxlength="200" placeholder="URLs allowed to have duplicates (e.g., *github.com*, https://docs.google.com*)" aria-label="URLs allowed to have duplicates">
-          <button id="addDuplicateAllowBtn" class="btn-glass">Add Exception Pattern</button>
+          <button id="addDuplicateAllowBtn" class="btn-glass" aria-label="Add exception pattern for duplicate prevention">Add Exception Pattern</button>
           <div id="duplicateAllowListContainer"></div>
         </div>
       </div>
@@ -351,7 +351,7 @@
       <div class="menu-content expanded" style="display:block;">
         <div style="display:flex;gap:8px;align-items:center;">
           <input id="initWindowLabelInput" type="text" class="form-input" maxlength="50" placeholder="Give this window a name (e.g., Work, Research)" aria-label="Give this window a name" aria-describedby="initWindowLabelHelp">
-          <button id="initSaveWindowLabelBtn" class="btn-glass">Save</button>
+          <button id="initSaveWindowLabelBtn" class="btn-glass" aria-label="Save initial window name">Save</button>
         </div>
         <div style="margin-top:6px;">
           <label class="glass-toggle">
